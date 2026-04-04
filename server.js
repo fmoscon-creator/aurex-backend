@@ -110,5 +110,41 @@ app.patch('/api/usuario/:userId', async (req, res) => { const { data, error } = 
 app.post('/api/test-telegram', async (req, res) => { try { await bot.sendMessage(req.body.chat_id, req.body.mensaje || '✅ Aurex Bot conectado!'); res.json({ ok: true }); } catch(e) { res.status(400).json({ error: e.message }); } });
 app.post('/api/test-whatsapp', async (req, res) => { try { const to = (req.body.numero||'').startsWith('+') ? req.body.numero : '+' + req.body.numero; await twilioClient.messages.create({ from: WHATSAPP_FROM, to: 'whatsapp:' + to, body: req.body.mensaje || '✅ Aurex WhatsApp conectado!' }); res.json({ ok: true }); } catch(e) { res.status(400).json({ error: e.message }); } });
 
+// YAHOO FINANCE PROXY - server side
+const _yCache = {};
+const _yTTL = 60000;
+
+app.get('/api/yahoo', async (req, res) => {
+  try {
+    const sym = (req.query.symbol || '').toUpperCase();
+    const iv = req.query.interval || '1d';
+    const rng = req.query.range || '5d';
+    if (!sym) return res.status(400).json({ error: 'symbol req' });
+    const ck = sym + '_' + iv + '_' + rng;
+    const now = Date.now();
+    if (_yCache[ck] && (now - _yCache[ck].ts) < _yTTL) return res.json(_yCache[ck].data);
+    const base = ['https://','query1.finance','.yahoo.com/v8/finance/chart/'].join('');
+    const yUrl = base + sym + '?interval=' + iv + '&range=' + rng;
+    const hdrs = { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' };
+    const r = await fetch(yUrl, { headers: hdrs });
+    if (!r.ok) return res.status(r.status).json({ error: 'Yahoo ' + r.status });
+    const data = await r.json();
+    _yCache[ck] = { ts: now, data };
+    res.json(data);
+  } catch(e) { console.error('yproxy:', e.message); res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/yahoo/search', async (req, res) => {
+  try {
+    const q = req.query.q || '';
+    if (!q) return res.status(400).json({ error: 'q req' });
+    const sb = ['https://','query1.finance','.yahoo.com/v1/finance/search'].join('');
+    const sq = sb + '?q=' + q + '&lang=en-US&newsCount=0&quotesCount=10';
+    const sr = await fetch(sq, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } });
+    if (!sr.ok) return res.status(sr.status).json({ error: 'YSearch ' + sr.status });
+    res.json(await sr.json());
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => { console.log('🚀 Aurex Backend en puerto ' + PORT); console.log('📡 Alertas cada 30s'); console.log('🤖 Telegram + WhatsApp activos'); });
+app.listen(PORT, () => console.log('Aurex Backend:', PORT));
