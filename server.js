@@ -278,7 +278,8 @@ async function calcularSenalesIA() {
     const signals = [];
     for (const act of IA_ACTIVOS) {
       try {
-        let d = act.t === 'cripto' ? await _fetchBinanceIA(act.s) : await _fetchYahooIA(act.y || act.s);
+        // Usar Yahoo para todo (Binance bloqueado en Railway)
+        let d = await _fetchYahooIA(act.y || act.s);
         if (!d || !d.precio) continue;
         d.btcC = btcC; d.spyC = spyC; d.pOro = pOro; d.pPet = pPet;
         signals.push(_calcIAScore(act.t, act.s, d));
