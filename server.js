@@ -146,19 +146,161 @@ app.get('/api/yahoo/search', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ─── CACHE DE SENALES IA ─────────────────────────────────────────────────────
-// La PWA escribe aqui las senales calculadas, la app nativa las lee
+// ─── MOTOR IA CENTRALIZADO ───────────────────────────────────────────────────
+// Calcula senales cada 5 min. PWA y app nativa leen de GET /api/ia-signals
+
+const IA_ACTIVOS = [
+  {s:'BTC',t:'cripto',y:'BTC-USD'},{s:'ETH',t:'cripto',y:'ETH-USD'},{s:'SOL',t:'cripto',y:'SOL-USD'},
+  {s:'BNB',t:'cripto',y:'BNB-USD'},{s:'XRP',t:'cripto',y:'XRP-USD'},{s:'ADA',t:'cripto',y:'ADA-USD'},
+  {s:'AVAX',t:'cripto',y:'AVAX-USD'},{s:'DOT',t:'cripto',y:'DOT-USD'},{s:'LINK',t:'cripto',y:'LINK-USD'},
+  {s:'MATIC',t:'cripto',y:'MATIC-USD'},{s:'DOGE',t:'cripto',y:'DOGE-USD'},{s:'SHIB',t:'cripto',y:'SHIB-USD'},
+  {s:'LTC',t:'cripto',y:'LTC-USD'},{s:'ATOM',t:'cripto',y:'ATOM-USD'},{s:'UNI',t:'cripto',y:'UNI-USD'},
+  {s:'FIL',t:'cripto',y:'FIL-USD'},{s:'NEAR',t:'cripto',y:'NEAR-USD'},{s:'APT',t:'cripto',y:'APT-USD'},
+  {s:'ARB',t:'cripto',y:'ARB-USD'},{s:'OP',t:'cripto',y:'OP-USD'},{s:'TON',t:'cripto',y:'TON-USD'},
+  {s:'SUI',t:'cripto',y:'SUI-USD'},{s:'TRX',t:'cripto',y:'TRX-USD'},{s:'INJ',t:'cripto',y:'INJ-USD'},
+  {s:'SEI',t:'cripto',y:'SEI-USD'},{s:'PEPE',t:'cripto',y:'PEPE-USD'},{s:'WIF',t:'cripto',y:'WIF-USD'},
+  {s:'AAVE',t:'cripto',y:'AAVE-USD'},{s:'MKR',t:'cripto',y:'MKR-USD'},{s:'CRV',t:'cripto',y:'CRV-USD'},
+  {s:'SAND',t:'cripto',y:'SAND-USD'},{s:'MANA',t:'cripto',y:'MANA-USD'},{s:'GRT',t:'cripto',y:'GRT-USD'},
+  {s:'IMX',t:'cripto',y:'IMX-USD'},{s:'HBAR',t:'cripto',y:'HBAR-USD'},{s:'XLM',t:'cripto',y:'XLM-USD'},
+  {s:'VET',t:'cripto',y:'VET-USD'},{s:'ETC',t:'cripto',y:'ETC-USD'},{s:'ALGO',t:'cripto',y:'ALGO-USD'},
+  {s:'FTM',t:'cripto',y:'FTM-USD'},{s:'THETA',t:'cripto',y:'THETA-USD'},
+  {s:'AAPL',t:'accion',y:'AAPL'},{s:'NVDA',t:'accion',y:'NVDA'},{s:'MSFT',t:'accion',y:'MSFT'},
+  {s:'TSLA',t:'accion',y:'TSLA'},{s:'META',t:'accion',y:'META'},{s:'GOOGL',t:'accion',y:'GOOGL'},
+  {s:'AMZN',t:'accion',y:'AMZN'},{s:'JPM',t:'accion',y:'JPM'},{s:'V',t:'accion',y:'V'},
+  {s:'HOOD',t:'accion',y:'HOOD'},{s:'MSTR',t:'accion',y:'MSTR'},{s:'COIN',t:'accion',y:'COIN'},
+  {s:'YPF',t:'accion',y:'YPF'},{s:'GGAL',t:'accion',y:'GGAL'},{s:'BMA',t:'accion',y:'BMA'},
+  {s:'SPY',t:'etf',y:'SPY'},{s:'QQQ',t:'etf',y:'QQQ'},{s:'IBIT',t:'etf',y:'IBIT'},
+  {s:'GLD',t:'metal',y:'GLD'},{s:'SLV',t:'metal',y:'SLV'},{s:'ALUM',t:'metal',y:'ALUM'},
+  {s:'GC=F',t:'metal',y:'GC=F'},{s:'CL=F',t:'materia_prima',y:'CL=F'},
+  {s:'JO',t:'materia_prima',y:'JO'},{s:'USO',t:'materia_prima',y:'USO'},
+  {s:'TLT',t:'bono',y:'TLT'},{s:'AGG',t:'bono',y:'AGG'},
+];
+
+function _calcRSI14(closes) {
+  if (closes.length < 15) return 50;
+  let g = 0, l = 0;
+  for (let i = 1; i <= 14; i++) { const d = closes[i] - closes[i-1]; if (d > 0) g += d; else l -= d; }
+  g /= 14; l /= 14;
+  for (let i = 15; i < closes.length; i++) { const d = closes[i] - closes[i-1]; g = (g*13+(d>0?d:0))/14; l = (l*13+(d<0?-d:0))/14; }
+  return l === 0 ? 100 : 100 - 100/(1+g/l);
+}
+function _ema(a, p) { let k=2/(p+1), e=a[0]; for(let i=1;i<a.length;i++) e=a[i]*k+e*(1-k); return e; }
+
+async function _fetchBinanceIA(sym) {
+  try {
+    const [tR, kR] = await Promise.all([
+      fetch('https://api.binance.com/api/v3/ticker/24hr?symbol='+sym+'USDT'),
+      fetch('https://api.binance.com/api/v3/klines?symbol='+sym+'USDT&interval=1d&limit=16')
+    ]);
+    const t = await tR.json(), k = await kR.json();
+    if (!t.lastPrice || !Array.isArray(k)) return null;
+    const cls = k.map(x => parseFloat(x[4])).filter(x => x > 0);
+    const vols = k.map(x => parseFloat(x[5])).filter(x => x > 0);
+    const av = vols.length > 1 ? vols.slice(0,-1).reduce((a,b)=>a+b,0)/(vols.length-1) : vols[0]||1;
+    return { precio:parseFloat(t.lastPrice), precio24h:parseFloat(t.prevClosePrice)||parseFloat(t.lastPrice), vol24h:parseFloat(t.volume)||0, volProm:av, hi:parseFloat(t.highPrice), lo:parseFloat(t.lowPrice), cls, hiMax:Math.max(...cls), loMin:Math.min(...cls) };
+  } catch(e) { return null; }
+}
+
+async function _fetchYahooIA(sym) {
+  try {
+    const base = ['https://','query1.finance','.yahoo.com/v8/finance/chart/'].join('');
+    const hdrs = { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' };
+    const [r5, r30] = await Promise.all([
+      fetch(base+sym+'?interval=1d&range=5d', {headers:hdrs}),
+      fetch(base+sym+'?interval=1d&range=30d', {headers:hdrs})
+    ]);
+    const d5 = await r5.json(), d30 = await r30.json();
+    const q5 = d5.chart.result[0], m = q5.meta;
+    const c5 = (q5.indicators.quote[0].close||[]).filter(x=>x!=null);
+    const v5 = (q5.indicators.quote[0].volume||[]).filter(x=>x!=null);
+    const lc = c5[c5.length-1]||m.regularMarketPrice, pc = c5[c5.length-2]||lc;
+    const av = v5.length>1 ? v5.slice(0,-1).reduce((a,b)=>a+b,0)/(v5.length-1) : v5[0]||1;
+    const q30 = d30.chart.result[0];
+    const c30 = (q30.indicators.quote[0].close||[]).filter(x=>x!=null);
+    const h30 = (q30.indicators.quote[0].high||[]).filter(x=>x!=null);
+    const l30 = (q30.indicators.quote[0].low||[]).filter(x=>x!=null);
+    return { precio:lc, precio24h:pc, vol24h:v5[v5.length-1]||av, volProm:av, hi:m.regularMarketDayHigh||lc*1.02, lo:m.regularMarketDayLow||lc*0.98, cls:c30, hiMax:h30.length?Math.max(...h30):null, loMin:l30.length?Math.min(...l30):null };
+  } catch(e) { return null; }
+}
+
+function _calcIAScore(tipo, sym, d) {
+  const sc = {};
+  const td = d.precio24h>0 ? (d.precio-d.precio24h)/d.precio24h : 0;
+  sc.tendencia = td * 8;
+  const rsi = d.cls && d.cls.length >= 15 ? _calcRSI14(d.cls) : Math.min(90, Math.max(10, 50+td*500));
+  sc.rsi = rsi>70?-0.06 : rsi>60?0.04 : rsi<30?0.06 : rsi<40?-0.03 : 0.01;
+  const vr = d.volProm>0 ? d.vol24h/d.volProm : 1;
+  sc.volumen = vr>1.8&&td>0?0.06 : vr>1.8&&td<0?-0.06 : vr>1.3?(td>0?0.03:-0.03) : vr<0.6?-0.02 : 0.01;
+  const vol = d.precio>0 ? (d.hi-d.lo)/d.precio : 0.02;
+  sc.volatilidad = vol>0.06?-0.03 : vol>0.03?(td>0?0.02:-0.02) : 0.01;
+  if (tipo==='cripto') { sc.correlacion = sym==='BTC' ? (d.btcC>0.01?0.03:d.btcC<-0.01?-0.03:0) : (d.btcC>0.02?0.04:d.btcC>0?0.02:d.btcC<-0.02?-0.04:-0.02); }
+  else { sc.correlacion = d.spyC>0.01?0.03 : d.spyC<-0.01?-0.03 : 0; }
+  let oro = 0;
+  if (d.pOro>3000) oro = tipo==='metal'?0.04 : tipo==='cripto'?-0.02 : tipo==='bono'?0.02 : -0.02;
+  else if (d.pOro>2200) oro = tipo==='metal'?0.03 : -0.01;
+  if (d.pPet>90) oro += tipo==='materia_prima'?0.03 : -0.02;
+  sc.oro_petroleo = oro;
+  sc.macro = -0.03; sc.earnings = 0;
+  let macd = 0;
+  if (d.cls && d.cls.length >= 26) { const e12=_ema(d.cls.slice(-12),12), e26=_ema(d.cls.slice(-26),26), mp=e26>0?(e12-e26)/e26:0; macd = mp>0.005?0.05 : mp<-0.005?-0.05 : 0.01; }
+  sc.macd = macd;
+  let sr = 0;
+  if (d.hiMax && d.loMin && d.precio>0) { const rp=(d.hiMax>d.loMin)?(d.precio-d.loMin)/(d.hiMax-d.loMin):0.5; sr = rp>0.85?-0.04 : rp<0.15?0.04 : rp>0.60?0.02 : -0.01; }
+  sc.soporte_resist = sr;
+  const total = Object.values(sc).reduce((a,b)=>a+b, 0);
+  const cat = (rsi>70||rsi<30) || sc.volumen>0.12;
+  const uc = cat?0.45:0.65, sa = Math.abs(total);
+  let dir, pp;
+  if (sa > uc) { dir='ALTA CONV-IA'; pp=Math.min(88, Math.round(55+sa*110)); }
+  else if (total > 0.02) { dir='ALCISTA'; pp=Math.min(82, Math.round(52+total*220)); }
+  else if (total < -0.02) { dir='BAJISTA'; pp=Math.min(82, Math.round(52+sa*220)); }
+  else { dir=total>=0?'ALCISTA':'BAJISTA'; pp=Math.min(58, Math.round(50+sa*150)); }
+  const est = sa>uc?5 : sa>0.10?4 : sa>0.06?3 : sa>0.03?2 : 1;
+  const ml = tipo==='cripto'?{n:0.02,x:0.08} : tipo==='accion'?{n:0.01,x:0.04} : tipo==='bono'?{n:0.002,x:0.015} : {n:0.005,x:0.03};
+  const ns = Math.min(sa,0.45)/0.45, mv = ml.n+ns*(ml.x-ml.n), al = total>0;
+  return { simbolo:sym, tipo, direccion:dir, scores:sc, confianza:pp, score:total, estrellas:est, rsi:parseFloat(rsi.toFixed(0)), volRel:parseFloat(vr.toFixed(1)), objetivo:d.precio>0?d.precio*(1+(al?mv:-mv)):0, stop:d.precio>0?d.precio*(1+(al?-mv*0.4:mv*0.4)):0, upside:(al?1:-1)*mv*100, precio:d.precio, precio24h:d.precio24h };
+}
+
 let _iaSignalsCache = { signals: [], updatedAt: null };
 
-app.post('/api/ia-signals', (req, res) => {
+async function calcularSenalesIA() {
+  console.log('[IA] Calculando senales...');
   try {
-    _iaSignalsCache = { signals: req.body || [], updatedAt: new Date().toISOString() };
-    res.json({ ok: true, count: _iaSignalsCache.signals.length });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
+    const btcD = await _fetchBinanceIA('BTC');
+    const spyD = await _fetchYahooIA('SPY');
+    const goldD = await _fetchYahooIA('GC=F');
+    const oilD = await _fetchYahooIA('CL=F');
+    const btcC = btcD&&btcD.precio24h>0 ? (btcD.precio-btcD.precio24h)/btcD.precio24h : 0;
+    const spyC = spyD&&spyD.precio24h>0 ? (spyD.precio-spyD.precio24h)/spyD.precio24h : 0;
+    const pOro = goldD ? goldD.precio : 2050;
+    const pPet = oilD ? oilD.precio : 80;
 
-app.get('/api/ia-signals', (req, res) => {
-  res.json(_iaSignalsCache);
+    const signals = [];
+    for (const act of IA_ACTIVOS) {
+      try {
+        let d = act.t === 'cripto' ? await _fetchBinanceIA(act.s) : await _fetchYahooIA(act.y || act.s);
+        if (!d || !d.precio) continue;
+        d.btcC = btcC; d.spyC = spyC; d.pOro = pOro; d.pPet = pPet;
+        signals.push(_calcIAScore(act.t, act.s, d));
+      } catch(e) { /* skip */ }
+    }
+    signals.sort((a,b) => b.confianza - a.confianza);
+    _iaSignalsCache = { signals, updatedAt: new Date().toISOString() };
+    const al = signals.filter(s=>s.direccion==='ALCISTA').length;
+    const ba = signals.filter(s=>s.direccion==='BAJISTA').length;
+    const hc = signals.filter(s=>s.direccion==='ALTA CONV-IA').length;
+    console.log('[IA] Listo:', signals.length, 'senales |', al, 'alcistas', ba, 'bajistas', hc, 'alta conv');
+  } catch(e) { console.error('[IA] Error:', e.message); }
+}
+
+// Calcular al iniciar y cada 5 min
+calcularSenalesIA();
+cron.schedule('*/5 * * * *', calcularSenalesIA);
+
+app.get('/api/ia-signals', (req, res) => res.json(_iaSignalsCache));
+app.post('/api/ia-signals', (req, res) => {
+  _iaSignalsCache = { signals: req.body || [], updatedAt: new Date().toISOString() };
+  res.json({ ok: true, count: _iaSignalsCache.signals.length });
 });
 
 const PORT = process.env.PORT || 3000;
