@@ -146,5 +146,20 @@ app.get('/api/yahoo/search', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── CACHE DE SENALES IA ─────────────────────────────────────────────────────
+// La PWA escribe aqui las senales calculadas, la app nativa las lee
+let _iaSignalsCache = { signals: [], updatedAt: null };
+
+app.post('/api/ia-signals', (req, res) => {
+  try {
+    _iaSignalsCache = { signals: req.body || [], updatedAt: new Date().toISOString() };
+    res.json({ ok: true, count: _iaSignalsCache.signals.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/ia-signals', (req, res) => {
+  res.json(_iaSignalsCache);
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Aurex Backend:', PORT));
