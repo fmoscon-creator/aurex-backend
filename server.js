@@ -9,7 +9,7 @@ const twilio = require('twilio');
 
 const app = express();
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
