@@ -310,74 +310,174 @@ async function calcularSenalesIA() {
 }
 
 // AUREX Pulse centralizado — misma fuente para PWA y nativa
-let _pulseCache = { score: 50, label: 'NEUTRAL', updatedAt: null, details: {} };
+let _pulseCache = { scores: {}, raw: {}, updatedAt: null };
+
+// === PULSE: funciones IDENTICAS a PWA aurex-features.js ===
+function _pctToScore(pct, scale) { return Math.min(100, Math.max(0, 50 + (pct/scale)*50)); }
+function _vixToScore(vix) { return Math.min(100, Math.max(0, 100 - (vix-10)*3.0)); }
+function _goldToScore(pct) { return Math.min(100, Math.max(0, 50 - pct*25)); }
+function _oilToScore(pct) { return Math.min(100, Math.max(0, 50 - Math.abs(pct)*15)); }
+
+function _calcPulseScore(raw, cat) {
+  if(!raw) return { value:50, label:'Neutral', color:'#D4A017', emoji:'😐', vars:{} };
+  var scores = {}, weighted = 0, totalW = 0;
+  function add(key, score, weight) {
+    scores[key] = Math.round(score);
+    weighted += score * weight;
+    totalW += weight;
+  }
+  if(cat==='CRIPTO'||cat==='GLOBAL') {
+    if(cat==='CRIPTO') {
+      if(raw.btc90dPos !== null && raw.btc90dPos !== undefined) {
+        add('BTC_Pos90d', raw.btc90dPos, 35);
+      }
+      if(raw.btcMom30 !== null && raw.btcMom30 !== undefined) {
+        add('BTC_Mom30d', Math.min(100,Math.max(0,50+(raw.btcMom30/30)*50)), 15);
+      } else {
+        add('BTC_Mom1d', _pctToScore(raw.btcPct,6), 15);
+      }
+      if(raw.vix) add('VIX', _vixToScore(raw.vix.price), 20);
+      if(raw.esf) add('SP500_Fut', _pctToScore(raw.esf.pct,1.5), 5);
+    } else {
+      add('BTC', _pctToScore(raw.btcPct,8), 12);
+      add('ETH', _pctToScore(raw.ethPct,8), 8);
+      if(raw.vix) add('VIX', _vixToScore(raw.vix.price), 14);
+      if(raw.esf) add('SP500_Fut', _pctToScore(raw.esf.pct,1.5), 8);
+    }
+  }
+  if(cat==='ACCIONES'||cat==='GLOBAL') {
+    if(raw.vix)  add('VIX',    _vixToScore(raw.vix.price),   cat==='ACCIONES'?35:14);
+    if(raw.sp500)add('SP500',  _pctToScore(raw.sp500.pct,1.5),cat==='ACCIONES'?25:8);
+    if(raw.esf)  add('ES_Fut', _pctToScore(raw.esf.pct,1.5), cat==='ACCIONES'?20:8);
+    if(raw.nqf)  add('NQ_Fut', _pctToScore(raw.nqf.pct,2),   cat==='ACCIONES'?12:6);
+    if(raw.ymf)  add('YM_Fut', _pctToScore(raw.ymf.pct,1.5), cat==='ACCIONES'?8:4);
+  }
+  if(cat==='FUTUROS'||cat==='GLOBAL') {
+    if(raw.esf)  add('ES_Fut',  _pctToScore(raw.esf.pct,1.5),  cat==='FUTUROS'?30:8);
+    if(raw.nqf)  add('NQ_Fut',  _pctToScore(raw.nqf.pct,2),    cat==='FUTUROS'?25:6);
+    if(raw.ymf)  add('YM_Fut',  _pctToScore(raw.ymf.pct,1.5),  cat==='FUTUROS'?20:4);
+    if(raw.rtyf) add('RTY_Fut', _pctToScore(raw.rtyf.pct,2),   cat==='FUTUROS'?25:3);
+  }
+  if(cat==='COMOD'||cat==='GLOBAL') {
+    if(raw.gcf) add('Oro',      _goldToScore(raw.gcf.pct), cat==='COMOD'?35:8);
+    if(raw.sif) add('Plata',    _goldToScore(raw.sif.pct), cat==='COMOD'?20:4);
+    if(raw.clf) add('Petroleo', _oilToScore(raw.clf.pct),  cat==='COMOD'?25:5);
+    if(raw.hgf) add('Cobre',    _pctToScore(raw.hgf.pct,2),cat==='COMOD'?20:4);
+  }
+  if(cat !== 'CRIPTO') {
+    if(raw.macro) add('Macro_FED', raw.macro.score, 12);
+    if(raw.geo)   add('Geopolitica', raw.geo.score, 4);
+  }
+  if(totalW===0) return { value:50, label:'Neutral', vars:scores };
+  var v = Math.min(100, Math.max(0, Math.round(weighted/totalW)));
+  var label;
+  if(v<=20)      label='Miedo Extremo';
+  else if(v<=40) label='Miedo';
+  else if(v<=60) label='Neutral';
+  else if(v<=80) label='Codicia';
+  else           label='Codicia Extrema';
+  return { value:v, label:label, vars:scores };
+}
 
 async function calcularPulse() {
   try {
-    // Mismas fuentes que la PWA: BTC, ETH, VIX, SP500, futuros, commodities
-    const syms = ['^VIX','^GSPC','ES=F','NQ=F','YM=F','RTY=F','GC=F','SI=F','CL=F','HG=F'];
-    const keys = ['vix','sp500','esf','nqf','ymf','rtyf','gcf','sif','clf','hgf'];
     const raw = {};
-
-    // BTC y ETH de Binance
-    const [btcR, ethR] = await Promise.all([
-      fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r=>r.json()),
-      fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT').then(r=>r.json()),
-    ]);
-    raw.btcChg = parseFloat(btcR.priceChangePercent || 0);
-    raw.ethChg = parseFloat(ethR.priceChangePercent || 0);
-    raw.btcPrice = parseFloat(btcR.lastPrice || 0);
-
-    // Klines 90d BTC para posición
+    // 1. Binance: BTC, ETH (idéntico a PWA _fetchPulseRaw)
     try {
-      const kRes = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=90');
-      const klines = await kRes.json();
-      if (Array.isArray(klines) && klines.length > 10) {
-        const closes = klines.map(k => parseFloat(k[4]));
-        const min90 = Math.min(...closes);
-        const max90 = Math.max(...closes);
-        raw.btcPos90 = max90 > min90 ? ((raw.btcPrice - min90) / (max90 - min90)) * 100 : 50;
-      }
-    } catch(e) { raw.btcPos90 = 50; }
-
-    // Yahoo data via nuestro propio proxy
-    for (let i = 0; i < syms.length; i++) {
+      const [btcR, ethR] = await Promise.all([
+        fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r=>r.json()),
+        fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT').then(r=>r.json()),
+      ]);
+      raw.btcPct = parseFloat(btcR.priceChangePercent) || 0;
+      raw.ethPct = parseFloat(ethR.priceChangePercent) || 0;
+      // BTC 90-day range position
       try {
-        const r = await _fetchYahooIA(syms[i]);
-        if (r && r.precio && r.precio24h) {
-          raw[keys[i]] = { price: r.precio, change: r.precio24h > 0 ? ((r.precio - r.precio24h) / r.precio24h) * 100 : 0 };
+        const klines = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=90').then(r=>r.json());
+        const cls = klines.map(k => parseFloat(k[4]));
+        const hi90 = Math.max(...cls), lo90 = Math.min(...cls), cur = cls[cls.length-1];
+        raw.btc90dPos = hi90>lo90 ? ((cur-lo90)/(hi90-lo90))*100 : 50;
+        raw.btcMom30 = cls.length>=30 ? ((cur-cls[cls.length-30])/cls[cls.length-30])*100 : raw.btcPct;
+      } catch(e) { raw.btc90dPos = null; raw.btcMom30 = null; }
+    } catch(e) { raw.btcPct = 0; raw.ethPct = 0; }
+
+    // 2. Yahoo via nuestro propio proxy (idéntico a PWA)
+    const yahooSyms = ['^VIX','^GSPC','ES=F','NQ=F','YM=F','RTY=F','GC=F','SI=F','CL=F','HG=F'];
+    const yahooKeys = ['vix','sp500','esf','nqf','ymf','rtyf','gcf','sif','clf','hgf'];
+    const BASE = process.env.RAILWAY_PUBLIC_DOMAIN ? ('https://' + process.env.RAILWAY_PUBLIC_DOMAIN) : 'http://localhost:' + (process.env.PORT || 3001);
+    await Promise.all(yahooSyms.map(async (sym, idx) => {
+      try {
+        const url = BASE + '/api/yahoo?symbol=' + encodeURIComponent(sym) + '&interval=1d&range=2d';
+        const res = await fetch(url);
+        const data = await res.json();
+        if(data.chart && data.chart.result && data.chart.result[0]) {
+          const meta = data.chart.result[0].meta;
+          const price = meta.regularMarketPrice || 0;
+          const prev = meta.previousClose || meta.chartPreviousClose || price;
+          raw[yahooKeys[idx]] = { price: price, pct: prev > 0 ? ((price-prev)/prev*100) : 0 };
         }
-      } catch(e) {}
+      } catch(e) { raw[yahooKeys[idx]] = { price: 0, pct: 0 }; }
+    }));
+
+    // 3. Macro FED (FRED) + Geopolitica (GDELT) — idéntico a PWA _fetchMacroGeo
+    let macroScore = 50, geoScore = 70;
+    try {
+      const fredUrl = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=FEDFUNDS&limit=3&sort_order=desc';
+      const fredText = await fetch(fredUrl).then(r => r.text());
+      const lines = fredText.trim().split('\n').filter(l => l && l.indexOf('DATE') < 0);
+      if (lines.length >= 2) {
+        const r1 = parseFloat(lines[0].split(',')[1]) || 0;
+        const r2 = parseFloat(lines[1].split(',')[1]) || 0;
+        const delta = r1 - r2;
+        macroScore = Math.min(100, Math.max(0, 50 - delta * 20));
+      } else if (lines.length === 1) {
+        const rate = parseFloat(lines[0].split(',')[1]) || 5;
+        macroScore = Math.min(100, Math.max(0, 100 - (rate - 1) * 12));
+      }
+    } catch(e) {
+      if (raw.vix && raw.vix.price) macroScore = Math.min(100, Math.max(0, 100 - (raw.vix.price - 10) * 2.5));
     }
+    try {
+      const gdeltUrl = 'https://api.gdeltproject.org/api/v2/summary/summary?d=aylook&t=summary&TIMESPAN=60&SRCLANG=english&OUTPUTTYPE=3';
+      const gdeltData = await fetch(gdeltUrl).then(r => r.json());
+      const tone = gdeltData && gdeltData.articles && gdeltData.articles[0] ? (parseFloat(gdeltData.articles[0].avgtone) || 0) : 0;
+      geoScore = Math.min(100, Math.max(0, 50 + tone * 5));
+    } catch(e) {
+      if (raw.vix && raw.vix.price) geoScore = raw.vix.price > 30 ? Math.max(10, 70-(raw.vix.price-30)*3) : 70;
+    }
+    raw.macro = { score: Math.round(macroScore) };
+    raw.geo = { score: Math.round(geoScore) };
 
-    // Calcular score GLOBAL (misma fórmula que la PWA)
-    const pctToScore = (pct, scale) => Math.max(0, Math.min(100, 50 + pct * (scale || 5)));
-    const vixToScore = (vix) => Math.max(0, Math.min(100, 100 - (vix - 10) * 3.0));
+    // 4. BTC Sentiment (Binance + CoinGecko) — idéntico a PWA
+    try {
+      const [btcT, globG] = await Promise.all([
+        fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r=>r.json()),
+        fetch('https://api.coingecko.com/api/v3/global').then(r=>r.json()),
+      ]);
+      const priceChg = parseFloat(btcT.priceChangePercent);
+      const volB = parseFloat(btcT.quoteVolume)/1e9;
+      const dom = globG?.data?.market_cap_percentage?.btc ?? 50;
+      const avgRatio = parseFloat(btcT.weightedAvgPrice)/parseFloat(btcT.lastPrice);
+      let sc = 50;
+      sc += priceChg * 2.5;
+      sc += (volB > 2 ? 5 : volB > 1 ? 2 : -3);
+      sc += (dom > 60 ? -5 : dom > 50 ? 0 : 5);
+      sc += (avgRatio < 0.99 ? 8 : avgRatio > 1.01 ? -5 : 0);
+      raw.btcSentiment = Math.max(0, Math.min(100, Math.round(sc)));
+    } catch(e) { raw.btcSentiment = null; }
 
-    let score = 0, weights = 0;
+    // 5. Crypto Fear & Greed (Alternative.me) — idéntico a PWA
+    try {
+      const fngData = await fetch('https://api.alternative.me/fng/?limit=1').then(r=>r.json());
+      raw.altFnG = fngData?.data?.[0]?.value != null ? parseInt(fngData.data[0].value) : null;
+    } catch(e) { raw.altFnG = null; }
 
-    // BTC Pos 90d (35%)
-    if (raw.btcPos90 != null) { score += (raw.btcPos90) * 0.35; weights += 0.35; }
-    // BTC momentum (15%)
-    score += pctToScore(raw.btcChg, 3) * 0.15; weights += 0.15;
-    // ETH momentum (8%)
-    score += pctToScore(raw.ethChg, 3) * 0.08; weights += 0.08;
-    // VIX (20%)
-    if (raw.vix) { score += vixToScore(raw.vix.price) * 0.20; weights += 0.20; }
-    // SP500 (8%)
-    if (raw.sp500) { score += pctToScore(raw.sp500.change, 5) * 0.08; weights += 0.08; }
-    // ES Fut (5%)
-    if (raw.esf) { score += pctToScore(raw.esf.change, 5) * 0.05; weights += 0.05; }
-    // Oro (5%)
-    if (raw.gcf) { score += (50 - raw.gcf.change * 25) * 0.05; weights += 0.05; }
-    // Petróleo (4%)
-    if (raw.clf) { score += (50 - Math.abs(raw.clf.change) * 15) * 0.04; weights += 0.04; }
+    // Calcular scores para las 5 categorías (idéntico a PWA _calcPulseScore)
+    const CATS = ['GLOBAL', 'CRIPTO', 'ACCIONES', 'COMOD', 'FUTUROS'];
+    const scores = {};
+    CATS.forEach(cat => { scores[cat] = _calcPulseScore(raw, cat); });
 
-    const finalScore = weights > 0 ? Math.max(0, Math.min(100, Math.round(score / weights))) : 50;
-    const label = finalScore <= 20 ? 'MIEDO EXTREMO' : finalScore <= 40 ? 'MIEDO' : finalScore <= 60 ? 'NEUTRAL' : finalScore <= 80 ? 'CODICIA' : 'CODICIA EXTREMA';
-
-    _pulseCache = { score: finalScore, label, updatedAt: new Date().toISOString(), details: raw };
-    console.log('[PULSE]', finalScore, label);
+    _pulseCache = { scores, raw, updatedAt: new Date().toISOString() };
+    console.log('[PULSE] GLOBAL:', scores.GLOBAL.value, scores.GLOBAL.label, '| CRIPTO:', scores.CRIPTO.value, '| ACCIONES:', scores.ACCIONES.value, '| FUTUROS:', scores.FUTUROS.value, '| COMOD:', scores.COMOD.value);
   } catch(e) { console.error('[PULSE] Error:', e.message); }
 }
 
