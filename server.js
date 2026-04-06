@@ -238,7 +238,25 @@ function _calcIAScore(tipo, sym, d) {
   const est = sa>uc?5 : sa>0.10?4 : sa>0.06?3 : sa>0.03?2 : 1;
   const ml = tipo==='cripto'?{n:0.02,x:0.08} : tipo==='accion'?{n:0.01,x:0.04} : tipo==='bono'?{n:0.002,x:0.015} : {n:0.005,x:0.03};
   const ns = Math.min(sa,0.45)/0.45, mv = ml.n+ns*(ml.x-ml.n), al = total>0;
-  return { simbolo:sym, tipo, direccion:dir, scores:sc, confianza:pp, score:total, estrellas:est, rsi:parseFloat(rsi.toFixed(0)), volRel:parseFloat(vr.toFixed(1)), objetivo:d.precio>0?d.precio*(1+(al?mv:-mv)):0, stop:d.precio>0?d.precio*(1+(al?-mv*0.4:mv*0.4)):0, upside:(al?1:-1)*mv*100, precio:d.precio, precio24h:d.precio24h };
+  // Campos adicionales para PWA y nativa
+  const probAlcista = dir==='ALCISTA' ? pp : dir==='BAJISTA' ? (100-pp) : (al ? pp : 100-pp);
+  const probBajista = 100 - probAlcista;
+  // Motivos basados en variables más fuertes
+  const motivos = [];
+  if (Math.abs(sc.tendencia)>0.03) motivos.push(sc.tendencia>0 ? 'Tendencia alcista fuerte en 24h' : 'Tendencia bajista fuerte en 24h');
+  if (rsi>70) motivos.push('RSI en zona de sobrecompra ('+rsi+')');
+  else if (rsi<30) motivos.push('RSI en zona de sobreventa ('+rsi+')');
+  else motivos.push('RSI en zona neutral ('+rsi+')');
+  if (vr>1.5) motivos.push('Volumen superior al promedio ('+vr.toFixed(1)+'x)');
+  else if (vr<0.6) motivos.push('Volumen bajo respecto al promedio');
+  if (sc.macd>0.03) motivos.push('MACD en cruce alcista');
+  else if (sc.macd<-0.03) motivos.push('MACD en cruce bajista');
+  if (sc.soporte_resist>0.03) motivos.push('Precio cerca de soporte — posible rebote');
+  else if (sc.soporte_resist<-0.03) motivos.push('Precio cerca de resistencia — posible rechazo');
+  if (motivos.length < 3) motivos.push('Correlacion con mercado general ' + (sc.correlacion>0?'positiva':'negativa'));
+  const escenario = dir==='ALTA CONV-IA' ? (al?'Ruptura alcista con alta conviccion':'Ruptura bajista con alta conviccion') : dir==='ALCISTA' ? 'Escenario alcista moderado' : 'Escenario bajista moderado';
+
+  return { simbolo:sym, tipo, direccion:dir, scores:sc, confianza:pp, probPrincipal:pp, score:total, estrellas:est, rsi:parseFloat(rsi.toFixed(0)), volRel:parseFloat(vr.toFixed(1)), objetivo:d.precio>0?d.precio*(1+(al?mv:-mv)):0, stop:d.precio>0?d.precio*(1+(al?-mv*0.4:mv*0.4)):0, upside:(al?1:-1)*mv*100, precio:d.precio, precio24h:d.precio24h, prob_alcista:Math.round(probAlcista), prob_bajista:Math.round(probBajista), motivos:motivos.slice(0,5), escenario_principal:escenario };
 }
 
 let _iaSignalsCache = { signals: [], updatedAt: null };
