@@ -97,7 +97,16 @@ app.get('/api/alertas/:userId', async (req, res) => { const { data, error } = aw
 app.post('/api/alertas', async (req, res) => { const { data, error } = await supabase.from('alertas').insert({ ...req.body, activa: true, disparada: false, created_at: new Date().toISOString() }).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.patch('/api/alertas/:id', async (req, res) => { const { data, error } = await supabase.from('alertas').update(req.body).eq('id', req.params.id).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.delete('/api/alertas/:id', async (req, res) => { const { error } = await supabase.from('alertas').delete().eq('id', req.params.id); error ? res.status(500).json({ error }) : res.json({ ok: true }); });
-app.get('/api/portfolio/:userId', async (req, res) => { const { data, error } = await supabase.from('portfolio').select('*').eq('user_id', req.params.userId); error ? res.status(500).json({ error }) : res.json(data); });
+app.get('/api/portfolio/:userId', async (req, res) => {
+  const { data, error } = await supabase.from('portfolio').select('*').eq('user_id', req.params.userId).order('created_at', { ascending: true });
+  if (error) return res.status(500).json({ error });
+  // Enriquecer con logo y ySymbol desde activos.json
+  const enriched = (data || []).map(item => {
+    const activo = IA_ACTIVOS.find(a => a.s === item.simbolo);
+    return { ...item, logo: activo ? activo.logo : null, ySymbol: activo ? activo.y : item.simbolo };
+  });
+  res.json(enriched);
+});
 app.post('/api/portfolio', async (req, res) => { const { data, error } = await supabase.from('portfolio').insert({ ...req.body, created_at: new Date().toISOString() }).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.patch('/api/portfolio/:id', async (req, res) => { const { data, error } = await supabase.from('portfolio').update(req.body).eq('id', req.params.id).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.delete('/api/portfolio/:id', async (req, res) => { const { error } = await supabase.from('portfolio').delete().eq('id', req.params.id); error ? res.status(500).json({ error }) : res.json({ ok: true }); });
@@ -299,6 +308,83 @@ async function calcularSenalesIA() {
     console.log('[IA] Listo:', signals.length + '/' + IA_ACTIVOS.length, '|', al, 'alcistas', ba, 'bajistas', hc, 'alta conv');
   } catch(e) { console.error('[IA] Error:', e.message); }
 }
+
+// AUREX Pulse centralizado — misma fuente para PWA y nativa
+let _pulseCache = { score: 50, label: 'NEUTRAL', updatedAt: null, details: {} };
+
+async function calcularPulse() {
+  try {
+    // Mismas fuentes que la PWA: BTC, ETH, VIX, SP500, futuros, commodities
+    const syms = ['^VIX','^GSPC','ES=F','NQ=F','YM=F','RTY=F','GC=F','SI=F','CL=F','HG=F'];
+    const keys = ['vix','sp500','esf','nqf','ymf','rtyf','gcf','sif','clf','hgf'];
+    const raw = {};
+
+    // BTC y ETH de Binance
+    const [btcR, ethR] = await Promise.all([
+      fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r=>r.json()),
+      fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT').then(r=>r.json()),
+    ]);
+    raw.btcChg = parseFloat(btcR.priceChangePercent || 0);
+    raw.ethChg = parseFloat(ethR.priceChangePercent || 0);
+    raw.btcPrice = parseFloat(btcR.lastPrice || 0);
+
+    // Klines 90d BTC para posición
+    try {
+      const kRes = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=90');
+      const klines = await kRes.json();
+      if (Array.isArray(klines) && klines.length > 10) {
+        const closes = klines.map(k => parseFloat(k[4]));
+        const min90 = Math.min(...closes);
+        const max90 = Math.max(...closes);
+        raw.btcPos90 = max90 > min90 ? ((raw.btcPrice - min90) / (max90 - min90)) * 100 : 50;
+      }
+    } catch(e) { raw.btcPos90 = 50; }
+
+    // Yahoo data via nuestro propio proxy
+    for (let i = 0; i < syms.length; i++) {
+      try {
+        const r = await _fetchYahooIA(syms[i]);
+        if (r && r.precio && r.precio24h) {
+          raw[keys[i]] = { price: r.precio, change: r.precio24h > 0 ? ((r.precio - r.precio24h) / r.precio24h) * 100 : 0 };
+        }
+      } catch(e) {}
+    }
+
+    // Calcular score GLOBAL (misma fórmula que la PWA)
+    const pctToScore = (pct, scale) => Math.max(0, Math.min(100, 50 + pct * (scale || 5)));
+    const vixToScore = (vix) => Math.max(0, Math.min(100, 100 - (vix - 10) * 3.0));
+
+    let score = 0, weights = 0;
+
+    // BTC Pos 90d (35%)
+    if (raw.btcPos90 != null) { score += (raw.btcPos90) * 0.35; weights += 0.35; }
+    // BTC momentum (15%)
+    score += pctToScore(raw.btcChg, 3) * 0.15; weights += 0.15;
+    // ETH momentum (8%)
+    score += pctToScore(raw.ethChg, 3) * 0.08; weights += 0.08;
+    // VIX (20%)
+    if (raw.vix) { score += vixToScore(raw.vix.price) * 0.20; weights += 0.20; }
+    // SP500 (8%)
+    if (raw.sp500) { score += pctToScore(raw.sp500.change, 5) * 0.08; weights += 0.08; }
+    // ES Fut (5%)
+    if (raw.esf) { score += pctToScore(raw.esf.change, 5) * 0.05; weights += 0.05; }
+    // Oro (5%)
+    if (raw.gcf) { score += (50 - raw.gcf.change * 25) * 0.05; weights += 0.05; }
+    // Petróleo (4%)
+    if (raw.clf) { score += (50 - Math.abs(raw.clf.change) * 15) * 0.04; weights += 0.04; }
+
+    const finalScore = weights > 0 ? Math.max(0, Math.min(100, Math.round(score / weights))) : 50;
+    const label = finalScore <= 20 ? 'MIEDO EXTREMO' : finalScore <= 40 ? 'MIEDO' : finalScore <= 60 ? 'NEUTRAL' : finalScore <= 80 ? 'CODICIA' : 'CODICIA EXTREMA';
+
+    _pulseCache = { score: finalScore, label, updatedAt: new Date().toISOString(), details: raw };
+    console.log('[PULSE]', finalScore, label);
+  } catch(e) { console.error('[PULSE] Error:', e.message); }
+}
+
+calcularPulse();
+cron.schedule('*/5 * * * *', calcularPulse);
+
+app.get('/api/pulse', (req, res) => res.json(_pulseCache));
 
 // Calcular al iniciar y cada 5 min
 calcularSenalesIA();
