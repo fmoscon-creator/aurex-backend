@@ -149,32 +149,12 @@ app.get('/api/yahoo/search', async (req, res) => {
 // ─── MOTOR IA CENTRALIZADO ───────────────────────────────────────────────────
 // Calcula senales cada 5 min. PWA y app nativa leen de GET /api/ia-signals
 
-const IA_ACTIVOS = [
-  {s:'BTC',t:'cripto',y:'BTC-USD'},{s:'ETH',t:'cripto',y:'ETH-USD'},{s:'SOL',t:'cripto',y:'SOL-USD'},
-  {s:'BNB',t:'cripto',y:'BNB-USD'},{s:'XRP',t:'cripto',y:'XRP-USD'},{s:'ADA',t:'cripto',y:'ADA-USD'},
-  {s:'AVAX',t:'cripto',y:'AVAX-USD'},{s:'DOT',t:'cripto',y:'DOT-USD'},{s:'LINK',t:'cripto',y:'LINK-USD'},
-  {s:'MATIC',t:'cripto',y:'MATIC-USD'},{s:'DOGE',t:'cripto',y:'DOGE-USD'},{s:'SHIB',t:'cripto',y:'SHIB-USD'},
-  {s:'LTC',t:'cripto',y:'LTC-USD'},{s:'ATOM',t:'cripto',y:'ATOM-USD'},{s:'UNI',t:'cripto',y:'UNI-USD'},
-  {s:'FIL',t:'cripto',y:'FIL-USD'},{s:'NEAR',t:'cripto',y:'NEAR-USD'},{s:'APT',t:'cripto',y:'APT-USD'},
-  {s:'ARB',t:'cripto',y:'ARB-USD'},{s:'OP',t:'cripto',y:'OP-USD'},{s:'TON',t:'cripto',y:'TON-USD'},
-  {s:'SUI',t:'cripto',y:'SUI-USD'},{s:'TRX',t:'cripto',y:'TRX-USD'},{s:'INJ',t:'cripto',y:'INJ-USD'},
-  {s:'SEI',t:'cripto',y:'SEI-USD'},{s:'PEPE',t:'cripto',y:'PEPE-USD'},{s:'WIF',t:'cripto',y:'WIF-USD'},
-  {s:'AAVE',t:'cripto',y:'AAVE-USD'},{s:'MKR',t:'cripto',y:'MKR-USD'},{s:'CRV',t:'cripto',y:'CRV-USD'},
-  {s:'SAND',t:'cripto',y:'SAND-USD'},{s:'MANA',t:'cripto',y:'MANA-USD'},{s:'GRT',t:'cripto',y:'GRT-USD'},
-  {s:'IMX',t:'cripto',y:'IMX-USD'},{s:'HBAR',t:'cripto',y:'HBAR-USD'},{s:'XLM',t:'cripto',y:'XLM-USD'},
-  {s:'VET',t:'cripto',y:'VET-USD'},{s:'ETC',t:'cripto',y:'ETC-USD'},{s:'ALGO',t:'cripto',y:'ALGO-USD'},
-  {s:'FTM',t:'cripto',y:'FTM-USD'},{s:'THETA',t:'cripto',y:'THETA-USD'},
-  {s:'AAPL',t:'accion',y:'AAPL'},{s:'NVDA',t:'accion',y:'NVDA'},{s:'MSFT',t:'accion',y:'MSFT'},
-  {s:'TSLA',t:'accion',y:'TSLA'},{s:'META',t:'accion',y:'META'},{s:'GOOGL',t:'accion',y:'GOOGL'},
-  {s:'AMZN',t:'accion',y:'AMZN'},{s:'JPM',t:'accion',y:'JPM'},{s:'V',t:'accion',y:'V'},
-  {s:'HOOD',t:'accion',y:'HOOD'},{s:'MSTR',t:'accion',y:'MSTR'},{s:'COIN',t:'accion',y:'COIN'},
-  {s:'YPF',t:'accion',y:'YPF'},{s:'GGAL',t:'accion',y:'GGAL'},{s:'BMA',t:'accion',y:'BMA'},
-  {s:'SPY',t:'etf',y:'SPY'},{s:'QQQ',t:'etf',y:'QQQ'},{s:'IBIT',t:'etf',y:'IBIT'},
-  {s:'GLD',t:'metal',y:'GLD'},{s:'SLV',t:'metal',y:'SLV'},{s:'ALUM',t:'metal',y:'ALUM'},
-  {s:'GC=F',t:'metal',y:'GC=F'},{s:'CL=F',t:'materia_prima',y:'CL=F'},
-  {s:'JO',t:'materia_prima',y:'JO'},{s:'USO',t:'materia_prima',y:'USO'},
-  {s:'TLT',t:'bono',y:'TLT'},{s:'AGG',t:'bono',y:'AGG'},
-];
+// Lista unica de activos — fuente de verdad para todo el sistema
+const IA_ACTIVOS = require('./activos.json').map(a => ({s:a.s, t:a.tipo, y:a.ySymbol||a.s, n:a.n, logo:a.logo||'', color:a.color||'#D4A017'}));
+console.log('[IA] Activos cargados:', IA_ACTIVOS.length);
+
+// Endpoint para consultar la lista de activos (PWA y app nativa)
+app.get('/api/activos', (req, res) => res.json(IA_ACTIVOS));
 
 function _calcRSI14(closes) {
   if (closes.length < 15) return 50;
@@ -264,33 +244,41 @@ function _calcIAScore(tipo, sym, d) {
 let _iaSignalsCache = { signals: [], updatedAt: null };
 
 async function calcularSenalesIA() {
-  console.log('[IA] Calculando senales...');
+  console.log('[IA] Calculando senales para', IA_ACTIVOS.length, 'activos...');
   try {
-    const btcD = await _fetchBinanceIA('BTC');
-    const spyD = await _fetchYahooIA('SPY');
-    const goldD = await _fetchYahooIA('GC=F');
-    const oilD = await _fetchYahooIA('CL=F');
+    // Paso 1: datos de referencia (BTC, SPY, oro, petroleo)
+    const [spyD, goldD, oilD, btcD] = await Promise.all([
+      _fetchYahooIA('SPY'), _fetchYahooIA('GC=F'), _fetchYahooIA('CL=F'), _fetchYahooIA('BTC-USD')
+    ]);
     const btcC = btcD&&btcD.precio24h>0 ? (btcD.precio-btcD.precio24h)/btcD.precio24h : 0;
     const spyC = spyD&&spyD.precio24h>0 ? (spyD.precio-spyD.precio24h)/spyD.precio24h : 0;
     const pOro = goldD ? goldD.precio : 2050;
     const pPet = oilD ? oilD.precio : 80;
 
+    // Paso 2: procesar en batches de 10 para no saturar Yahoo
     const signals = [];
-    for (const act of IA_ACTIVOS) {
-      try {
-        // Usar Yahoo para todo (Binance bloqueado en Railway)
-        let d = await _fetchYahooIA(act.y || act.s);
-        if (!d || !d.precio) continue;
-        d.btcC = btcC; d.spyC = spyC; d.pOro = pOro; d.pPet = pPet;
-        signals.push(_calcIAScore(act.t, act.s, d));
-      } catch(e) { /* skip */ }
+    for (let i = 0; i < IA_ACTIVOS.length; i += 10) {
+      const batch = IA_ACTIVOS.slice(i, i + 10);
+      const results = await Promise.allSettled(
+        batch.map(async (act) => {
+          try {
+            const d = await _fetchYahooIA(act.y);
+            if (!d || !d.precio) return null;
+            d.btcC = btcC; d.spyC = spyC; d.pOro = pOro; d.pPet = pPet;
+            return _calcIAScore(act.t, act.s, d);
+          } catch(e) { return null; }
+        })
+      );
+      results.forEach(r => { if (r.status === 'fulfilled' && r.value) signals.push(r.value); });
+      // Pausa entre batches para no ser bloqueado
+      if (i + 10 < IA_ACTIVOS.length) await new Promise(r => setTimeout(r, 500));
     }
     signals.sort((a,b) => b.confianza - a.confianza);
-    _iaSignalsCache = { signals, updatedAt: new Date().toISOString() };
+    _iaSignalsCache = { signals, updatedAt: new Date().toISOString(), total: IA_ACTIVOS.length };
     const al = signals.filter(s=>s.direccion==='ALCISTA').length;
     const ba = signals.filter(s=>s.direccion==='BAJISTA').length;
     const hc = signals.filter(s=>s.direccion==='ALTA CONV-IA').length;
-    console.log('[IA] Listo:', signals.length, 'senales |', al, 'alcistas', ba, 'bajistas', hc, 'alta conv');
+    console.log('[IA] Listo:', signals.length + '/' + IA_ACTIVOS.length, '|', al, 'alcistas', ba, 'bajistas', hc, 'alta conv');
   } catch(e) { console.error('[IA] Error:', e.message); }
 }
 
