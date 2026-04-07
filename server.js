@@ -447,23 +447,18 @@ async function calcularPulse() {
     raw.macro = { score: Math.round(macroScore) };
     raw.geo = { score: Math.round(geoScore) };
 
-    // 4. BTC Sentiment (Binance + CoinGecko) — idéntico a PWA
-    try {
-      const [btcT, globG] = await Promise.all([
-        fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r=>r.json()),
-        fetch('https://api.coingecko.com/api/v3/global').then(r=>r.json()),
-      ]);
-      const priceChg = parseFloat(btcT.priceChangePercent);
-      const volB = parseFloat(btcT.quoteVolume)/1e9;
-      const dom = globG?.data?.market_cap_percentage?.btc ?? 50;
-      const avgRatio = parseFloat(btcT.weightedAvgPrice)/parseFloat(btcT.lastPrice);
-      let sc = 50;
-      sc += priceChg * 2.5;
-      sc += (volB > 2 ? 5 : volB > 1 ? 2 : -3);
-      sc += (dom > 60 ? -5 : dom > 50 ? 0 : 5);
-      sc += (avgRatio < 0.99 ? 8 : avgRatio > 1.01 ? -5 : 0);
-      raw.btcSentiment = Math.max(0, Math.min(100, Math.round(sc)));
-    } catch(e) { raw.btcSentiment = null; }
+     // 4. BTC Sentiment (solo Binance)
+     try {
+       const btcT = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r=>r.json());
+       const priceChg = parseFloat(btcT.priceChangePercent);
+       const volB = parseFloat(btcT.quoteVolume)/1e9;
+       const avgRatio = parseFloat(btcT.weightedAvgPrice)/parseFloat(btcT.lastPrice);
+       let sc = 50;
+       sc += priceChg * 2.5;
+       sc += (volB > 2 ? 5 : volB > 1 ? 2 : -3);
+       sc += (avgRatio < 0.99 ? 8 : avgRatio > 1.01 ? -5 : 0);
+       raw.btcSentiment = Math.max(0, Math.min(100, Math.round(sc)));
+     } catch(e) { raw.btcSentiment = null; }
 
     // 5. Crypto Fear & Greed (Alternative.me) — idéntico a PWA
     try {
