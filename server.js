@@ -458,7 +458,7 @@ async function calcularPulse() {
        sc += (volB > 2 ? 5 : volB > 1 ? 2 : -3);
        sc += (avgRatio < 0.99 ? 8 : avgRatio > 1.01 ? -5 : 0);
        raw.btcSentiment = Math.max(0, Math.min(100, Math.round(sc)));
-     } catch(e) { raw.btcSentiment = null; }
+     } catch(e) { console.log("[PULSE] btcSentiment ERROR:", e.message); raw.btcSentiment = null; }
 
     // 5. Crypto Fear & Greed (Alternative.me) — idéntico a PWA
     try {
