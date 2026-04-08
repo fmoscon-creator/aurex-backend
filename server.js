@@ -253,9 +253,9 @@ function _calcIAScore(tipo, sym, d) {
   // Motivos basados en variables más fuertes
   const motivos = [];
   if (Math.abs(sc.tendencia)>0.03) motivos.push(sc.tendencia>0 ? 'Tendencia alcista fuerte en 24h' : 'Tendencia bajista fuerte en 24h');
-  if (rsi>70) motivos.push('RSI en zona de sobrecompra ('+rsi+')');
-  else if (rsi<30) motivos.push('RSI en zona de sobreventa ('+rsi+')');
-  else motivos.push('RSI en zona neutral ('+rsi+')');
+  if (rsi>70) motivos.push('RSI en zona de sobrecompra ('+Math.round(rsi)+')');
+  else if (rsi<30) motivos.push('RSI en zona de sobreventa ('+Math.round(rsi)+')');
+  else motivos.push('RSI en zona neutral ('+Math.round(rsi)+')');
   if (vr>1.5) motivos.push('Volumen superior al promedio ('+vr.toFixed(1)+'x)');
   else if (vr<0.6) motivos.push('Volumen bajo respecto al promedio');
   if (sc.macd>0.03) motivos.push('MACD en cruce alcista');
@@ -265,7 +265,10 @@ function _calcIAScore(tipo, sym, d) {
   if (motivos.length < 3) motivos.push('Correlacion con mercado general ' + (sc.correlacion>0?'positiva':'negativa'));
   const escenario = dir==='ALTA CONV-IA' ? (al?'Ruptura alcista con alta conviccion':'Ruptura bajista con alta conviccion') : dir==='ALCISTA' ? 'Escenario alcista moderado' : 'Escenario bajista moderado';
 
-  return { simbolo:sym, tipo, direccion:dir, scores:sc, confianza:pp, probPrincipal:pp, score:total, estrellas:est, rsi:parseFloat(rsi.toFixed(0)), volRel:parseFloat(vr.toFixed(1)), objetivo:d.precio>0?d.precio*(1+(al?mv:-mv)):0, stop:d.precio>0?d.precio*(1+(al?-mv*0.4:mv*0.4)):0, upside:(al?1:-1)*mv*100, precio:d.precio, precio24h:d.precio24h, prob_alcista:Math.round(probAlcista), prob_bajista:Math.round(probBajista), motivos:motivos.slice(0,5), escenario_principal:escenario };
+  const objRaw = d.precio>0?d.precio*(1+(al?mv:-mv)):0;
+  const stopRaw = d.precio>0?d.precio*(1+(al?-mv*0.4:mv*0.4)):0;
+  const pDec = d.precio>=1000?2:d.precio>=1?2:d.precio>=0.01?4:d.precio>=0.0001?6:8;
+  return { simbolo:sym, tipo, direccion:dir, scores:sc, confianza:pp, probPrincipal:pp, score:total, estrellas:est, rsi:parseFloat(rsi.toFixed(0)), volRel:parseFloat(vr.toFixed(1)), objetivo:parseFloat(objRaw.toFixed(pDec)), stop:parseFloat(stopRaw.toFixed(pDec)), upside:parseFloat(((al?1:-1)*mv*100).toFixed(1)), precio:d.precio, precio24h:d.precio24h, prob_alcista:Math.round(probAlcista), prob_bajista:Math.round(probBajista), motivos:motivos.slice(0,5), escenario_principal:escenario };
 }
 
 let _iaSignalsCache = { signals: [], updatedAt: null };
