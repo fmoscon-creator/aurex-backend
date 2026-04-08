@@ -113,6 +113,28 @@ app.delete('/api/portfolio/:id', async (req, res) => { const { error } = await s
 app.get('/api/watchlist/:userId', async (req, res) => { const { data, error } = await supabase.from('watchlist').select('*').eq('user_id', req.params.userId).order('orden'); error ? res.status(500).json({ error }) : res.json(data); });
 app.post('/api/watchlist', async (req, res) => { const { data, error } = await supabase.from('watchlist').insert({ ...req.body, created_at: new Date().toISOString() }).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.delete('/api/watchlist/:id', async (req, res) => { const { error } = await supabase.from('watchlist').delete().eq('id', req.params.id); error ? res.status(500).json({ error }) : res.json({ ok: true }); });
+
+// WATCHLISTS v2 (tablas watchlists + watchlist_items)
+app.get('/api/watchlists/:userId', async (req, res) => {
+  const { data, error } = await supabase.from('watchlists').select('*').eq('user_id', req.params.userId).order('position', { ascending: true });
+  error ? res.status(500).json({ error }) : res.json(data || []);
+});
+app.get('/api/watchlists/:userId/items', async (req, res) => {
+  const { data: lists } = await supabase.from('watchlists').select('id').eq('user_id', req.params.userId);
+  if (!lists || lists.length === 0) return res.json({});
+  const result = {};
+  for (const l of lists) {
+    const { data: items } = await supabase.from('watchlist_items').select('*').eq('watchlist_id', l.id).order('position', { ascending: true });
+    result[l.id] = items || [];
+  }
+  res.json(result);
+});
+app.post('/api/watchlists', async (req, res) => { const { data, error } = await supabase.from('watchlists').insert(req.body).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
+app.post('/api/watchlist-items', async (req, res) => { const { data, error } = await supabase.from('watchlist_items').insert(req.body).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
+app.delete('/api/watchlists/:id', async (req, res) => { await supabase.from('watchlist_items').delete().eq('watchlist_id', req.params.id); const { error } = await supabase.from('watchlists').delete().eq('id', req.params.id); error ? res.status(500).json({ error }) : res.json({ ok: true }); });
+app.delete('/api/watchlist-items/:id', async (req, res) => { const { error } = await supabase.from('watchlist_items').delete().eq('id', req.params.id); error ? res.status(500).json({ error }) : res.json({ ok: true }); });
+app.patch('/api/watchlist-items/:id', async (req, res) => { const { data, error } = await supabase.from('watchlist_items').update(req.body).eq('id', req.params.id).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
+app.patch('/api/watchlists/:id', async (req, res) => { const { data, error } = await supabase.from('watchlists').update(req.body).eq('id', req.params.id).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.get('/api/usuario/:userId', async (req, res) => { const { data, error } = await supabase.from('usuarios').select('*').eq('id', req.params.userId).single(); error ? res.status(404).json({ error }) : res.json(data); });
 app.post('/api/usuario', async (req, res) => { const { data: ex } = await supabase.from('usuarios').select('*').eq('email', req.body.email).single(); if (ex) return res.json(ex); const { data, error } = await supabase.from('usuarios').insert({ ...req.body, plan: req.body.plan || 'FREE', created_at: new Date().toISOString() }).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.patch('/api/usuario/:userId', async (req, res) => { const { data, error } = await supabase.from('usuarios').update(req.body).eq('id', req.params.userId).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
