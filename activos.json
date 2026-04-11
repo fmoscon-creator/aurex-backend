@@ -1205,7 +1205,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "PAMP"
+    "ySymbol": "PAMP.BA"
   },
   {
     "s": "LOMA",
@@ -1237,7 +1237,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "TECO2"
+    "ySymbol": "TECO2.BA"
   },
   {
     "s": "TXAR",
@@ -1245,7 +1245,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "TXAR"
+    "ySymbol": "TXAR.BA"
   },
   {
     "s": "CRES",
@@ -1253,7 +1253,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "CRES"
+    "ySymbol": "CRES.BA"
   },
   {
     "s": "IRSA",
@@ -1261,7 +1261,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "IRSA"
+    "ySymbol": "IRSA.BA"
   },
   {
     "s": "BYMA",
@@ -1269,7 +1269,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "BYMA"
+    "ySymbol": "BYMA.BA"
   },
   {
     "s": "HARG",
@@ -1277,7 +1277,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "HARG"
+    "ySymbol": "HARG.BA"
   },
   {
     "s": "DGCU2",
@@ -1285,7 +1285,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "DGCU2"
+    "ySymbol": "DGCU2.BA"
   },
   {
     "s": "TRAN",
@@ -1293,7 +1293,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "TRAN"
+    "ySymbol": "TRAN.BA"
   },
   {
     "s": "EDN",
@@ -1309,7 +1309,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "COME"
+    "ySymbol": "COME.BA"
   },
   {
     "s": "AUSO",
@@ -1317,7 +1317,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "AUSO"
+    "ySymbol": "AUSO.BA"
   },
   {
     "s": "BOLT",
@@ -1333,7 +1333,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "INVJ"
+    "ySymbol": "INVJ.BA"
   },
   {
     "s": "MOLI",
@@ -1341,7 +1341,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "MOLI"
+    "ySymbol": "MOLI.BA"
   },
   {
     "s": "SAMI",
@@ -1349,7 +1349,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "SAMI"
+    "ySymbol": "SAMI.BA"
   },
   {
     "s": "RICH",
@@ -1357,7 +1357,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "RICH"
+    "ySymbol": "RICH.BA"
   },
   {
     "s": "METR",
@@ -1365,7 +1365,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "METR"
+    "ySymbol": "METR.BA"
   },
   {
     "s": "DESP",
@@ -1429,7 +1429,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "BRFS"
+    "ySymbol": "BRFS3.SA"
   },
   {
     "s": "VTEX",
@@ -1765,7 +1765,7 @@
     "tipo": "accion",
     "logo": null,
     "color": null,
-    "ySymbol": "INGA"
+    "ySymbol": "ITUB4.SA"
   },
   {
     "s": "TM",
@@ -2669,7 +2669,7 @@
     "tipo": "futuro",
     "logo": null,
     "color": null,
-    "ySymbol": "VX=F"
+    "ySymbol": "^VIX"
   },
   {
     "s": "DX=F",
@@ -2677,7 +2677,7 @@
     "tipo": "futuro",
     "logo": null,
     "color": null,
-    "ySymbol": "DX=F"
+    "ySymbol": "DX-Y.NYB"
   },
   {
     "s": "6E=F",
@@ -2757,7 +2757,7 @@
     "tipo": "bono",
     "logo": null,
     "color": null,
-    "ySymbol": "AL30"
+    "ySymbol": "AL30=F"
   },
   {
     "s": "GD30",
@@ -2765,7 +2765,7 @@
     "tipo": "bono",
     "logo": null,
     "color": null,
-    "ySymbol": "GD30"
+    "ySymbol": "GD30=F"
   },
   {
     "s": "AL35",
@@ -2773,7 +2773,7 @@
     "tipo": "bono",
     "logo": null,
     "color": null,
-    "ySymbol": "AL35"
+    "ySymbol": "AL35=F"
   },
   {
     "s": "EURUSD=X",
