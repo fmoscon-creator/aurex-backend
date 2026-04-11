@@ -1,1 +1,2318 @@
-[{"s":"BTC","n":"Bitcoin","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/1/small/bitcoin.png","color":"#F7931A","ySymbol":"BTC-USD"},{"s":"ETH","n":"Ethereum","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/279/small/ethereum.png","color":"#627EEA","ySymbol":"ETH-USD"},{"s":"SOL","n":"Solana","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/4128/small/solana.png","color":"#9945FF","ySymbol":"SOL-USD"},{"s":"BNB","n":"BNB","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png","color":"#F3BA2F","ySymbol":"BNB-USD"},{"s":"XRP","n":"XRP","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png","color":"#00AAE4","ySymbol":"XRP-USD"},{"s":"ADA","n":"Cardano","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/975/small/cardano.png","color":"#0033AD","ySymbol":"ADA-USD"},{"s":"AVAX","n":"Avalanche","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png","color":"#E84142","ySymbol":"AVAX-USD"},{"s":"DOT","n":"Polkadot","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/12171/small/polkadot.png","color":"#E6007A","ySymbol":"DOT-USD"},{"s":"LINK","n":"Chainlink","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png","color":"#2A5ADA","ySymbol":"LINK-USD"},{"s":"MATIC","n":"Polygon","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png","color":"#8247E5","ySymbol":"MATIC-USD"},{"s":"DOGE","n":"Dogecoin","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/5/small/dogecoin.png","color":"#C2A633","ySymbol":"DOGE-USD"},{"s":"SHIB","n":"Shiba Inu","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/11939/small/shiba.png","color":"#E3003A","ySymbol":"SHIB-USD"},{"s":"LTC","n":"Litecoin","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/2/small/litecoin.png","color":"#BFBBBB","ySymbol":"LTC-USD"},{"s":"ATOM","n":"Cosmos","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png","color":"#6F7390","ySymbol":"ATOM-USD"},{"s":"UNI","n":"Uniswap","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/12504/small/uni.jpg","color":"#FF007A","ySymbol":"UNI-USD"},{"s":"FIL","n":"Filecoin","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/12817/small/filecoin.png","color":"#42C1CA","ySymbol":"FIL-USD"},{"s":"NEAR","n":"NEAR Protocol","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/10365/small/near.jpg","color":"#00C08B","ySymbol":"NEAR-USD"},{"s":"APT","n":"Aptos","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/26455/small/aptos_round.png","color":"#00D395","ySymbol":"APT-USD"},{"s":"ARB","n":"Arbitrum","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg","color":"#12AAFF","ySymbol":"ARB-USD"},{"s":"OP","n":"Optimism","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/25244/small/Optimism.png","color":"#FF0420","ySymbol":"OP-USD"},{"s":"TON","n":"Toncoin","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/17980/small/ton_symbol.png","color":"#0088CC","ySymbol":"TON-USD"},{"s":"SUI","n":"Sui","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/26375/small/sui_asset.jpeg","color":"#6FBCF0","ySymbol":"SUI-USD"},{"s":"TRX","n":"TRON","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/1094/small/tron-logo.png","color":"#FF0013","ySymbol":"TRX-USD"},{"s":"INJ","n":"Injective","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/12882/small/Secondary_Symbol.png","color":"#00B2FF","ySymbol":"INJ-USD"},{"s":"SEI","n":"Sei","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/28205/small/Sei_Logo_-_Transparent.png","color":"#9C3A7A","ySymbol":"SEI-USD"},{"s":"PEPE","n":"Pepe","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg","color":"#00B140","ySymbol":"PEPE-USD"},{"s":"WIF","n":"Dogwifhat","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/33566/small/dogwifhat.jpg","color":"#C29B67","ySymbol":"WIF-USD"},{"s":"JUP","n":"Jupiter","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/34285/large/jup.png","color":"#C8853A","ySymbol":"JUP-USD"},{"s":"ENA","n":"Ethena","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/36530/small/ethena.png","color":"#9B59B6","ySymbol":"ENA-USD"},{"s":"BONK","n":"Bonk","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/28600/small/bonk.jpg","color":"#F4A418","ySymbol":"BONK-USD"},{"s":"FTM","n":"Fantom","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/4001/small/Fantom_round.png","color":"#1969FF","ySymbol":"FTM-USD"},{"s":"AAVE","n":"Aave","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/12645/small/AAVE.png","color":"#B6509E","ySymbol":"AAVE-USD"},{"s":"MKR","n":"Maker","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/1364/small/Mark_Maker.png","color":"#1AAB9B","ySymbol":"MKR-USD"},{"s":"CRV","n":"Curve","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/12124/small/Curve.png","color":"#D9002E","ySymbol":"CRV-USD"},{"s":"SNX","n":"Synthetix","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/3406/small/SNX.png","color":"#1E1A31","ySymbol":"SNX-USD"},{"s":"SAND","n":"The Sandbox","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/12129/small/sandbox_logo.jpg","color":"#00ADEF","ySymbol":"SAND-USD"},{"s":"MANA","n":"Decentraland","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/878/small/decentraland-mana.png","color":"#FF2D55","ySymbol":"MANA-USD"},{"s":"AXS","n":"Axie Infinity","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/13029/small/axie_infinity_logo.png","color":"#0055D5","ySymbol":"AXS-USD"},{"s":"GRT","n":"The Graph","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/13397/small/Graph_Token.png","color":"#6747ED","ySymbol":"GRT-USD"},{"s":"LDO","n":"Lido DAO","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/13573/small/Lido_DAO.png","color":"#F27B4D","ySymbol":"LDO-USD"},{"s":"IMX","n":"Immutable X","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/17233/small/immutableX-symbol-BLK-RGB.png","color":"#00C3F9","ySymbol":"IMX-USD"},{"s":"RUNE","n":"THORChain","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/6595/small/Rune200x200.png","color":"#33FF99","ySymbol":"RUNE-USD"},{"s":"CFX","n":"Conflux","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/13079/small/3vuYMbjN.png","color":"#1FCFCF","ySymbol":"CFX-USD"},{"s":"HBAR","n":"Hedera","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/3688/small/hbar.png","color":"#222222","ySymbol":"HBAR-USD"},{"s":"XLM","n":"Stellar","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/100/small/Stellar_symbol_black_RGB.png","color":"#000000","ySymbol":"XLM-USD"},{"s":"VET","n":"VeChain","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/1167/small/VET_Token_Icon.png","color":"#15BDFF","ySymbol":"VET-USD"},{"s":"ETC","n":"Ethereum Classic","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/453/small/ethereum-classic-logo.png","color":"#328332","ySymbol":"ETC-USD"},{"s":"ALGO","n":"Algorand","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/4380/small/download.png","color":"#000000","ySymbol":"ALGO-USD"},{"s":"EGLD","n":"MultiversX","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/12335/small/egld-token-logo.png","color":"#1B46C2","ySymbol":"EGLD-USD"},{"s":"THETA","n":"Theta Network","tipo":"cripto","logo":"https://assets.coingecko.com/coins/images/2538/small/theta-token-logo.png","color":"#2AB8E6","ySymbol":"THETA-USD"},{"s":"AAPL","n":"Apple","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/AAPL.png","icon":"A","color":"#555","ySymbol":"AAPL"},{"s":"NVDA","n":"NVIDIA","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/NVDA.png","icon":"N","color":"#76B900","ySymbol":"NVDA"},{"s":"MSFT","n":"Microsoft","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/MSFT.png","icon":"M","color":"#00A4EF","ySymbol":"MSFT"},{"s":"GOOGL","n":"Alphabet A","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/GOOGL.png","icon":"G","color":"#4285F4","ySymbol":"GOOGL"},{"s":"GOOG","n":"Alphabet C","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/GOOG.png","icon":"G","color":"#34A853","ySymbol":"GOOG"},{"s":"AMZN","n":"Amazon","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/AMZN.png","icon":"A","color":"#FF9900","ySymbol":"AMZN"},{"s":"META","n":"Meta","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/META.png","icon":"M","color":"#1877F2","ySymbol":"META"},{"s":"TSLA","n":"Tesla","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/TSLA.png","icon":"T","color":"#CC0000","ySymbol":"TSLA"},{"s":"AVGO","n":"Broadcom","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/AVGO.png","icon":"A","color":"#CC0000","ySymbol":"AVGO"},{"s":"ORCL","n":"Oracle","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/ORCL.png","icon":"O","color":"#C74634","ySymbol":"ORCL"},{"s":"JPM","n":"JPMorgan","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/JPM.png","icon":"J","color":"#003087","ySymbol":"JPM"},{"s":"V","n":"Visa","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/V.png","icon":"V","color":"#1A1F71","ySymbol":"V"},{"s":"MA","n":"Mastercard","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/MA.png","icon":"M","color":"#EB001B","ySymbol":"MA"},{"s":"BAC","n":"Bank of America","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BAC.png","icon":"B","color":"#E31837","ySymbol":"BAC"},{"s":"WFC","n":"Wells Fargo","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/WFC.png","icon":"W","color":"#CC0000","ySymbol":"WFC"},{"s":"GS","n":"Goldman Sachs","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/GS.png","icon":"G","color":"#003087","ySymbol":"GS"},{"s":"MS","n":"Morgan Stanley","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/MS.png","icon":"M","color":"#003087","ySymbol":"MS"},{"s":"AXP","n":"AmEx","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/AXP.png","icon":"A","color":"#016FD0","ySymbol":"AXP"},{"s":"BLK","n":"BlackRock","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BLK.png","icon":"B","color":"#003087","ySymbol":"BLK"},{"s":"SCHW","n":"Charles Schwab","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SCHW.png","icon":"S","color":"#003087","ySymbol":"SCHW"},{"s":"LLY","n":"Eli Lilly","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/LLY.png","icon":"L","color":"#CC0000","ySymbol":"LLY"},{"s":"UNH","n":"UnitedHealth","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/UNH.png","icon":"U","color":"#003087","ySymbol":"UNH"},{"s":"JNJ","n":"J&J","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/JNJ.png","icon":"J","color":"#CC0000","ySymbol":"JNJ"},{"s":"MRK","n":"Merck","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/MRK.png","icon":"M","color":"#009999","ySymbol":"MRK"},{"s":"ABBV","n":"AbbVie","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/ABBV.png","icon":"A","color":"#003087","ySymbol":"ABBV"},{"s":"PFE","n":"Pfizer","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/PFE.png","icon":"P","color":"#0044CC","ySymbol":"PFE"},{"s":"TMO","n":"Thermo Fisher","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/TMO.png","icon":"T","color":"#003087","ySymbol":"TMO"},{"s":"ABT","n":"Abbott Labs","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/ABT.png","icon":"A","color":"#003087","ySymbol":"ABT"},{"s":"DHR","n":"Danaher","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/DHR.png","icon":"D","color":"#003087","ySymbol":"DHR"},{"s":"BMY","n":"Bristol Myers","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BMY.png","icon":"B","color":"#003087","ySymbol":"BMY"},{"s":"COST","n":"Costco","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/COST.png","icon":"C","color":"#005DAA","ySymbol":"COST"},{"s":"WMT","n":"Walmart","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/WMT.png","icon":"W","color":"#0071CE","ySymbol":"WMT"},{"s":"HD","n":"Home Depot","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/HD.png","icon":"H","color":"#F96302","ySymbol":"HD"},{"s":"PG","n":"Procter Gamble","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/PG.png","icon":"P","color":"#003087","ySymbol":"PG"},{"s":"KO","n":"Coca-Cola","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/KO.png","icon":"K","color":"#F40009","ySymbol":"KO"},{"s":"PEP","n":"PepsiCo","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/PEP.png","icon":"P","color":"#004B93","ySymbol":"PEP"},{"s":"MCD","n":"McDonalds","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/MCD.png","icon":"M","color":"#FFC72C","ySymbol":"MCD"},{"s":"SBUX","n":"Starbucks","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SBUX.png","icon":"S","color":"#00704A","ySymbol":"SBUX"},{"s":"NKE","n":"Nike","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/NKE.png","icon":"N","color":"#000000","ySymbol":"NKE"},{"s":"TGT","n":"Target","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/TGT.png","icon":"T","color":"#CC0000","ySymbol":"TGT"},{"s":"AMD","n":"AMD","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/AMD.png","icon":"A","color":"#ED1C24","ySymbol":"AMD"},{"s":"INTC","n":"Intel","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/INTC.png","icon":"I","color":"#0071C5","ySymbol":"INTC"},{"s":"QCOM","n":"Qualcomm","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/QCOM.png","icon":"Q","color":"#3253DC","ySymbol":"QCOM"},{"s":"TXN","n":"Texas Instruments","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/TXN.png","icon":"T","color":"#CC0000","ySymbol":"TXN"},{"s":"AMAT","n":"Applied Materials","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/AMAT.png","icon":"A","color":"#003087","ySymbol":"AMAT"},{"s":"MU","n":"Micron","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/MU.png","icon":"M","color":"#003087","ySymbol":"MU"},{"s":"LRCX","n":"Lam Research","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/LRCX.png","icon":"L","color":"#003087","ySymbol":"LRCX"},{"s":"NOW","n":"ServiceNow","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/NOW.png","icon":"N","color":"#81B5A1","ySymbol":"NOW"},{"s":"CRM","n":"Salesforce","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/CRM.png","icon":"C","color":"#00A1E0","ySymbol":"CRM"},{"s":"ADBE","n":"Adobe","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/ADBE.png","icon":"A","color":"#FF0000","ySymbol":"ADBE"},{"s":"NFLX","n":"Netflix","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/NFLX.png","icon":"N","color":"#E50914","ySymbol":"NFLX"},{"s":"DIS","n":"Disney","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/DIS.png","icon":"D","color":"#113CCF","ySymbol":"DIS"},{"s":"CMCSA","n":"Comcast","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/CMCSA.png","icon":"C","color":"#CC0000","ySymbol":"CMCSA"},{"s":"SPOT","n":"Spotify","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SPOT.png","icon":"S","color":"#1DB954","ySymbol":"SPOT"},{"s":"RBLX","n":"Roblox","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/RBLX.png","icon":"R","color":"#CC0000","ySymbol":"RBLX"},{"s":"COIN","n":"Coinbase","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/COIN.png","icon":"C","color":"#0052FF","ySymbol":"COIN"},{"s":"HOOD","n":"Robinhood","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/HOOD.png","icon":"H","color":"#00C805","ySymbol":"HOOD"},{"s":"PYPL","n":"PayPal","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/PYPL.png","icon":"P","color":"#003087","ySymbol":"PYPL"},{"s":"SQ","n":"Block (Square)","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SQ.png","icon":"S","color":"#000000","ySymbol":"SQ"},{"s":"MSTR","n":"MicroStrategy","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/MSTR.png","icon":"M","color":"#CC0000","ySymbol":"MSTR"},{"s":"MARA","n":"Marathon Digital","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/MARA.png","icon":"M","color":"#F7931A","ySymbol":"MARA"},{"s":"RIOT","n":"Riot Platforms","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/RIOT.png","icon":"R","color":"#CC0000","ySymbol":"RIOT"},{"s":"XOM","n":"ExxonMobil","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/XOM.png","icon":"X","color":"#003087","ySymbol":"XOM"},{"s":"CVX","n":"Chevron","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/CVX.png","icon":"C","color":"#009DD9","ySymbol":"CVX"},{"s":"COP","n":"ConocoPhillips","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/COP.png","icon":"C","color":"#CC0000","ySymbol":"COP"},{"s":"SLB","n":"Schlumberger","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SLB.png","icon":"S","color":"#003087","ySymbol":"SLB"},{"s":"EOG","n":"EOG Resources","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/EOG.png","icon":"E","color":"#003087","ySymbol":"EOG"},{"s":"F","n":"Ford","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/F.png","icon":"F","color":"#003087","ySymbol":"F"},{"s":"GM","n":"General Motors","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/GM.png","icon":"G","color":"#003087","ySymbol":"GM"},{"s":"RIVN","n":"Rivian","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/RIVN.png","icon":"R","color":"#52D48E","ySymbol":"RIVN"},{"s":"LCID","n":"Lucid Motors","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/LCID.png","icon":"L","color":"#CC0000","ySymbol":"LCID"},{"s":"PLTR","n":"Palantir","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/PLTR.png","icon":"P","color":"#000000","ySymbol":"PLTR"},{"s":"ARM","n":"ARM Holdings","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/ARM.png","icon":"A","color":"#0091BD","ySymbol":"ARM"},{"s":"SMCI","n":"Super Micro","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SMCI.png","icon":"S","color":"#003087","ySymbol":"SMCI"},{"s":"AI","n":"C3.ai","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/AI.png","icon":"A","color":"#003087","ySymbol":"AI"},{"s":"SOUN","n":"SoundHound AI","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SOUN.png","icon":"S","color":"#CC0000","ySymbol":"SOUN"},{"s":"UBER","n":"Uber","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/UBER.png","icon":"U","color":"#000000","ySymbol":"UBER"},{"s":"LYFT","n":"Lyft","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/LYFT.png","icon":"L","color":"#FF00BF","ySymbol":"LYFT"},{"s":"ABNB","n":"Airbnb","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/ABNB.png","icon":"A","color":"#FF5A5F","ySymbol":"ABNB"},{"s":"DASH","n":"DoorDash","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/DASH.png","icon":"D","color":"#FF3008","ySymbol":"DASH"},{"s":"T","n":"AT&T","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/T.png","icon":"T","color":"#00A8E0","ySymbol":"T"},{"s":"VZ","n":"Verizon","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/VZ.png","icon":"V","color":"#CD040B","ySymbol":"VZ"},{"s":"TMUS","n":"T-Mobile","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/TMUS.png","icon":"T","color":"#E20074","ySymbol":"TMUS"},{"s":"BA","n":"Boeing","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BA.png","icon":"B","color":"#003087","ySymbol":"BA"},{"s":"CAT","n":"Caterpillar","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/CAT.png","icon":"C","color":"#FFCD11","ySymbol":"CAT"},{"s":"DE","n":"John Deere","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/DE.png","icon":"D","color":"#367C2B","ySymbol":"DE"},{"s":"GE","n":"GE Aerospace","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/GE.png","icon":"G","color":"#003087","ySymbol":"GE"},{"s":"RTX","n":"RTX Corp","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/RTX.png","icon":"R","color":"#003087","ySymbol":"RTX"},{"s":"LMT","n":"Lockheed Martin","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/LMT.png","icon":"L","color":"#003087","ySymbol":"LMT"},{"s":"AMT","n":"American Tower","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/AMT.png","icon":"A","color":"#003087","ySymbol":"AMT"},{"s":"PLD","n":"Prologis","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/PLD.png","icon":"P","color":"#003087","ySymbol":"PLD"},{"s":"BRK-B","n":"Berkshire B","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BRK-B.png","icon":"B","color":"#4A4A4A","ySymbol":"BRK-B"},{"s":"BABA","n":"Alibaba ADR","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BABA.png","icon":"A","color":"#FF6A00","ySymbol":"BABA"},{"s":"SPGI","n":"S&P Global","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SPGI.png","icon":"S","color":"#003087","ySymbol":"SPGI"},{"s":"BX","n":"Blackstone","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BX.png","icon":"B","color":"#003087","ySymbol":"BX"},{"s":"NDAQ","n":"Nasdaq Inc","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/NDAQ.png","icon":"N","color":"#003087","ySymbol":"NDAQ"},{"s":"YPF","n":"YPF Argentina","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/YPF.png","icon":"Y","color":"#005FAD","ySymbol":"YPF"},{"s":"PBR","n":"Petrobras","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/PBR.png","icon":"P","color":"#009B3A","ySymbol":"PBR"},{"s":"VALE","n":"Vale","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/VALE.png","icon":"V","color":"#009B3A","ySymbol":"VALE"},{"s":"MELI","n":"MercadoLibre","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/MELI.png","icon":"M","color":"#FFE600","ySymbol":"MELI"},{"s":"GLOB","n":"Globant","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/GLOB.png","icon":"G","color":"#00A651","ySymbol":"GLOB"},{"s":"NU","n":"Nubank","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/NU.png","icon":"N","color":"#8A05BE","ySymbol":"NU"},{"s":"ITUB","n":"Itau Unibanco","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/ITUB.png","icon":"I","color":"#F48024","ySymbol":"ITUB"},{"s":"BBD","n":"Bradesco","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BBD.png","icon":"B","color":"#CC0000","ySymbol":"BBD"},{"s":"SQM","n":"SQM Chile","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SQM.png","icon":"S","color":"#003087","ySymbol":"SQM"},{"s":"ABEV","n":"Ambev","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/ABEV.png","icon":"A","color":"#F4A700","ySymbol":"ABEV"},{"s":"CIB","n":"Bancolombia","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/CIB.png","icon":"C","color":"#FFCC00","ySymbol":"CIB"},{"s":"TV","n":"Televisa","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/TV.png","icon":"T","color":"#003087","ySymbol":"TV"},{"s":"ERJ","n":"Embraer","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/ERJ.png","icon":"E","color":"#003087","ySymbol":"ERJ"},{"s":"DESP","n":"Despegar","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/DESP.png","icon":"D","color":"#003087","ySymbol":"DESP"},{"s":"LREN3","n":"Lojas Renner","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/LREN3.png","icon":"L","color":"#CC0000","ySymbol":"LRENY"},{"s":"VIVA","n":"Viva Aerobus","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/VIVA.png","icon":"V","color":"#CC0000","ySymbol":"VIVA"},{"s":"GGAL","n":"Galicia Arg","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/GGAL.png","icon":"G","color":"#003087","ySymbol":"GGAL"},{"s":"BMA","n":"Banco Macro","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BMA.png","icon":"B","color":"#003087","ySymbol":"BMA"},{"s":"CEPU","n":"Central Puerto","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/CEPU.png","icon":"C","color":"#003087","ySymbol":"CEPU"},{"s":"PAMP","n":"Pampa Energia","tipo":"accion","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNDMDM5MkInLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+UEE8L3RleHQ+PC9zdmc+","icon":"P","color":"#003087","ySymbol":"PAM"},{"s":"LOMA","n":"Loma Negra","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/LOMA.png","icon":"L","color":"#CC0000","ySymbol":"LOMA"},{"s":"ARCO","n":"Arcos Dorados","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/ARCO.png","icon":"A","color":"#FFC72C","ySymbol":"ARCO"},{"s":"XPEV","n":"XPeng (China)","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/XPEV.png","icon":"X","color":"#CC0000","ySymbol":"XPEV"},{"s":"VTEX","n":"VTEX","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/VTEX.png","icon":"V","color":"#CC0000","ySymbol":"VTEX"},{"s":"BRFS","n":"BRF Foods","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BRFS.png","icon":"B","color":"#003087","ySymbol":"BRFS"},{"s":"ASML","n":"ASML","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/ASML.png","icon":"A","color":"#003087","ySymbol":"ASML"},{"s":"SAP","n":"SAP","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SAP.png","icon":"S","color":"#1872B4","ySymbol":"SAP"},{"s":"NVS","n":"Novartis","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/NVS.png","icon":"N","color":"#CC0000","ySymbol":"NVS"},{"s":"NSRGY","n":"Nestle","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/NSRGY.png","icon":"N","color":"#003087","ySymbol":"NSRGY"},{"s":"RHHBY","n":"Roche","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/RHHBY.png","icon":"R","color":"#CC0000","ySymbol":"RHHBY"},{"s":"VWAGY","n":"Volkswagen","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/VWAGY.png","icon":"V","color":"#003087","ySymbol":"VWAGY"},{"s":"SIEGY","n":"Siemens","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SIEGY.png","icon":"S","color":"#009999","ySymbol":"SIEGY"},{"s":"SHEL","n":"Shell","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SHEL.png","icon":"S","color":"#DD1D21","ySymbol":"SHEL"},{"s":"BP","n":"BP","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BP.png","icon":"B","color":"#009900","ySymbol":"BP"},{"s":"GSK","n":"GSK","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/GSK.png","icon":"G","color":"#F36200","ySymbol":"GSK"},{"s":"UL","n":"Unilever","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/UL.png","icon":"U","color":"#003087","ySymbol":"UL"},{"s":"RIO","n":"Rio Tinto","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/RIO.png","icon":"R","color":"#CC0000","ySymbol":"RIO"},{"s":"BHP","n":"BHP Group","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BHP.png","icon":"B","color":"#CC0000","ySymbol":"BHP"},{"s":"AZN","n":"AstraZeneca","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/AZN.png","icon":"A","color":"#CC0000","ySymbol":"AZN"},{"s":"HSBC","n":"HSBC","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/HSBC.png","icon":"H","color":"#CC0000","ySymbol":"HSBC"},{"s":"STM","n":"STMicroelectronics","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/STM.png","icon":"S","color":"#003087","ySymbol":"STM"},{"s":"EADSF","n":"Airbus","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/EADSF.png","icon":"A","color":"#003087","ySymbol":"EADSF"},{"s":"IDEXY","n":"Inditex/Zara","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/IDEXY.png","icon":"I","color":"#003087","ySymbol":"IDEXY"},{"s":"LVMUY","n":"LVMH","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/LVMUY.png","icon":"L","color":"#8B7355","ySymbol":"LVMUY"},{"s":"HNNMY","n":"Hennes & Mauritz","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/HNNMY.png","icon":"H","color":"#CC0000","ySymbol":"HNNMY"},{"s":"ALIZF","n":"Allianz","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/ALIZF.png","icon":"A","color":"#003087","ySymbol":"ALIZF"},{"s":"BAYZF","n":"Bayer","tipo":"accion","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMxREE0NjInLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Qlk8L3RleHQ+PC9zdmc+","icon":"B","color":"#10384F","ySymbol":"BAYRY"},{"s":"SAN","n":"Santander","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SAN.png","icon":"S","color":"#CC0000","ySymbol":"SAN"},{"s":"BBVA","n":"BBVA","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BBVA.png","icon":"B","color":"#004481","ySymbol":"BBVA"},{"s":"INGA","n":"ING Group","tipo":"accion","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMyN0FFNjAnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+SU48L3RleHQ+PC9zdmc+","icon":"I","color":"#FF6200","ySymbol":"ING"},{"s":"TSM","n":"TSMC","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/TSM.png","icon":"T","color":"#003087","ySymbol":"TSM"},{"s":"TM","n":"Toyota","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/TM.png","icon":"T","color":"#CC0000","ySymbol":"TM"},{"s":"SONY","n":"Sony","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SONY.png","icon":"S","color":"#003087","ySymbol":"SONY"},{"s":"HMC","n":"Honda","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/HMC.png","icon":"H","color":"#CC0000","ySymbol":"HMC"},{"s":"NTDOY","n":"Nintendo","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/NTDOY.png","icon":"N","color":"#CC0000","ySymbol":"NTDOY"},{"s":"BIDU","n":"Baidu","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/BIDU.png","icon":"B","color":"#2932E1","ySymbol":"BIDU"},{"s":"JD","n":"JD.com","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/JD.png","icon":"J","color":"#CC0000","ySymbol":"JD"},{"s":"PDD","n":"PDD Holdings","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/PDD.png","icon":"P","color":"#CC0000","ySymbol":"PDD"},{"s":"NTES","n":"NetEase","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/NTES.png","icon":"N","color":"#CC0000","ySymbol":"NTES"},{"s":"SFTBY","n":"SoftBank","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SFTBY.png","icon":"S","color":"#CC0000","ySymbol":"SFTBY"},{"s":"INFY","n":"Infosys","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/INFY.png","icon":"I","color":"#003087","ySymbol":"INFY"},{"s":"HDB","n":"HDFC Bank","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/HDB.png","icon":"H","color":"#004A97","ySymbol":"HDB"},{"s":"IBN","n":"ICICI Bank","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/IBN.png","icon":"I","color":"#CC0000","ySymbol":"IBN"},{"s":"WIT","n":"Wipro","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/WIT.png","icon":"W","color":"#003087","ySymbol":"WIT"},{"s":"RELX","n":"Reliance Industries","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/RELX.png","icon":"R","color":"#003087","ySymbol":"RELIANCE.NS"},{"s":"SE","n":"Sea Limited","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/SE.png","icon":"S","color":"#000000","ySymbol":"SE"},{"s":"GRAB","n":"Grab","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/GRAB.png","icon":"G","color":"#00B14F","ySymbol":"GRAB"},{"s":"GOTO","n":"GoTo Indonesia","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/GOTO.png","icon":"G","color":"#CC0000","ySymbol":"GOTO-USD"},{"s":"KPELY","n":"Korea Electric","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/KPELY.png","icon":"K","color":"#003087","ySymbol":"KEP"},{"s":"LG","n":"LG Electronics","tipo":"accion","logo":"https://financialmodelingprep.com/image-stock/LG.png","icon":"L","color":"#CC0000","ySymbol":"LGEIY"},{"s":"SPY","n":"S&P 500 ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/SPY.png","icon":"S","color":"#003087","ySymbol":"SPY"},{"s":"QQQ","n":"Nasdaq 100 ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/QQQ.png","icon":"Q","color":"#003087","ySymbol":"QQQ"},{"s":"DIA","n":"Dow Jones ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/DIA.png","icon":"D","color":"#003087","ySymbol":"DIA"},{"s":"IWM","n":"Russell 2000","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/IWM.png","icon":"I","color":"#003087","ySymbol":"IWM"},{"s":"VTI","n":"Total Market","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/VTI.png","icon":"V","color":"#003087","ySymbol":"VTI"},{"s":"VOO","n":"Vanguard S&P 500","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/VOO.png","icon":"V","color":"#003087","ySymbol":"VOO"},{"s":"ARKK","n":"ARK Innovation","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/ARKK.png","icon":"A","color":"#00B0D7","ySymbol":"ARKK"},{"s":"ARKG","n":"ARK Genomics","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/ARKG.png","icon":"A","color":"#00B0D7","ySymbol":"ARKG"},{"s":"XLF","n":"Financials ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/XLF.png","icon":"X","color":"#003087","ySymbol":"XLF"},{"s":"XLE","n":"Energy ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/XLE.png","icon":"X","color":"#333","ySymbol":"XLE"},{"s":"XLK","n":"Tech ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/XLK.png","icon":"X","color":"#003087","ySymbol":"XLK"},{"s":"XLV","n":"Health ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/XLV.png","icon":"X","color":"#CC0000","ySymbol":"XLV"},{"s":"XLI","n":"Industrial ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/XLI.png","icon":"X","color":"#003087","ySymbol":"XLI"},{"s":"XLU","n":"Utilities ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/XLU.png","icon":"X","color":"#003087","ySymbol":"XLU"},{"s":"XLB","n":"Materials ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/XLB.png","icon":"X","color":"#003087","ySymbol":"XLB"},{"s":"XLP","n":"Consumer Stap ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/XLP.png","icon":"X","color":"#003087","ySymbol":"XLP"},{"s":"GDX","n":"Gold Miners ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/GDX.png","icon":"G","color":"#D4A017","ySymbol":"GDX"},{"s":"GDXJ","n":"Jr Gold Miners","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/GDXJ.png","icon":"G","color":"#D4A017","ySymbol":"GDXJ"},{"s":"IBIT","n":"iShares Bitcoin","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/IBIT.png","icon":"I","color":"#F7931A","ySymbol":"IBIT"},{"s":"FBTC","n":"Fidelity Bitcoin","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/FBTC.png","icon":"F","color":"#F7931A","ySymbol":"FBTC"},{"s":"GBTC","n":"Grayscale BTC","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/GBTC.png","icon":"G","color":"#F7931A","ySymbol":"GBTC"},{"s":"GLD","n":"SPDR Gold","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/GLD.png","icon":"G","color":"#D4A017","ySymbol":"GLD"},{"s":"SLV","n":"iShares Silver","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/SLV.png","icon":"S","color":"#C0C0C0","ySymbol":"SLV"},{"s":"IAU","n":"iShares Gold","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/IAU.png","icon":"I","color":"#D4A017","ySymbol":"IAU"},{"s":"EWZ","n":"Brazil ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/EWZ.png","icon":"E","color":"#009B3A","ySymbol":"EWZ"},{"s":"EWJ","n":"Japan ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/EWJ.png","icon":"E","color":"#CC0000","ySymbol":"EWJ"},{"s":"FXI","n":"China ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/FXI.png","icon":"F","color":"#CC0000","ySymbol":"FXI"},{"s":"EEM","n":"Emerging Markets","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/EEM.png","icon":"E","color":"#003087","ySymbol":"EEM"},{"s":"EWW","n":"Mexico ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/EWW.png","icon":"E","color":"#006847","ySymbol":"EWW"},{"s":"EWY","n":"Korea ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/EWY.png","icon":"E","color":"#003087","ySymbol":"EWY"},{"s":"EWG","n":"Germany ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/EWG.png","icon":"E","color":"#003087","ySymbol":"EWG"},{"s":"EWU","n":"UK ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/EWU.png","icon":"E","color":"#CC0000","ySymbol":"EWU"},{"s":"EWQ","n":"France ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/EWQ.png","icon":"E","color":"#003087","ySymbol":"EWQ"},{"s":"SOXX","n":"Semiconductors","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/SOXX.png","icon":"S","color":"#003087","ySymbol":"SOXX"},{"s":"XBI","n":"Biotech ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/XBI.png","icon":"X","color":"#003087","ySymbol":"XBI"},{"s":"KWEB","n":"China Internet","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/KWEB.png","icon":"K","color":"#CC0000","ySymbol":"KWEB"},{"s":"VNQ","n":"Real Estate ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/VNQ.png","icon":"V","color":"#003087","ySymbol":"VNQ"},{"s":"TAN","n":"Solar ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/TAN.png","icon":"T","color":"#FF9900","ySymbol":"TAN"},{"s":"ICLN","n":"Clean Energy ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/ICLN.png","icon":"I","color":"#00A651","ySymbol":"ICLN"},{"s":"BOTZ","n":"Robotics AI ETF","tipo":"etf","logo":"https://financialmodelingprep.com/image-stock/BOTZ.png","icon":"B","color":"#003087","ySymbol":"BOTZ"},{"s":"ES=F","n":"S&P 500 Futuro","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMxQTZCM0MnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+RVM8L3RleHQ+PC9zdmc+","icon":"E","color":"#003087","ySymbol":"ES=F"},{"s":"NQ=F","n":"Nasdaq Futuro","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwQTY2QzInLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+TlE8L3RleHQ+PC9zdmc+","icon":"N","color":"#003087","ySymbol":"NQ=F"},{"s":"YM=F","n":"Dow Futuro","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwMDI4NjgnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+RFc8L3RleHQ+PC9zdmc+","icon":"Y","color":"#003087","ySymbol":"YM=F"},{"s":"RTY=F","n":"Russell Futuro","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNDQzAwMDAnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+UlQ8L3RleHQ+PC9zdmc+","icon":"R","color":"#003087","ySymbol":"RTY=F"},{"s":"GC=F","n":"Oro Futuro","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNENEFGMzcnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+QXU8L3RleHQ+PC9zdmc+","icon":"O","color":"#D4A017","ySymbol":"GC=F"},{"s":"SI=F","n":"Plata Futuro","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNBOEE5QUQnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+QWc8L3RleHQ+PC9zdmc+","icon":"P","color":"#C0C0C0","ySymbol":"SI=F"},{"s":"CL=F","n":"Petroleo WTI","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMxQzFDMUMnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+V1RJPC90ZXh0Pjwvc3ZnPg==","icon":"P","color":"#333","ySymbol":"CL=F"},{"s":"BZ=F","n":"Petroleo Brent","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMyQzJDNTQnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Qlo8L3RleHQ+PC9zdmc+","icon":"B","color":"#444","ySymbol":"BZ=F"},{"s":"NG=F","n":"Gas Natural","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwMDY2Q0MnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Tkc8L3RleHQ+PC9zdmc+","icon":"G","color":"#FF6600","ySymbol":"NG=F"},{"s":"HG=F","n":"Cobre Futuro","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNCODczMzMnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Q3U8L3RleHQ+PC9zdmc+","icon":"C","color":"#B87333","ySymbol":"HG=F"},{"s":"ZB=F","n":"US Bond 30Y","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwMDMwODcnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+WkI8L3RleHQ+PC9zdmc+","icon":"Z","color":"#003087","ySymbol":"ZB=F"},{"s":"ZN=F","n":"US Note 10Y","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMxRjQ3ODgnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Wk48L3RleHQ+PC9zdmc+","icon":"Z","color":"#003087","ySymbol":"ZN=F"},{"s":"6E=F","n":"Euro Futuro","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwMDMzOTknLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+RVVSPC90ZXh0Pjwvc3ZnPg==","icon":"E","color":"#003087","ySymbol":"6E=F"},{"s":"6J=F","n":"Yen Futuro","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNCQzAwMkQnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+SlBZPC90ZXh0Pjwvc3ZnPg==","icon":"J","color":"#CC0000","ySymbol":"6J=F"},{"s":"6B=F","n":"GBP Futuro","tipo":"futuro","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwMDMzOTknLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+R0JQPC90ZXh0Pjwvc3ZnPg==","icon":"G","color":"#CC0000","ySymbol":"6B=F"},{"s":"USO","n":"US Oil ETF","tipo":"materia_prima","logo":"https://financialmodelingprep.com/image-stock/USO.png","icon":"U","color":"#333","ySymbol":"USO"},{"s":"BNO","n":"Brent Oil ETF","tipo":"materia_prima","logo":"https://financialmodelingprep.com/image-stock/BNO.png","icon":"B","color":"#444","ySymbol":"BNO"},{"s":"UNG","n":"Natural Gas ETF","tipo":"materia_prima","logo":"https://financialmodelingprep.com/image-stock/UNG.png","icon":"G","color":"#FF6600","ySymbol":"UNG"},{"s":"WEAT","n":"Wheat ETF","tipo":"materia_prima","logo":"https://financialmodelingprep.com/image-stock/WEAT.png","icon":"W","color":"#C8A951","ySymbol":"WEAT"},{"s":"CORN","n":"Corn ETF","tipo":"materia_prima","logo":"https://financialmodelingprep.com/image-stock/CORN.png","icon":"C","color":"#F5C800","ySymbol":"CORN"},{"s":"SOYB","n":"Soybean ETF","tipo":"materia_prima","logo":"https://financialmodelingprep.com/image-stock/SOYB.png","icon":"S","color":"#7BAE36","ySymbol":"SOYB"},{"s":"JO","n":"Cafe OJ ETF","tipo":"materia_prima","logo":"https://financialmodelingprep.com/image-stock/JO.png","icon":"J","color":"#FF8C00","ySymbol":"JO"},{"s":"SGG","n":"Sugar ETF","tipo":"materia_prima","logo":"https://financialmodelingprep.com/image-stock/SGG.png","icon":"S","color":"#EEE","ySymbol":"SGG"},{"s":"KC=F","n":"Cafe Futuro","tipo":"materia_prima","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMzRTFGMDAnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+S0M8L3RleHQ+PC9zdmc+","icon":"C","color":"#6F4E37","ySymbol":"KC=F"},{"s":"SB=F","n":"Azucar Futuro","tipo":"materia_prima","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNBQUFBQUEnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+U0I8L3RleHQ+PC9zdmc+","icon":"A","color":"#EEE","ySymbol":"SB=F"},{"s":"CC=F","n":"Cacao Futuro","tipo":"materia_prima","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyM2QjNBMkEnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Q0M8L3RleHQ+PC9zdmc+","icon":"C","color":"#7B3F00","ySymbol":"CC=F"},{"s":"ZW=F","n":"Trigo Futuro","tipo":"materia_prima","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNDOEE5NTEnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Wlc8L3RleHQ+PC9zdmc+","icon":"T","color":"#C8A951","ySymbol":"ZW=F"},{"s":"ZC=F","n":"Maiz Futuro","tipo":"materia_prima","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNGNUM1MTgnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+WkM8L3RleHQ+PC9zdmc+","icon":"M","color":"#F5C800","ySymbol":"ZC=F"},{"s":"ZS=F","n":"Soja Futuro","tipo":"materia_prima","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyM4QjczNTUnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+WlM8L3RleHQ+PC9zdmc+","icon":"S","color":"#7BAE36","ySymbol":"ZS=F"},{"s":"CT=F","n":"Algodon Futuro","tipo":"materia_prima","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNDQ0NDQ0MnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Q1Q8L3RleHQ+PC9zdmc+","icon":"A","color":"#EEE","ySymbol":"CT=F"},{"s":"OJ=F","n":"OJ Futuro","tipo":"materia_prima","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNGRjhDMDAnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+T0o8L3RleHQ+PC9zdmc+","icon":"O","color":"#FF8C00","ySymbol":"OJ=F"},{"s":"LB=F","n":"Madera Futuro","tipo":"materia_prima","logo":"https://financialmodelingprep.com/image-stock/LB=F.png","icon":"M","color":"#8B4513","ySymbol":"LBS=F"},{"s":"LE=F","n":"Ganado Futuro","tipo":"materia_prima","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyM4QjQ1MTMnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+TEU8L3RleHQ+PC9zdmc+","icon":"G","color":"#8B4513","ySymbol":"LE=F"},{"s":"HE=F","n":"Cerdo Futuro","tipo":"materia_prima","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNGRjZCNkInLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+SEU8L3RleHQ+PC9zdmc+","icon":"C","color":"#FF69B4","ySymbol":"HE=F"},{"s":"PDBC","n":"Diversified Comm","tipo":"materia_prima","logo":"https://financialmodelingprep.com/image-stock/PDBC.png","icon":"P","color":"#333","ySymbol":"PDBC"},{"s":"CPER","n":"Cobre ETF","tipo":"metal","logo":"https://financialmodelingprep.com/image-stock/CPER.png","icon":"C","color":"#B87333","ySymbol":"CPER"},{"s":"PPLT","n":"Platino ETF","tipo":"metal","logo":"https://financialmodelingprep.com/image-stock/PPLT.png","icon":"P","color":"#E5E4E2","ySymbol":"PPLT"},{"s":"PALL","n":"Paladio ETF","tipo":"metal","logo":"https://financialmodelingprep.com/image-stock/PALL.png","icon":"P","color":"#CED0CF","ySymbol":"PALL"},{"s":"ALUM","n":"Aluminio ETF","tipo":"metal","logo":"https://financialmodelingprep.com/image-stock/ALUM.png","icon":"A","color":"#848484","ySymbol":"ALUM"},{"s":"ZINC","n":"Zinc ETF","tipo":"metal","logo":"https://financialmodelingprep.com/image-stock/ZINC.png","icon":"Z","color":"#4A4A4A","ySymbol":"JJZ"},{"s":"IRON","n":"Hierro/Steel ETF","tipo":"metal","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyM3RjhDOEQnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+SVI8L3RleHQ+PC9zdmc+","icon":"I","color":"#8B4513","ySymbol":"SLX"},{"s":"ORO","n":"Oro","tipo":"metal","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNENEFGMzcnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+QXU8L3RleHQ+PC9zdmc+","icon":"O","color":"#D4A017","ySymbol":"GLD"},{"s":"PLATA","n":"Plata","tipo":"metal","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNBOEE5QUQnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+QWc8L3RleHQ+PC9zdmc+","icon":"P","color":"#C0C0C0","ySymbol":"SLV"},{"s":"COBRE","n":"Cobre","tipo":"metal","logo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNCODczMzMnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Q3U8L3RleHQ+PC9zdmc+","icon":"C","color":"#B87333","ySymbol":"CPER"},{"s":"DBB","n":"Base Metals ETF","tipo":"metal","logo":"https://financialmodelingprep.com/image-stock/DBB.png","icon":"D","color":"#848484","ySymbol":"DBB"},{"s":"TLT","n":"US 20Y Bond","tipo":"bono","logo":"https://financialmodelingprep.com/image-stock/TLT.png","icon":"T","color":"#003087","ySymbol":"TLT"},{"s":"AGG","n":"US Bond Agg","tipo":"bono","logo":"https://financialmodelingprep.com/image-stock/AGG.png","icon":"A","color":"#003087","ySymbol":"AGG"},{"s":"IEF","n":"US 7-10Y Bond","tipo":"bono","logo":"https://financialmodelingprep.com/image-stock/IEF.png","icon":"I","color":"#003087","ySymbol":"IEF"},{"s":"SHY","n":"US 1-3Y Bond","tipo":"bono","logo":"https://financialmodelingprep.com/image-stock/SHY.png","icon":"S","color":"#003087","ySymbol":"SHY"},{"s":"HYG","n":"High Yield Bond","tipo":"bono","logo":"https://financialmodelingprep.com/image-stock/HYG.png","icon":"H","color":"#CC0000","ySymbol":"HYG"},{"s":"LQD","n":"Inv Grade Corp","tipo":"bono","logo":"https://financialmodelingprep.com/image-stock/LQD.png","icon":"L","color":"#003087","ySymbol":"LQD"},{"s":"EMB","n":"Emerging Bonds","tipo":"bono","logo":"https://financialmodelingprep.com/image-stock/EMB.png","icon":"E","color":"#003087","ySymbol":"EMB"},{"s":"BND","n":"Total Bond ETF","tipo":"bono","logo":"https://financialmodelingprep.com/image-stock/BND.png","icon":"B","color":"#003087","ySymbol":"BND"},{"s":"TIP","n":"TIPS Inflation","tipo":"bono","logo":"https://financialmodelingprep.com/image-stock/TIP.png","icon":"T","color":"#003087","ySymbol":"TIP"},{"s":"JNK","n":"Junk Bonds","tipo":"bono","logo":"https://financialmodelingprep.com/image-stock/JNK.png","icon":"J","color":"#CC0000","ySymbol":"JNK"},{"s":"MUB","n":"Muni Bond ETF","tipo":"bono","logo":"https://financialmodelingprep.com/image-stock/MUB.png","icon":"M","color":"#003087","ySymbol":"MUB"},{"s":"BNDX","n":"Intl Bond ETF","tipo":"bono","logo":"https://financialmodelingprep.com/image-stock/BNDX.png","icon":"B","color":"#003087","ySymbol":"BNDX"}]
+[
+  {
+    "s": "BTC",
+    "n": "Bitcoin",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/1/small/bitcoin.png",
+    "color": "#F7931A"
+  },
+  {
+    "s": "ETH",
+    "n": "Ethereum",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
+    "color": "#627EEA"
+  },
+  {
+    "s": "SOL",
+    "n": "Solana",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/4128/small/solana.png",
+    "color": "#9945FF"
+  },
+  {
+    "s": "BNB",
+    "n": "BNB",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
+    "color": "#F3BA2F"
+  },
+  {
+    "s": "XRP",
+    "n": "Ripple",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png",
+    "color": "#00AAE4"
+  },
+  {
+    "s": "ADA",
+    "n": "Cardano",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/975/small/cardano.png",
+    "color": "#0033AD"
+  },
+  {
+    "s": "AVAX",
+    "n": "Avalanche",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png",
+    "color": "#E84142"
+  },
+  {
+    "s": "DOT",
+    "n": "Polkadot",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/12171/small/polkadot.png",
+    "color": "#E6007A"
+  },
+  {
+    "s": "LINK",
+    "n": "Chainlink",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png",
+    "color": "#2A5ADA"
+  },
+  {
+    "s": "MATIC",
+    "n": "Polygon",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png",
+    "color": "#8247E5"
+  },
+  {
+    "s": "DOGE",
+    "n": "Dogecoin",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/5/small/dogecoin.png",
+    "color": "#C2A633"
+  },
+  {
+    "s": "SHIB",
+    "n": "Shiba Inu",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/11939/small/shiba.png",
+    "color": "#E3003A"
+  },
+  {
+    "s": "LTC",
+    "n": "Litecoin",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/2/small/litecoin.png",
+    "color": "#BFBBBB"
+  },
+  {
+    "s": "UNI",
+    "n": "Uniswap",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/12504/small/uni.jpg",
+    "color": "#FF007A"
+  },
+  {
+    "s": "ATOM",
+    "n": "Cosmos",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png",
+    "color": "#6F7390"
+  },
+  {
+    "s": "ETC",
+    "n": "Ethereum Classic",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/453/small/ethereum-classic-logo.png",
+    "color": "#328332"
+  },
+  {
+    "s": "XLM",
+    "n": "Stellar",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/100/small/Stellar_symbol_black_RGB.png",
+    "color": "#000000"
+  },
+  {
+    "s": "ALGO",
+    "n": "Algorand",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/4380/small/download.png",
+    "color": "#000000"
+  },
+  {
+    "s": "ICP",
+    "n": "Internet Computer",
+    "tipo": "cripto"
+  },
+  {
+    "s": "FIL",
+    "n": "Filecoin",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/12817/small/filecoin.png",
+    "color": "#42C1CA"
+  },
+  {
+    "s": "HBAR",
+    "n": "Hedera",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/3688/small/hbar.png",
+    "color": "#222222"
+  },
+  {
+    "s": "VET",
+    "n": "VeChain",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/1167/small/VET_Token_Icon.png",
+    "color": "#15BDFF"
+  },
+  {
+    "s": "SAND",
+    "n": "The Sandbox",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/12129/small/sandbox_logo.jpg",
+    "color": "#00ADEF"
+  },
+  {
+    "s": "MANA",
+    "n": "Decentraland",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/878/small/decentraland-mana.png",
+    "color": "#FF2D55"
+  },
+  {
+    "s": "THETA",
+    "n": "Theta",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/2538/small/theta-token-logo.png",
+    "color": "#2AB8E6"
+  },
+  {
+    "s": "AAVE",
+    "n": "Aave",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/12645/small/AAVE.png",
+    "color": "#B6509E"
+  },
+  {
+    "s": "MKR",
+    "n": "Maker",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/1364/small/Mark_Maker.png",
+    "color": "#1AAB9B"
+  },
+  {
+    "s": "GRT",
+    "n": "The Graph",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/13397/small/Graph_Token.png",
+    "color": "#6747ED"
+  },
+  {
+    "s": "SNX",
+    "n": "Synthetix",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/3406/small/SNX.png",
+    "color": "#1E1A31"
+  },
+  {
+    "s": "COMP",
+    "n": "Compound",
+    "tipo": "cripto"
+  },
+  {
+    "s": "CRV",
+    "n": "Curve",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/12124/small/Curve.png",
+    "color": "#D9002E"
+  },
+  {
+    "s": "1INCH",
+    "n": "1inch",
+    "tipo": "cripto"
+  },
+  {
+    "s": "LDO",
+    "n": "Lido DAO",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/13573/small/Lido_DAO.png",
+    "color": "#F27B4D"
+  },
+  {
+    "s": "ARB",
+    "n": "Arbitrum",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg",
+    "color": "#12AAFF"
+  },
+  {
+    "s": "OP",
+    "n": "Optimism",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/25244/small/Optimism.png",
+    "color": "#FF0420"
+  },
+  {
+    "s": "IMX",
+    "n": "Immutable X",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/17233/small/immutableX-symbol-BLK-RGB.png",
+    "color": "#00C3F9"
+  },
+  {
+    "s": "APT",
+    "n": "Aptos",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/26455/small/aptos_round.png",
+    "color": "#00D395"
+  },
+  {
+    "s": "SUI",
+    "n": "Sui",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/26375/small/sui_asset.jpeg",
+    "color": "#6FBCF0"
+  },
+  {
+    "s": "SEI",
+    "n": "Sei",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/28205/small/Sei_Logo_-_Transparent.png",
+    "color": "#9C3A7A"
+  },
+  {
+    "s": "INJ",
+    "n": "Injective",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/12882/small/Secondary_Symbol.png",
+    "color": "#00B2FF"
+  },
+  {
+    "s": "TIA",
+    "n": "Celestia",
+    "tipo": "cripto"
+  },
+  {
+    "s": "JUP",
+    "n": "Jupiter",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/34285/large/jup.png",
+    "color": "#C8853A"
+  },
+  {
+    "s": "NEAR",
+    "n": "NEAR Protocol",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/10365/small/near.jpg",
+    "color": "#00C08B"
+  },
+  {
+    "s": "FTM",
+    "n": "Fantom",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/4001/small/Fantom_round.png",
+    "color": "#1969FF"
+  },
+  {
+    "s": "ROSE",
+    "n": "Oasis",
+    "tipo": "cripto"
+  },
+  {
+    "s": "ZEC",
+    "n": "Zcash",
+    "tipo": "cripto"
+  },
+  {
+    "s": "DASH",
+    "n": "Dash",
+    "tipo": "cripto",
+    "logo": "https://financialmodelingprep.com/image-stock/DASH.png",
+    "color": "#FF3008"
+  },
+  {
+    "s": "XMR",
+    "n": "Monero",
+    "tipo": "cripto"
+  },
+  {
+    "s": "BCH",
+    "n": "Bitcoin Cash",
+    "tipo": "cripto"
+  },
+  {
+    "s": "TON",
+    "n": "Toncoin",
+    "tipo": "cripto",
+    "logo": "https://assets.coingecko.com/coins/images/17980/small/ton_symbol.png",
+    "color": "#0088CC"
+  },
+  {
+    "s": "USDT",
+    "n": "Tether",
+    "tipo": "stable",
+    "fixed": 1
+  },
+  {
+    "s": "USDC",
+    "n": "USD Coin",
+    "tipo": "stable",
+    "fixed": 1
+  },
+  {
+    "s": "DAI",
+    "n": "Dai",
+    "tipo": "stable",
+    "fixed": 1
+  },
+  {
+    "s": "AAPL",
+    "n": "Apple",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/AAPL.png",
+    "color": "#555"
+  },
+  {
+    "s": "NVDA",
+    "n": "NVIDIA",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/NVDA.png",
+    "color": "#76B900"
+  },
+  {
+    "s": "MSFT",
+    "n": "Microsoft",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/MSFT.png",
+    "color": "#00A4EF"
+  },
+  {
+    "s": "GOOGL",
+    "n": "Alphabet",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/GOOGL.png",
+    "color": "#4285F4"
+  },
+  {
+    "s": "AMZN",
+    "n": "Amazon",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/AMZN.png",
+    "color": "#FF9900"
+  },
+  {
+    "s": "META",
+    "n": "Meta",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/META.png",
+    "color": "#1877F2"
+  },
+  {
+    "s": "TSLA",
+    "n": "Tesla",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/TSLA.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "AVGO",
+    "n": "Broadcom",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/AVGO.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "ORCL",
+    "n": "Oracle",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/ORCL.png",
+    "color": "#C74634"
+  },
+  {
+    "s": "JPM",
+    "n": "JPMorgan",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/JPM.png",
+    "color": "#003087"
+  },
+  {
+    "s": "V",
+    "n": "Visa",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/V.png",
+    "color": "#1A1F71"
+  },
+  {
+    "s": "MA",
+    "n": "Mastercard",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/MA.png",
+    "color": "#EB001B"
+  },
+  {
+    "s": "BAC",
+    "n": "Bank of America",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/BAC.png",
+    "color": "#E31837"
+  },
+  {
+    "s": "WFC",
+    "n": "Wells Fargo",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/WFC.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "GS",
+    "n": "Goldman Sachs",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/GS.png",
+    "color": "#003087"
+  },
+  {
+    "s": "MS",
+    "n": "Morgan Stanley",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/MS.png",
+    "color": "#003087"
+  },
+  {
+    "s": "AXP",
+    "n": "American Express",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/AXP.png",
+    "color": "#016FD0"
+  },
+  {
+    "s": "BLK",
+    "n": "BlackRock",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/BLK.png",
+    "color": "#003087"
+  },
+  {
+    "s": "SCHW",
+    "n": "Charles Schwab",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/SCHW.png",
+    "color": "#003087"
+  },
+  {
+    "s": "LLY",
+    "n": "Eli Lilly",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/LLY.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "UNH",
+    "n": "UnitedHealth",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/UNH.png",
+    "color": "#003087"
+  },
+  {
+    "s": "JNJ",
+    "n": "Johnson & Johnson",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/JNJ.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "MRK",
+    "n": "Merck",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/MRK.png",
+    "color": "#009999"
+  },
+  {
+    "s": "ABBV",
+    "n": "AbbVie",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/ABBV.png",
+    "color": "#003087"
+  },
+  {
+    "s": "PFE",
+    "n": "Pfizer",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/PFE.png",
+    "color": "#0044CC"
+  },
+  {
+    "s": "TMO",
+    "n": "Thermo Fisher",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/TMO.png",
+    "color": "#003087"
+  },
+  {
+    "s": "ABT",
+    "n": "Abbott",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/ABT.png",
+    "color": "#003087"
+  },
+  {
+    "s": "COST",
+    "n": "Costco",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/COST.png",
+    "color": "#005DAA"
+  },
+  {
+    "s": "WMT",
+    "n": "Walmart",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/WMT.png",
+    "color": "#0071CE"
+  },
+  {
+    "s": "HD",
+    "n": "Home Depot",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/HD.png",
+    "color": "#F96302"
+  },
+  {
+    "s": "PG",
+    "n": "Procter & Gamble",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/PG.png",
+    "color": "#003087"
+  },
+  {
+    "s": "KO",
+    "n": "Coca-Cola",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/KO.png",
+    "color": "#F40009"
+  },
+  {
+    "s": "PEP",
+    "n": "PepsiCo",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/PEP.png",
+    "color": "#004B93"
+  },
+  {
+    "s": "MCD",
+    "n": "McDonalds",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/MCD.png",
+    "color": "#FFC72C"
+  },
+  {
+    "s": "SBUX",
+    "n": "Starbucks",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/SBUX.png",
+    "color": "#00704A"
+  },
+  {
+    "s": "NKE",
+    "n": "Nike",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/NKE.png",
+    "color": "#000000"
+  },
+  {
+    "s": "AMD",
+    "n": "AMD",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/AMD.png",
+    "color": "#ED1C24"
+  },
+  {
+    "s": "INTC",
+    "n": "Intel",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/INTC.png",
+    "color": "#0071C5"
+  },
+  {
+    "s": "QCOM",
+    "n": "Qualcomm",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/QCOM.png",
+    "color": "#3253DC"
+  },
+  {
+    "s": "TXN",
+    "n": "Texas Instruments",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/TXN.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "AMAT",
+    "n": "Applied Materials",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/AMAT.png",
+    "color": "#003087"
+  },
+  {
+    "s": "MU",
+    "n": "Micron",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/MU.png",
+    "color": "#003087"
+  },
+  {
+    "s": "NFLX",
+    "n": "Netflix",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/NFLX.png",
+    "color": "#E50914"
+  },
+  {
+    "s": "DIS",
+    "n": "Disney",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/DIS.png",
+    "color": "#113CCF"
+  },
+  {
+    "s": "SPOT",
+    "n": "Spotify",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/SPOT.png",
+    "color": "#1DB954"
+  },
+  {
+    "s": "COIN",
+    "n": "Coinbase",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/COIN.png",
+    "color": "#0052FF"
+  },
+  {
+    "s": "HOOD",
+    "n": "Robinhood",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/HOOD.png",
+    "color": "#00C805"
+  },
+  {
+    "s": "PYPL",
+    "n": "PayPal",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/PYPL.png",
+    "color": "#003087"
+  },
+  {
+    "s": "XYZ",
+    "n": "Block",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/XYZ.png",
+    "color": "#000000"
+  },
+  {
+    "s": "MSTR",
+    "n": "MicroStrategy",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/MSTR.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "MARA",
+    "n": "Marathon Digital",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/MARA.png",
+    "color": "#F7931A"
+  },
+  {
+    "s": "RIOT",
+    "n": "Riot Platforms",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/RIOT.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "PLTR",
+    "n": "Palantir",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/PLTR.png",
+    "color": "#000000"
+  },
+  {
+    "s": "ARM",
+    "n": "ARM Holdings",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/ARM.png",
+    "color": "#0091BD"
+  },
+  {
+    "s": "SMCI",
+    "n": "Super Micro",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/SMCI.png",
+    "color": "#003087"
+  },
+  {
+    "s": "AI",
+    "n": "C3.ai",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/AI.png",
+    "color": "#003087"
+  },
+  {
+    "s": "UBER",
+    "n": "Uber",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/UBER.png",
+    "color": "#000000"
+  },
+  {
+    "s": "ABNB",
+    "n": "Airbnb",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/ABNB.png",
+    "color": "#FF5A5F"
+  },
+  {
+    "s": "DASH",
+    "n": "DoorDash",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/DASH.png",
+    "color": "#FF3008"
+  },
+  {
+    "s": "XOM",
+    "n": "ExxonMobil",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/XOM.png",
+    "color": "#003087"
+  },
+  {
+    "s": "CVX",
+    "n": "Chevron",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/CVX.png",
+    "color": "#009DD9"
+  },
+  {
+    "s": "COP",
+    "n": "ConocoPhillips",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/COP.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "F",
+    "n": "Ford",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/F.png",
+    "color": "#003087"
+  },
+  {
+    "s": "GM",
+    "n": "General Motors",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/GM.png",
+    "color": "#003087"
+  },
+  {
+    "s": "RIVN",
+    "n": "Rivian",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/RIVN.png",
+    "color": "#52D48E"
+  },
+  {
+    "s": "BA",
+    "n": "Boeing",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/BA.png",
+    "color": "#003087"
+  },
+  {
+    "s": "CAT",
+    "n": "Caterpillar",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/CAT.png",
+    "color": "#FFCD11"
+  },
+  {
+    "s": "GE",
+    "n": "GE Aerospace",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/GE.png",
+    "color": "#003087"
+  },
+  {
+    "s": "RTX",
+    "n": "RTX Corp",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/RTX.png",
+    "color": "#003087"
+  },
+  {
+    "s": "LMT",
+    "n": "Lockheed Martin",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/LMT.png",
+    "color": "#003087"
+  },
+  {
+    "s": "T",
+    "n": "AT&T",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/T.png",
+    "color": "#00A8E0"
+  },
+  {
+    "s": "VZ",
+    "n": "Verizon",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/VZ.png",
+    "color": "#CD040B"
+  },
+  {
+    "s": "TMUS",
+    "n": "T-Mobile",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/TMUS.png",
+    "color": "#E20074"
+  },
+  {
+    "s": "CMCSA",
+    "n": "Comcast",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/CMCSA.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "AMT",
+    "n": "American Tower",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/AMT.png",
+    "color": "#003087"
+  },
+  {
+    "s": "PLD",
+    "n": "Prologis",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/PLD.png",
+    "color": "#003087"
+  },
+  {
+    "s": "BRK-B",
+    "n": "Berkshire Hathaway",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/BRK-B.png",
+    "color": "#4A4A4A"
+  },
+  {
+    "s": "SPGI",
+    "n": "S&P Global",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/SPGI.png",
+    "color": "#003087"
+  },
+  {
+    "s": "BX",
+    "n": "Blackstone",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/BX.png",
+    "color": "#003087"
+  },
+  {
+    "s": "NDAQ",
+    "n": "Nasdaq Inc",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/NDAQ.png",
+    "color": "#003087"
+  },
+  {
+    "s": "NOW",
+    "n": "ServiceNow",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/NOW.png",
+    "color": "#81B5A1"
+  },
+  {
+    "s": "CRM",
+    "n": "Salesforce",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/CRM.png",
+    "color": "#00A1E0"
+  },
+  {
+    "s": "ADBE",
+    "n": "Adobe",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/ADBE.png",
+    "color": "#FF0000"
+  },
+  {
+    "s": "BABA",
+    "n": "Alibaba",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/BABA.png",
+    "color": "#FF6A00"
+  },
+  {
+    "s": "RBLX",
+    "n": "Roblox",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/RBLX.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "LYFT",
+    "n": "Lyft",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/LYFT.png",
+    "color": "#FF00BF"
+  },
+  {
+    "s": "SOUN",
+    "n": "SoundHound AI",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/SOUN.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "LCID",
+    "n": "Lucid",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/LCID.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "SLB",
+    "n": "Schlumberger",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/SLB.png",
+    "color": "#003087"
+  },
+  {
+    "s": "EOG",
+    "n": "EOG Resources",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/EOG.png",
+    "color": "#003087"
+  },
+  {
+    "s": "DHR",
+    "n": "Danaher",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/DHR.png",
+    "color": "#003087"
+  },
+  {
+    "s": "BMY",
+    "n": "Bristol-Myers",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/BMY.png",
+    "color": "#003087"
+  },
+  {
+    "s": "TGT",
+    "n": "Target",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/TGT.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "LRCX",
+    "n": "Lam Research",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/LRCX.png",
+    "color": "#003087"
+  },
+  {
+    "s": "CRWD",
+    "n": "CrowdStrike",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/CRWD.png",
+    "color": "#FF0000"
+  },
+  {
+    "s": "PANW",
+    "n": "Palo Alto Networks",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/PANW.png",
+    "color": "#003087"
+  },
+  {
+    "s": "SNOW",
+    "n": "Snowflake",
+    "tipo": "accion_usa",
+    "logo": "https://financialmodelingprep.com/image-stock/SNOW.png",
+    "color": "#29B5E8"
+  },
+  {
+    "s": "GGAL",
+    "n": "Grupo Galicia",
+    "tipo": "accion_arg",
+    "logo": "https://financialmodelingprep.com/image-stock/GGAL.png",
+    "color": "#003087"
+  },
+  {
+    "s": "YPF",
+    "n": "YPF",
+    "tipo": "accion_arg",
+    "logo": "https://financialmodelingprep.com/image-stock/YPF.png",
+    "color": "#005FAD"
+  },
+  {
+    "s": "BMA",
+    "n": "Banco Macro",
+    "tipo": "accion_arg",
+    "logo": "https://financialmodelingprep.com/image-stock/BMA.png",
+    "color": "#003087"
+  },
+  {
+    "s": "CEPU",
+    "n": "Central Puerto",
+    "tipo": "accion_arg",
+    "logo": "https://financialmodelingprep.com/image-stock/CEPU.png",
+    "color": "#003087"
+  },
+  {
+    "s": "PAMP",
+    "n": "Pampa Energia",
+    "tipo": "accion_arg",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNDMDM5MkInLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+UEE8L3RleHQ+PC9zdmc+",
+    "color": "#003087",
+    "ySymbol": "PAMP.BA"
+  },
+  {
+    "s": "LOMA",
+    "n": "Loma Negra",
+    "tipo": "accion_arg",
+    "logo": "https://financialmodelingprep.com/image-stock/LOMA.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "SUPV",
+    "n": "Supervielle",
+    "tipo": "accion_arg"
+  },
+  {
+    "s": "BBAR",
+    "n": "BBVA Argentina",
+    "tipo": "accion_arg"
+  },
+  {
+    "s": "TECO2",
+    "n": "Telecom Argentina",
+    "tipo": "accion_arg",
+    "ySymbol": "TECO2.BA"
+  },
+  {
+    "s": "TXAR",
+    "n": "Ternium Argentina",
+    "tipo": "accion_arg",
+    "ySymbol": "TXAR.BA"
+  },
+  {
+    "s": "CRES",
+    "n": "Cresud",
+    "tipo": "accion_arg",
+    "ySymbol": "CRES.BA"
+  },
+  {
+    "s": "IRSA",
+    "n": "IRSA",
+    "tipo": "accion_arg",
+    "ySymbol": "IRSA.BA"
+  },
+  {
+    "s": "BYMA",
+    "n": "BYMA",
+    "tipo": "accion_arg",
+    "ySymbol": "BYMA.BA"
+  },
+  {
+    "s": "HARG",
+    "n": "Harg",
+    "tipo": "accion_arg",
+    "ySymbol": "HARG.BA"
+  },
+  {
+    "s": "DGCU2",
+    "n": "Dist. Gas Cuyana",
+    "tipo": "accion_arg",
+    "ySymbol": "DGCU2.BA"
+  },
+  {
+    "s": "TRAN",
+    "n": "Transener",
+    "tipo": "accion_arg",
+    "ySymbol": "TRAN.BA"
+  },
+  {
+    "s": "EDN",
+    "n": "Edenor",
+    "tipo": "accion_arg"
+  },
+  {
+    "s": "COME",
+    "n": "Comercial del Plata",
+    "tipo": "accion_arg",
+    "ySymbol": "COME.BA"
+  },
+  {
+    "s": "AUSO",
+    "n": "Autopistas del Sol",
+    "tipo": "accion_arg",
+    "ySymbol": "AUSO.BA"
+  },
+  {
+    "s": "BOLT",
+    "n": "Boldt",
+    "tipo": "accion_arg"
+  },
+  {
+    "s": "INVJ",
+    "n": "Inversora Juramento",
+    "tipo": "accion_arg",
+    "ySymbol": "INVJ.BA"
+  },
+  {
+    "s": "MOLI",
+    "n": "Molinos Agro",
+    "tipo": "accion_arg",
+    "ySymbol": "MOLI.BA"
+  },
+  {
+    "s": "PBR",
+    "n": "Petrobras",
+    "tipo": "accion_brasil",
+    "logo": "https://financialmodelingprep.com/image-stock/PBR.png",
+    "color": "#009B3A"
+  },
+  {
+    "s": "VALE",
+    "n": "Vale",
+    "tipo": "accion_brasil",
+    "logo": "https://financialmodelingprep.com/image-stock/VALE.png",
+    "color": "#009B3A"
+  },
+  {
+    "s": "ITUB",
+    "n": "Itau Unibanco",
+    "tipo": "accion_brasil",
+    "logo": "https://financialmodelingprep.com/image-stock/ITUB.png",
+    "color": "#F48024"
+  },
+  {
+    "s": "BBD",
+    "n": "Bradesco",
+    "tipo": "accion_brasil",
+    "logo": "https://financialmodelingprep.com/image-stock/BBD.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "ABEV",
+    "n": "Ambev",
+    "tipo": "accion_brasil",
+    "logo": "https://financialmodelingprep.com/image-stock/ABEV.png",
+    "color": "#F4A700"
+  },
+  {
+    "s": "BBAS3.SA",
+    "n": "Banco do Brasil",
+    "tipo": "accion_brasil",
+    "color": "#003087"
+  },
+  {
+    "s": "RENT3.SA",
+    "n": "Localiza Rentacar",
+    "tipo": "accion_brasil",
+    "color": "#003087"
+  },
+  {
+    "s": "VTEX",
+    "n": "VTEX",
+    "tipo": "accion_brasil",
+    "logo": "https://financialmodelingprep.com/image-stock/VTEX.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "NU",
+    "n": "Nu Holdings",
+    "tipo": "accion_brasil",
+    "logo": "https://financialmodelingprep.com/image-stock/NU.png",
+    "color": "#8A05BE"
+  },
+  {
+    "s": "MELI",
+    "n": "MercadoLibre",
+    "tipo": "accion_brasil",
+    "logo": "https://financialmodelingprep.com/image-stock/MELI.png",
+    "color": "#FFE600"
+  },
+  {
+    "s": "XP",
+    "n": "XP Inc",
+    "tipo": "accion_brasil"
+  },
+  {
+    "s": "STNE",
+    "n": "StoneCo",
+    "tipo": "accion_brasil"
+  },
+  {
+    "s": "PAGS",
+    "n": "PagSeguro",
+    "tipo": "accion_brasil"
+  },
+  {
+    "s": "ARCO",
+    "n": "Arcos Dorados",
+    "tipo": "accion_brasil",
+    "logo": "https://financialmodelingprep.com/image-stock/ARCO.png",
+    "color": "#FFC72C"
+  },
+  {
+    "s": "CIB",
+    "n": "Bancolombia",
+    "tipo": "accion_brasil",
+    "logo": "https://financialmodelingprep.com/image-stock/CIB.png",
+    "color": "#FFCC00"
+  },
+  {
+    "s": "SQM",
+    "n": "SQM",
+    "tipo": "accion_brasil",
+    "logo": "https://financialmodelingprep.com/image-stock/SQM.png",
+    "color": "#003087"
+  },
+  {
+    "s": "BSAC",
+    "n": "Banco Santander Chile",
+    "tipo": "accion_brasil"
+  },
+  {
+    "s": "IFS",
+    "n": "Intercorp Financial",
+    "tipo": "accion_brasil"
+  },
+  {
+    "s": "BAP",
+    "n": "Credicorp",
+    "tipo": "accion_brasil"
+  },
+  {
+    "s": "CPFE3.SA",
+    "n": "CPFL Energia",
+    "tipo": "accion_brasil"
+  },
+  {
+    "s": "WEGE3.SA",
+    "n": "WEG",
+    "tipo": "accion_brasil"
+  },
+  {
+    "s": "ASML",
+    "n": "ASML",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/ASML.png",
+    "color": "#003087"
+  },
+  {
+    "s": "SAP",
+    "n": "SAP",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/SAP.png",
+    "color": "#1872B4"
+  },
+  {
+    "s": "NVS",
+    "n": "Novartis",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/NVS.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "NSRGY",
+    "n": "Nestle",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/NSRGY.png",
+    "color": "#003087"
+  },
+  {
+    "s": "RHHBY",
+    "n": "Roche",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/RHHBY.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "VWAGY",
+    "n": "Volkswagen",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/VWAGY.png",
+    "color": "#003087"
+  },
+  {
+    "s": "SIEGY",
+    "n": "Siemens",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/SIEGY.png",
+    "color": "#009999"
+  },
+  {
+    "s": "SHEL",
+    "n": "Shell",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/SHEL.png",
+    "color": "#DD1D21"
+  },
+  {
+    "s": "BP",
+    "n": "BP",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/BP.png",
+    "color": "#009900"
+  },
+  {
+    "s": "GSK",
+    "n": "GSK",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/GSK.png",
+    "color": "#F36200"
+  },
+  {
+    "s": "UL",
+    "n": "Unilever",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/UL.png",
+    "color": "#003087"
+  },
+  {
+    "s": "RIO",
+    "n": "Rio Tinto",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/RIO.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "BHP",
+    "n": "BHP",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/BHP.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "AZN",
+    "n": "AstraZeneca",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/AZN.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "HSBC",
+    "n": "HSBC",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/HSBC.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "STM",
+    "n": "STMicroelectronics",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/STM.png",
+    "color": "#003087"
+  },
+  {
+    "s": "SAN",
+    "n": "Santander",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/SAN.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "BBVA",
+    "n": "BBVA",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/BBVA.png",
+    "color": "#004481"
+  },
+  {
+    "s": "LVMUY",
+    "n": "LVMH",
+    "tipo": "accion_europa",
+    "logo": "https://financialmodelingprep.com/image-stock/LVMUY.png",
+    "color": "#8B7355"
+  },
+  {
+    "s": "TM",
+    "n": "Toyota",
+    "tipo": "accion_japon",
+    "logo": "https://financialmodelingprep.com/image-stock/TM.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "SONY",
+    "n": "Sony",
+    "tipo": "accion_japon",
+    "logo": "https://financialmodelingprep.com/image-stock/SONY.png",
+    "color": "#003087"
+  },
+  {
+    "s": "HMC",
+    "n": "Honda",
+    "tipo": "accion_japon",
+    "logo": "https://financialmodelingprep.com/image-stock/HMC.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "NTDOY",
+    "n": "Nintendo",
+    "tipo": "accion_japon",
+    "logo": "https://financialmodelingprep.com/image-stock/NTDOY.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "SFTBY",
+    "n": "SoftBank",
+    "tipo": "accion_japon",
+    "logo": "https://financialmodelingprep.com/image-stock/SFTBY.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "7267.T",
+    "n": "Honda Japan",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "6758.T",
+    "n": "Sony Japan",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "9984.T",
+    "n": "SoftBank Japan",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "7203.T",
+    "n": "Toyota Japan",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "6861.T",
+    "n": "Keyence",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "6367.T",
+    "n": "Daikin",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "8306.T",
+    "n": "MUFG",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "9432.T",
+    "n": "NTT",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "7974.T",
+    "n": "Nintendo Japan",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "6501.T",
+    "n": "Hitachi",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "6702.T",
+    "n": "Fujitsu",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "4519.T",
+    "n": "Chugai Pharma",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "2914.T",
+    "n": "JT",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "8058.T",
+    "n": "Mitsubishi Corp",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "6594.T",
+    "n": "Nidec",
+    "tipo": "accion_japon"
+  },
+  {
+    "s": "BIDU",
+    "n": "Baidu",
+    "tipo": "accion_china",
+    "logo": "https://financialmodelingprep.com/image-stock/BIDU.png",
+    "color": "#2932E1"
+  },
+  {
+    "s": "JD",
+    "n": "JD.com",
+    "tipo": "accion_china",
+    "logo": "https://financialmodelingprep.com/image-stock/JD.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "PDD",
+    "n": "PDD Holdings",
+    "tipo": "accion_china",
+    "logo": "https://financialmodelingprep.com/image-stock/PDD.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "NTES",
+    "n": "NetEase",
+    "tipo": "accion_china",
+    "logo": "https://financialmodelingprep.com/image-stock/NTES.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "XPEV",
+    "n": "XPeng",
+    "tipo": "accion_china",
+    "logo": "https://financialmodelingprep.com/image-stock/XPEV.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "NIO",
+    "n": "NIO",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "LI",
+    "n": "Li Auto",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "TCEHY",
+    "n": "Tencent ADR",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "9988.HK",
+    "n": "Alibaba HK",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "0700.HK",
+    "n": "Tencent HK",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "3690.HK",
+    "n": "Meituan",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "9618.HK",
+    "n": "JD HK",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "2318.HK",
+    "n": "Ping An",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "1398.HK",
+    "n": "ICBC",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "0941.HK",
+    "n": "China Mobile",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "2628.HK",
+    "n": "China Life",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "0388.HK",
+    "n": "HK Exchanges",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "1810.HK",
+    "n": "Xiaomi",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "9999.HK",
+    "n": "NetEase HK",
+    "tipo": "accion_china"
+  },
+  {
+    "s": "SPY",
+    "n": "S&P 500 ETF",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/SPY.png",
+    "color": "#003087"
+  },
+  {
+    "s": "QQQ",
+    "n": "Nasdaq 100",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/QQQ.png",
+    "color": "#003087"
+  },
+  {
+    "s": "IWM",
+    "n": "Russell 2000",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/IWM.png",
+    "color": "#003087"
+  },
+  {
+    "s": "VTI",
+    "n": "Total US Market",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/VTI.png",
+    "color": "#003087"
+  },
+  {
+    "s": "VOO",
+    "n": "Vanguard S&P",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/VOO.png",
+    "color": "#003087"
+  },
+  {
+    "s": "DIA",
+    "n": "Dow Jones ETF",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/DIA.png",
+    "color": "#003087"
+  },
+  {
+    "s": "GLD",
+    "n": "Oro SPDR",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/GLD.png",
+    "color": "#D4A017"
+  },
+  {
+    "s": "SLV",
+    "n": "Plata iShares",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/SLV.png",
+    "color": "#C0C0C0"
+  },
+  {
+    "s": "IAU",
+    "n": "Oro iShares",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/IAU.png",
+    "color": "#D4A017"
+  },
+  {
+    "s": "GDX",
+    "n": "Mineras Oro",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/GDX.png",
+    "color": "#D4A017"
+  },
+  {
+    "s": "GDXJ",
+    "n": "Mineras Oro Jr",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/GDXJ.png",
+    "color": "#D4A017"
+  },
+  {
+    "s": "IBIT",
+    "n": "Bitcoin ETF",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/IBIT.png",
+    "color": "#F7931A"
+  },
+  {
+    "s": "GBTC",
+    "n": "Grayscale Bitcoin",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/GBTC.png",
+    "color": "#F7931A"
+  },
+  {
+    "s": "BITO",
+    "n": "ProShares Bitcoin",
+    "tipo": "etf"
+  },
+  {
+    "s": "TLT",
+    "n": "Bonos 20+ anos",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/TLT.png",
+    "color": "#003087"
+  },
+  {
+    "s": "IEF",
+    "n": "Bonos 7-10 anos",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/IEF.png",
+    "color": "#003087"
+  },
+  {
+    "s": "SHY",
+    "n": "Bonos 1-3 anos",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/SHY.png",
+    "color": "#003087"
+  },
+  {
+    "s": "HYG",
+    "n": "High Yield",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/HYG.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "LQD",
+    "n": "Investment Grade",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/LQD.png",
+    "color": "#003087"
+  },
+  {
+    "s": "EMB",
+    "n": "Bonos Emergentes",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/EMB.png",
+    "color": "#003087"
+  },
+  {
+    "s": "XLE",
+    "n": "Energia",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/XLE.png",
+    "color": "#333"
+  },
+  {
+    "s": "XLF",
+    "n": "Financiero",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/XLF.png",
+    "color": "#003087"
+  },
+  {
+    "s": "XLK",
+    "n": "Tecnologia",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/XLK.png",
+    "color": "#003087"
+  },
+  {
+    "s": "XLV",
+    "n": "Salud",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/XLV.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "XLI",
+    "n": "Industrial",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/XLI.png",
+    "color": "#003087"
+  },
+  {
+    "s": "XLP",
+    "n": "Consumo Basico",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/XLP.png",
+    "color": "#003087"
+  },
+  {
+    "s": "ARKK",
+    "n": "ARK Innovation",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/ARKK.png",
+    "color": "#00B0D7"
+  },
+  {
+    "s": "ARKG",
+    "n": "ARK Genomics",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/ARKG.png",
+    "color": "#00B0D7"
+  },
+  {
+    "s": "ARKW",
+    "n": "ARK Next Gen",
+    "tipo": "etf"
+  },
+  {
+    "s": "EEM",
+    "n": "Mercados Emergentes",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/EEM.png",
+    "color": "#003087"
+  },
+  {
+    "s": "EWZ",
+    "n": "Brasil",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/EWZ.png",
+    "color": "#009B3A"
+  },
+  {
+    "s": "FXI",
+    "n": "China Large Cap",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/FXI.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "EWJ",
+    "n": "Japon",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/EWJ.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "VGK",
+    "n": "Europa",
+    "tipo": "etf"
+  },
+  {
+    "s": "EWG",
+    "n": "Alemania",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/EWG.png",
+    "color": "#003087"
+  },
+  {
+    "s": "PDBC",
+    "n": "Commodities Diversif",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/PDBC.png",
+    "color": "#333"
+  },
+  {
+    "s": "USO",
+    "n": "Petroleo WTI",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/USO.png",
+    "color": "#333"
+  },
+  {
+    "s": "UNG",
+    "n": "Gas Natural",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/UNG.png",
+    "color": "#FF6600"
+  },
+  {
+    "s": "CPER",
+    "n": "Cobre",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/CPER.png",
+    "color": "#B87333"
+  },
+  {
+    "s": "DBB",
+    "n": "Metales Base",
+    "tipo": "etf",
+    "logo": "https://financialmodelingprep.com/image-stock/DBB.png",
+    "color": "#848484"
+  },
+  {
+    "s": "RB=F",
+    "n": "Gasolina",
+    "tipo": "commodity"
+  },
+  {
+    "s": "KC=F",
+    "n": "Cafe",
+    "tipo": "commodity",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMzRTFGMDAnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+S0M8L3RleHQ+PC9zdmc+",
+    "color": "#6F4E37"
+  },
+  {
+    "s": "SB=F",
+    "n": "Azucar",
+    "tipo": "commodity",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNBQUFBQUEnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+U0I8L3RleHQ+PC9zdmc+",
+    "color": "#EEE"
+  },
+  {
+    "s": "CC=F",
+    "n": "Cacao",
+    "tipo": "commodity",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyM2QjNBMkEnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Q0M8L3RleHQ+PC9zdmc+",
+    "color": "#7B3F00"
+  },
+  {
+    "s": "ZW=F",
+    "n": "Trigo",
+    "tipo": "commodity",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNDOEE5NTEnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Wlc8L3RleHQ+PC9zdmc+",
+    "color": "#C8A951"
+  },
+  {
+    "s": "CT=F",
+    "n": "Algodon",
+    "tipo": "commodity",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNDQ0NDQ0MnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Q1Q8L3RleHQ+PC9zdmc+",
+    "color": "#EEE"
+  },
+  {
+    "s": "LE=F",
+    "n": "Ganado",
+    "tipo": "commodity",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyM4QjQ1MTMnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+TEU8L3RleHQ+PC9zdmc+",
+    "color": "#8B4513"
+  },
+  {
+    "s": "HE=F",
+    "n": "Cerdo",
+    "tipo": "commodity",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNGRjZCNkInLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+SEU8L3RleHQ+PC9zdmc+",
+    "color": "#FF69B4"
+  },
+  {
+    "s": "LBS=F",
+    "n": "Madera",
+    "tipo": "commodity"
+  },
+  {
+    "s": "OJ=F",
+    "n": "Jugo Naranja",
+    "tipo": "commodity",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNGRjhDMDAnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+T0o8L3RleHQ+PC9zdmc+",
+    "color": "#FF8C00"
+  },
+  {
+    "s": "JO",
+    "n": "Cafe ETN",
+    "tipo": "commodity",
+    "logo": "https://financialmodelingprep.com/image-stock/JO.png",
+    "color": "#FF8C00"
+  },
+  {
+    "s": "WEAT",
+    "n": "Trigo ETF",
+    "tipo": "commodity",
+    "logo": "https://financialmodelingprep.com/image-stock/WEAT.png",
+    "color": "#C8A951"
+  },
+  {
+    "s": "GLD",
+    "n": "Oro SPDR",
+    "tipo": "metal",
+    "logo": "https://financialmodelingprep.com/image-stock/GLD.png",
+    "color": "#D4A017"
+  },
+  {
+    "s": "SLV",
+    "n": "Plata iShares",
+    "tipo": "metal",
+    "logo": "https://financialmodelingprep.com/image-stock/SLV.png",
+    "color": "#C0C0C0"
+  },
+  {
+    "s": "CPER",
+    "n": "Cobre",
+    "tipo": "metal",
+    "logo": "https://financialmodelingprep.com/image-stock/CPER.png",
+    "color": "#B87333"
+  },
+  {
+    "s": "PPLT",
+    "n": "Platino",
+    "tipo": "metal",
+    "logo": "https://financialmodelingprep.com/image-stock/PPLT.png",
+    "color": "#E5E4E2"
+  },
+  {
+    "s": "PALL",
+    "n": "Paladio",
+    "tipo": "metal",
+    "logo": "https://financialmodelingprep.com/image-stock/PALL.png",
+    "color": "#CED0CF"
+  },
+  {
+    "s": "SLX",
+    "n": "Acero",
+    "tipo": "metal"
+  },
+  {
+    "s": "DBB",
+    "n": "Metales Base",
+    "tipo": "metal",
+    "logo": "https://financialmodelingprep.com/image-stock/DBB.png",
+    "color": "#848484"
+  },
+  {
+    "s": "JJU",
+    "n": "Aluminio",
+    "tipo": "metal"
+  },
+  {
+    "s": "ES=F",
+    "n": "S&P 500 Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMxQTZCM0MnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+RVM8L3RleHQ+PC9zdmc+",
+    "color": "#003087"
+  },
+  {
+    "s": "NQ=F",
+    "n": "Nasdaq Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwQTY2QzInLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+TlE8L3RleHQ+PC9zdmc+",
+    "color": "#003087"
+  },
+  {
+    "s": "YM=F",
+    "n": "Dow Jones Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwMDI4NjgnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+RFc8L3RleHQ+PC9zdmc+",
+    "color": "#003087"
+  },
+  {
+    "s": "RTY=F",
+    "n": "Russell 2000 Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNDQzAwMDAnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+UlQ8L3RleHQ+PC9zdmc+",
+    "color": "#003087"
+  },
+  {
+    "s": "GC=F",
+    "n": "Oro Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNENEFGMzcnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+QXU8L3RleHQ+PC9zdmc+",
+    "color": "#D4A017"
+  },
+  {
+    "s": "SI=F",
+    "n": "Plata Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNBOEE5QUQnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+QWc8L3RleHQ+PC9zdmc+",
+    "color": "#C0C0C0"
+  },
+  {
+    "s": "CL=F",
+    "n": "Petroleo Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMxQzFDMUMnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+V1RJPC90ZXh0Pjwvc3ZnPg==",
+    "color": "#333"
+  },
+  {
+    "s": "BZ=F",
+    "n": "Brent Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMyQzJDNTQnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Qlo8L3RleHQ+PC9zdmc+",
+    "color": "#444"
+  },
+  {
+    "s": "NG=F",
+    "n": "Gas Natural Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwMDY2Q0MnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Tkc8L3RleHQ+PC9zdmc+",
+    "color": "#FF6600"
+  },
+  {
+    "s": "ZB=F",
+    "n": "Bonos 30Y Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwMDMwODcnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+WkI8L3RleHQ+PC9zdmc+",
+    "color": "#003087"
+  },
+  {
+    "s": "ZN=F",
+    "n": "Bonos 10Y Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMxRjQ3ODgnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Wk48L3RleHQ+PC9zdmc+",
+    "color": "#003087"
+  },
+  {
+    "s": "ZF=F",
+    "n": "Bonos 5Y Fut",
+    "tipo": "futuro"
+  },
+  {
+    "s": "HG=F",
+    "n": "Cobre Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNCODczMzMnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Q3U8L3RleHQ+PC9zdmc+",
+    "color": "#B87333"
+  },
+  {
+    "s": "^VIX",
+    "n": "VIX Index",
+    "tipo": "futuro"
+  },
+  {
+    "s": "UUP",
+    "n": "Dollar Bull ETF",
+    "tipo": "futuro"
+  },
+  {
+    "s": "6E=F",
+    "n": "Euro Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwMDMzOTknLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+RVVSPC90ZXh0Pjwvc3ZnPg==",
+    "color": "#003087"
+  },
+  {
+    "s": "6J=F",
+    "n": "Yen Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNCQzAwMkQnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+SlBZPC90ZXh0Pjwvc3ZnPg==",
+    "color": "#CC0000"
+  },
+  {
+    "s": "6B=F",
+    "n": "Libra Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwMDMzOTknLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+R0JQPC90ZXh0Pjwvc3ZnPg==",
+    "color": "#CC0000"
+  },
+  {
+    "s": "ZC=F",
+    "n": "Maiz Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNGNUM1MTgnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+WkM8L3RleHQ+PC9zdmc+",
+    "color": "#F5C800"
+  },
+  {
+    "s": "ZS=F",
+    "n": "Soja Fut",
+    "tipo": "futuro",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyM4QjczNTUnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+WlM8L3RleHQ+PC9zdmc+",
+    "color": "#7BAE36"
+  },
+  {
+    "s": "TLT",
+    "n": "Bonos 20+ anos",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/TLT.png",
+    "color": "#003087"
+  },
+  {
+    "s": "IEF",
+    "n": "Bonos 7-10 anos",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/IEF.png",
+    "color": "#003087"
+  },
+  {
+    "s": "SHY",
+    "n": "Bonos 1-3 anos",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/SHY.png",
+    "color": "#003087"
+  },
+  {
+    "s": "HYG",
+    "n": "High Yield",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/HYG.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "LQD",
+    "n": "Invest. Grade",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/LQD.png",
+    "color": "#003087"
+  },
+  {
+    "s": "AGG",
+    "n": "Bonos Agregado",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/AGG.png",
+    "color": "#003087"
+  },
+  {
+    "s": "EMB",
+    "n": "Emergentes",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/EMB.png",
+    "color": "#003087"
+  },
+  {
+    "s": "BND",
+    "n": "Vanguard Total Bond",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/BND.png",
+    "color": "#003087"
+  },
+  {
+    "s": "TIP",
+    "n": "Inflation Protected",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/TIP.png",
+    "color": "#003087"
+  },
+  {
+    "s": "JNK",
+    "n": "SPDR High Yield",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/JNK.png",
+    "color": "#CC0000"
+  },
+  {
+    "s": "MUB",
+    "n": "Municipal Bonds",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/MUB.png",
+    "color": "#003087"
+  },
+  {
+    "s": "BNDX",
+    "n": "International Bond",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/BNDX.png",
+    "color": "#003087"
+  },
+  {
+    "s": "ARGT",
+    "n": "MSCI Argentina ETF",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/ARGT.png",
+    "color": "#75B5E5"
+  },
+  {
+    "s": "AGT",
+    "n": "iShares Argentina ETF",
+    "tipo": "bono",
+    "logo": "https://financialmodelingprep.com/image-stock/AGT.png",
+    "color": "#003087"
+  },
+  {
+    "s": "EURUSD=X",
+    "n": "Euro / Dolar",
+    "tipo": "divisa",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwMDMzOTknLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzExJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+RVVSPC90ZXh0Pjwvc3ZnPg==",
+    "color": "#003399"
+  },
+  {
+    "s": "USDJPY=X",
+    "n": "Dolar / Yen",
+    "tipo": "divisa",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNCQzAwMkQnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzExJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+SlBZPC90ZXh0Pjwvc3ZnPg==",
+    "color": "#BC002D"
+  },
+  {
+    "s": "GBPUSD=X",
+    "n": "Libra / Dolar",
+    "tipo": "divisa",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyMwMDMzOTknLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzExJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+R0JQPC90ZXh0Pjwvc3ZnPg==",
+    "color": "#003399"
+  },
+  {
+    "s": "USDCNY=X",
+    "n": "Dolar / Yuan",
+    "tipo": "divisa",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNERTJDMTAnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzExJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+Q05ZPC90ZXh0Pjwvc3ZnPg==",
+    "color": "#DE2C10"
+  },
+  {
+    "s": "USDARS=X",
+    "n": "Dolar / Peso ARG",
+    "tipo": "divisa",
+    "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyM3NUI1RTUnLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzExJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+QVJTPC90ZXh0Pjwvc3ZnPg==",
+    "color": "#75B5E5"
+  }
+]
