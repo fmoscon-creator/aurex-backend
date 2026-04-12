@@ -3,7 +3,7 @@
     "s": "BTC",
     "n": "Bitcoin",
     "tipo": "Cripto",
-    "ySymbol": "BTC",
+    "ySymbol": "BTC-USD",
     "logo": "https://assets.coingecko.com/coins/images/1/small/bitcoin.png",
     "color": "#F7931A"
   },
@@ -11,7 +11,7 @@
     "s": "ETH",
     "n": "Ethereum",
     "tipo": "Cripto",
-    "ySymbol": "ETH",
+    "ySymbol": "ETH-USD",
     "logo": "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
     "color": "#627EEA"
   },
@@ -19,7 +19,7 @@
     "s": "SOL",
     "n": "Solana",
     "tipo": "Cripto",
-    "ySymbol": "SOL",
+    "ySymbol": "SOL-USD",
     "logo": "https://assets.coingecko.com/coins/images/4128/small/solana.png",
     "color": "#9945FF"
   },
@@ -27,7 +27,7 @@
     "s": "BNB",
     "n": "BNB",
     "tipo": "Cripto",
-    "ySymbol": "BNB",
+    "ySymbol": "BNB-USD",
     "logo": "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
     "color": "#F3BA2F"
   },
@@ -35,7 +35,7 @@
     "s": "XRP",
     "n": "Ripple",
     "tipo": "Cripto",
-    "ySymbol": "XRP",
+    "ySymbol": "XRP-USD",
     "logo": "https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png",
     "color": "#00AAE4"
   },
@@ -43,7 +43,7 @@
     "s": "ADA",
     "n": "Cardano",
     "tipo": "Cripto",
-    "ySymbol": "ADA",
+    "ySymbol": "ADA-USD",
     "logo": "https://assets.coingecko.com/coins/images/975/small/cardano.png",
     "color": "#0033AD"
   },
@@ -51,7 +51,7 @@
     "s": "AVAX",
     "n": "Avalanche",
     "tipo": "Cripto",
-    "ySymbol": "AVAX",
+    "ySymbol": "AVAX-USD",
     "logo": "https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png",
     "color": "#E84142"
   },
@@ -59,7 +59,7 @@
     "s": "DOT",
     "n": "Polkadot",
     "tipo": "Cripto",
-    "ySymbol": "DOT",
+    "ySymbol": "DOT-USD",
     "logo": "https://assets.coingecko.com/coins/images/12171/small/polkadot.png",
     "color": "#E6007A"
   },
@@ -67,7 +67,7 @@
     "s": "LINK",
     "n": "Chainlink",
     "tipo": "Cripto",
-    "ySymbol": "LINK",
+    "ySymbol": "LINK-USD",
     "logo": "https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png",
     "color": "#2A5ADA"
   },
@@ -75,7 +75,7 @@
     "s": "MATIC",
     "n": "Polygon",
     "tipo": "Cripto",
-    "ySymbol": "MATIC",
+    "ySymbol": "MATIC-USD",
     "logo": "https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png",
     "color": "#8247E5"
   },
@@ -83,7 +83,7 @@
     "s": "DOGE",
     "n": "Dogecoin",
     "tipo": "Cripto",
-    "ySymbol": "DOGE",
+    "ySymbol": "DOGE-USD",
     "logo": "https://assets.coingecko.com/coins/images/5/small/dogecoin.png",
     "color": "#C2A633"
   },
@@ -91,7 +91,7 @@
     "s": "SHIB",
     "n": "Shiba Inu",
     "tipo": "Cripto",
-    "ySymbol": "SHIB",
+    "ySymbol": "SHIB-USD",
     "logo": "https://assets.coingecko.com/coins/images/11939/small/shiba.png",
     "color": "#E3003A"
   },
@@ -99,7 +99,7 @@
     "s": "LTC",
     "n": "Litecoin",
     "tipo": "Cripto",
-    "ySymbol": "LTC",
+    "ySymbol": "LTC-USD",
     "logo": "https://assets.coingecko.com/coins/images/2/small/litecoin.png",
     "color": "#BFBBBB"
   },
@@ -107,7 +107,7 @@
     "s": "UNI",
     "n": "Uniswap",
     "tipo": "Cripto",
-    "ySymbol": "UNI",
+    "ySymbol": "UNI-USD",
     "logo": "https://assets.coingecko.com/coins/images/12504/small/uni.jpg",
     "color": "#FF007A"
   },
@@ -115,7 +115,7 @@
     "s": "ATOM",
     "n": "Cosmos",
     "tipo": "Cripto",
-    "ySymbol": "ATOM",
+    "ySymbol": "ATOM-USD",
     "logo": "https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png",
     "color": "#6F7390"
   },
@@ -123,7 +123,7 @@
     "s": "ETC",
     "n": "Ethereum Classic",
     "tipo": "Cripto",
-    "ySymbol": "ETC",
+    "ySymbol": "ETC-USD",
     "logo": "https://assets.coingecko.com/coins/images/453/small/ethereum-classic-logo.png",
     "color": "#328332"
   },
@@ -131,7 +131,7 @@
     "s": "XLM",
     "n": "Stellar",
     "tipo": "Cripto",
-    "ySymbol": "XLM",
+    "ySymbol": "XLM-USD",
     "logo": "https://assets.coingecko.com/coins/images/100/small/Stellar_symbol_black_RGB.png",
     "color": "#000000"
   },
@@ -139,7 +139,7 @@
     "s": "ALGO",
     "n": "Algorand",
     "tipo": "Cripto",
-    "ySymbol": "ALGO",
+    "ySymbol": "ALGO-USD",
     "logo": "https://assets.coingecko.com/coins/images/4380/small/download.png",
     "color": "#000000"
   },
@@ -147,7 +147,7 @@
     "s": "ICP",
     "n": "Internet Computer",
     "tipo": "Cripto",
-    "ySymbol": "ICP",
+    "ySymbol": "ICP-USD",
     "logo": "https://assets.coingecko.com/coins/images/14495/small/Internet_Computer_logo.png",
     "color": "#29ABE2"
   },
@@ -155,7 +155,7 @@
     "s": "FIL",
     "n": "Filecoin",
     "tipo": "Cripto",
-    "ySymbol": "FIL",
+    "ySymbol": "FIL-USD",
     "logo": "https://assets.coingecko.com/coins/images/12817/small/filecoin.png",
     "color": "#42C1CA"
   },
@@ -163,7 +163,7 @@
     "s": "HBAR",
     "n": "Hedera",
     "tipo": "Cripto",
-    "ySymbol": "HBAR",
+    "ySymbol": "HBAR-USD",
     "logo": "https://assets.coingecko.com/coins/images/3688/small/hbar.png",
     "color": "#222222"
   },
@@ -171,7 +171,7 @@
     "s": "VET",
     "n": "VeChain",
     "tipo": "Cripto",
-    "ySymbol": "VET",
+    "ySymbol": "VET-USD",
     "logo": "https://assets.coingecko.com/coins/images/1167/small/VET_Token_Icon.png",
     "color": "#15BDFF"
   },
@@ -179,7 +179,7 @@
     "s": "SAND",
     "n": "The Sandbox",
     "tipo": "Cripto",
-    "ySymbol": "SAND",
+    "ySymbol": "SAND-USD",
     "logo": "https://assets.coingecko.com/coins/images/12129/small/sandbox_logo.jpg",
     "color": "#00ADEF"
   },
@@ -187,7 +187,7 @@
     "s": "MANA",
     "n": "Decentraland",
     "tipo": "Cripto",
-    "ySymbol": "MANA",
+    "ySymbol": "MANA-USD",
     "logo": "https://assets.coingecko.com/coins/images/878/small/decentraland-mana.png",
     "color": "#FF2D55"
   },
@@ -195,7 +195,7 @@
     "s": "THETA",
     "n": "Theta",
     "tipo": "Cripto",
-    "ySymbol": "THETA",
+    "ySymbol": "THETA-USD",
     "logo": "https://assets.coingecko.com/coins/images/2538/small/theta-token-logo.png",
     "color": "#2AB8E6"
   },
@@ -203,7 +203,7 @@
     "s": "AAVE",
     "n": "Aave",
     "tipo": "Cripto",
-    "ySymbol": "AAVE",
+    "ySymbol": "AAVE-USD",
     "logo": "https://assets.coingecko.com/coins/images/12645/small/AAVE.png",
     "color": "#B6509E"
   },
@@ -211,7 +211,7 @@
     "s": "MKR",
     "n": "Maker",
     "tipo": "Cripto",
-    "ySymbol": "MKR",
+    "ySymbol": "MKR-USD",
     "logo": "https://assets.coingecko.com/coins/images/1364/small/Mark_Maker.png",
     "color": "#1AAB9B"
   },
@@ -219,7 +219,7 @@
     "s": "GRT",
     "n": "The Graph",
     "tipo": "Cripto",
-    "ySymbol": "GRT",
+    "ySymbol": "GRT-USD",
     "logo": "https://assets.coingecko.com/coins/images/13397/small/Graph_Token.png",
     "color": "#6747ED"
   },
@@ -227,7 +227,7 @@
     "s": "SNX",
     "n": "Synthetix",
     "tipo": "Cripto",
-    "ySymbol": "SNX",
+    "ySymbol": "SNX-USD",
     "logo": "https://assets.coingecko.com/coins/images/3406/small/SNX.png",
     "color": "#1E1A31"
   },
@@ -235,7 +235,7 @@
     "s": "COMP",
     "n": "Compound",
     "tipo": "Cripto",
-    "ySymbol": "COMP",
+    "ySymbol": "COMP-USD",
     "logo": "https://assets.coingecko.com/coins/images/10775/small/COMP.png",
     "color": "#00D395"
   },
@@ -243,7 +243,7 @@
     "s": "CRV",
     "n": "Curve",
     "tipo": "Cripto",
-    "ySymbol": "CRV",
+    "ySymbol": "CRV-USD",
     "logo": "https://assets.coingecko.com/coins/images/12124/small/Curve.png",
     "color": "#D9002E"
   },
@@ -251,7 +251,7 @@
     "s": "1INCH",
     "n": "1inch",
     "tipo": "Cripto",
-    "ySymbol": "1INCH",
+    "ySymbol": "1INCH-USD",
     "logo": "https://assets.coingecko.com/coins/images/13469/small/1inch-token.png",
     "color": "#1B314F"
   },
@@ -259,7 +259,7 @@
     "s": "LDO",
     "n": "Lido DAO",
     "tipo": "Cripto",
-    "ySymbol": "LDO",
+    "ySymbol": "LDO-USD",
     "logo": "https://assets.coingecko.com/coins/images/13573/small/Lido_DAO.png",
     "color": "#F27B4D"
   },
@@ -267,7 +267,7 @@
     "s": "ARB",
     "n": "Arbitrum",
     "tipo": "Cripto",
-    "ySymbol": "ARB",
+    "ySymbol": "ARB-USD",
     "logo": "https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg",
     "color": "#12AAFF"
   },
@@ -275,7 +275,7 @@
     "s": "OP",
     "n": "Optimism",
     "tipo": "Cripto",
-    "ySymbol": "OP",
+    "ySymbol": "OP-USD",
     "logo": "https://assets.coingecko.com/coins/images/25244/small/Optimism.png",
     "color": "#FF0420"
   },
@@ -283,7 +283,7 @@
     "s": "IMX",
     "n": "Immutable X",
     "tipo": "Cripto",
-    "ySymbol": "IMX",
+    "ySymbol": "IMX-USD",
     "logo": "https://assets.coingecko.com/coins/images/17233/small/immutableX-symbol-BLK-RGB.png",
     "color": "#00C3F9"
   },
@@ -291,7 +291,7 @@
     "s": "APT",
     "n": "Aptos",
     "tipo": "Cripto",
-    "ySymbol": "APT",
+    "ySymbol": "APT-USD",
     "logo": "https://assets.coingecko.com/coins/images/26455/small/aptos_round.png",
     "color": "#00D395"
   },
@@ -299,7 +299,7 @@
     "s": "SUI",
     "n": "Sui",
     "tipo": "Cripto",
-    "ySymbol": "SUI",
+    "ySymbol": "SUI-USD",
     "logo": "https://assets.coingecko.com/coins/images/26375/small/sui_asset.jpeg",
     "color": "#6FBCF0"
   },
@@ -307,7 +307,7 @@
     "s": "SEI",
     "n": "Sei",
     "tipo": "Cripto",
-    "ySymbol": "SEI",
+    "ySymbol": "SEI-USD",
     "logo": "https://assets.coingecko.com/coins/images/28205/small/Sei_Logo_-_Transparent.png",
     "color": "#9C3A7A"
   },
@@ -315,7 +315,7 @@
     "s": "INJ",
     "n": "Injective",
     "tipo": "Cripto",
-    "ySymbol": "INJ",
+    "ySymbol": "INJ-USD",
     "logo": "https://assets.coingecko.com/coins/images/12882/small/Secondary_Symbol.png",
     "color": "#00B2FF"
   },
@@ -323,7 +323,7 @@
     "s": "TIA",
     "n": "Celestia",
     "tipo": "Cripto",
-    "ySymbol": "TIA",
+    "ySymbol": "TIA-USD",
     "logo": "https://assets.coingecko.com/coins/images/33172/small/celestia.png",
     "color": "#7B2BF9"
   },
@@ -331,7 +331,7 @@
     "s": "JUP",
     "n": "Jupiter",
     "tipo": "Cripto",
-    "ySymbol": "JUP",
+    "ySymbol": "JUP-USD",
     "logo": "https://assets.coingecko.com/coins/images/34285/large/jup.png",
     "color": "#C8853A"
   },
@@ -339,7 +339,7 @@
     "s": "NEAR",
     "n": "NEAR Protocol",
     "tipo": "Cripto",
-    "ySymbol": "NEAR",
+    "ySymbol": "NEAR-USD",
     "logo": "https://assets.coingecko.com/coins/images/10365/small/near.jpg",
     "color": "#00C08B"
   },
@@ -347,7 +347,7 @@
     "s": "FTM",
     "n": "Fantom",
     "tipo": "Cripto",
-    "ySymbol": "FTM",
+    "ySymbol": "FTM-USD",
     "logo": "https://assets.coingecko.com/coins/images/4001/small/Fantom_round.png",
     "color": "#1969FF"
   },
@@ -355,7 +355,7 @@
     "s": "ROSE",
     "n": "Oasis",
     "tipo": "Cripto",
-    "ySymbol": "ROSE",
+    "ySymbol": "ROSE-USD",
     "logo": "https://assets.coingecko.com/coins/images/13162/small/rose.png",
     "color": "#0092F6"
   },
@@ -363,7 +363,7 @@
     "s": "ZEC",
     "n": "Zcash",
     "tipo": "Cripto",
-    "ySymbol": "ZEC",
+    "ySymbol": "ZEC-USD",
     "logo": "https://assets.coingecko.com/coins/images/486/small/circle-zcash-color.png",
     "color": "#ECB244"
   },
@@ -371,7 +371,7 @@
     "s": "DASH",
     "n": "Dash",
     "tipo": "Cripto",
-    "ySymbol": "DASH",
+    "ySymbol": "DASH-USD",
     "logo": "https://financialmodelingprep.com/image-stock/DASH.png",
     "color": "#FF3008"
   },
@@ -379,7 +379,7 @@
     "s": "XMR",
     "n": "Monero",
     "tipo": "Cripto",
-    "ySymbol": "XMR",
+    "ySymbol": "XMR-USD",
     "logo": "https://assets.coingecko.com/coins/images/69/small/monero_logo.png",
     "color": "#FF6600"
   },
@@ -387,7 +387,7 @@
     "s": "BCH",
     "n": "Bitcoin Cash",
     "tipo": "Cripto",
-    "ySymbol": "BCH",
+    "ySymbol": "BCH-USD",
     "logo": "https://assets.coingecko.com/coins/images/780/small/bitcoin-cash-circle.png",
     "color": "#8DC351"
   },
@@ -395,7 +395,7 @@
     "s": "TON",
     "n": "Toncoin",
     "tipo": "Cripto",
-    "ySymbol": "TON",
+    "ySymbol": "TON-USD",
     "logo": "https://assets.coingecko.com/coins/images/17980/small/ton_symbol.png",
     "color": "#0088CC"
   },
@@ -403,7 +403,7 @@
     "s": "USDT",
     "n": "Tether",
     "tipo": "Stable",
-    "ySymbol": "USDT",
+    "ySymbol": "USDT-USD",
     "logo": "",
     "color": "#D4A017"
   },
@@ -411,7 +411,7 @@
     "s": "USDC",
     "n": "USD Coin",
     "tipo": "Stable",
-    "ySymbol": "USDC",
+    "ySymbol": "USDC-USD",
     "logo": "",
     "color": "#D4A017"
   },
@@ -419,7 +419,7 @@
     "s": "DAI",
     "n": "Dai",
     "tipo": "Stable",
-    "ySymbol": "DAI",
+    "ySymbol": "DAI-USD",
     "logo": "",
     "color": "#D4A017"
   },
@@ -1235,7 +1235,7 @@
     "s": "PAMP",
     "n": "Pampa Energia",
     "tipo": "Accion",
-    "ySymbol": "PAMP",
+    "ySymbol": "PAMP.BA",
     "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTYnIGZpbGw9JyNDMDM5MkInLz48dGV4dCB4PScxNicgeT0nMjEnIGZvbnQtZmFtaWx5PSdBcmlhbCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzEzJyBmb250LXdlaWdodD0nYm9sZCcgZmlsbD0nI2ZmZicgdGV4dC1hbmNob3I9J21pZGRsZSc+UEE8L3RleHQ+PC9zdmc+",
     "color": "#003087"
   },
@@ -1267,7 +1267,7 @@
     "s": "TECO2",
     "n": "Telecom Argentina",
     "tipo": "Accion",
-    "ySymbol": "TECO2",
+    "ySymbol": "TECO2.BA",
     "logo": "",
     "color": "#D4A017"
   },
@@ -1275,7 +1275,7 @@
     "s": "TXAR",
     "n": "Ternium Argentina",
     "tipo": "Accion",
-    "ySymbol": "TXAR",
+    "ySymbol": "TXAR.BA",
     "logo": "",
     "color": "#D4A017"
   },
@@ -1283,7 +1283,7 @@
     "s": "CRES",
     "n": "Cresud",
     "tipo": "Accion",
-    "ySymbol": "CRES",
+    "ySymbol": "CRES.BA",
     "logo": "",
     "color": "#D4A017"
   },
@@ -1291,7 +1291,7 @@
     "s": "IRSA",
     "n": "IRSA",
     "tipo": "Accion",
-    "ySymbol": "IRSA",
+    "ySymbol": "IRSA.BA",
     "logo": "",
     "color": "#D4A017"
   },
@@ -1299,7 +1299,7 @@
     "s": "BYMA",
     "n": "BYMA",
     "tipo": "Accion",
-    "ySymbol": "BYMA",
+    "ySymbol": "BYMA.BA",
     "logo": "",
     "color": "#D4A017"
   },
@@ -1307,7 +1307,7 @@
     "s": "HARG",
     "n": "Harg",
     "tipo": "Accion",
-    "ySymbol": "HARG",
+    "ySymbol": "HARG.BA",
     "logo": "",
     "color": "#D4A017"
   },
@@ -1315,7 +1315,7 @@
     "s": "DGCU2",
     "n": "Dist. Gas Cuyana",
     "tipo": "Accion",
-    "ySymbol": "DGCU2",
+    "ySymbol": "DGCU2.BA",
     "logo": "",
     "color": "#D4A017"
   },
@@ -1323,7 +1323,7 @@
     "s": "TRAN",
     "n": "Transener",
     "tipo": "Accion",
-    "ySymbol": "TRAN",
+    "ySymbol": "TRAN.BA",
     "logo": "",
     "color": "#D4A017"
   },
@@ -1339,7 +1339,7 @@
     "s": "COME",
     "n": "Comercial del Plata",
     "tipo": "Accion",
-    "ySymbol": "COME",
+    "ySymbol": "COME.BA",
     "logo": "",
     "color": "#D4A017"
   },
@@ -1347,7 +1347,7 @@
     "s": "AUSO",
     "n": "Autopistas del Sol",
     "tipo": "Accion",
-    "ySymbol": "AUSO",
+    "ySymbol": "AUSO.BA",
     "logo": "",
     "color": "#D4A017"
   },
@@ -1363,7 +1363,7 @@
     "s": "INVJ",
     "n": "Inversora Juramento",
     "tipo": "Accion",
-    "ySymbol": "INVJ",
+    "ySymbol": "INVJ.BA",
     "logo": "",
     "color": "#D4A017"
   },
@@ -1371,7 +1371,7 @@
     "s": "MOLI",
     "n": "Molinos Agro",
     "tipo": "Accion",
-    "ySymbol": "MOLI",
+    "ySymbol": "MOLI.BA",
     "logo": "",
     "color": "#D4A017"
   },
