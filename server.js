@@ -290,7 +290,9 @@ function _calcIAScore(tipo, sym, d) {
   const objRaw = d.precio>0?d.precio*(1+(al?mv:-mv)):0;
   const stopRaw = d.precio>0?d.precio*(1+(al?-mv*0.4:mv*0.4)):0;
   const pDec = d.precio>=1000?2:d.precio>=1?2:d.precio>=0.01?4:d.precio>=0.0001?6:8;
-  return { simbolo:sym, tipo, direccion:dir, scores:sc, confianza:pp, probPrincipal:pp, score:total, estrellas:est, rsi:parseFloat(rsi.toFixed(0)), volRel:parseFloat(vr.toFixed(1)), objetivo:parseFloat(objRaw.toFixed(pDec)), stop:parseFloat(stopRaw.toFixed(pDec)), upside:parseFloat(((al?1:-1)*mv*100).toFixed(1)), precio:d.precio, precio24h:d.precio24h, prob_alcista:Math.round(probAlcista), prob_bajista:Math.round(probBajista), motivos:motivos.slice(0,5), escenario_principal:escenario };
+  const precio7d = d.cls && d.cls.length >= 7 ? d.cls[d.cls.length - 7] : 0;
+  const precio30d = d.cls && d.cls.length >= 30 ? d.cls[0] : 0;
+  return { simbolo:sym, tipo, direccion:dir, scores:sc, confianza:pp, probPrincipal:pp, score:total, estrellas:est, rsi:parseFloat(rsi.toFixed(0)), volRel:parseFloat(vr.toFixed(1)), objetivo:parseFloat(objRaw.toFixed(pDec)), stop:parseFloat(stopRaw.toFixed(pDec)), upside:parseFloat(((al?1:-1)*mv*100).toFixed(1)), precio:d.precio, precio24h:d.precio24h, precio7d, precio30d, prob_alcista:Math.round(probAlcista), prob_bajista:Math.round(probBajista), motivos:motivos.slice(0,5), escenario_principal:escenario };
 }
 
 let _iaSignalsCache = { signals: [], updatedAt: null };
