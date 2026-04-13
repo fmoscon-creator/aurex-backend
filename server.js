@@ -115,6 +115,24 @@ app.get('/api/watchlist/:userId', async (req, res) => { const { data, error } = 
 app.post('/api/watchlist', async (req, res) => { const { data, error } = await supabase.from('watchlist').insert({ ...req.body, created_at: new Date().toISOString() }).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.delete('/api/watchlist/:id', async (req, res) => { const { error } = await supabase.from('watchlist').delete().eq('id', req.params.id); error ? res.status(500).json({ error }) : res.json({ ok: true }); });
 
+// AVATAR upload — usa service_role key del backend para bypassar RLS del bucket
+app.post('/api/avatar', async (req, res) => {
+  try {
+    const { user_id, base64, content_type } = req.body;
+    if (!user_id || !base64) return res.status(400).json({ error: 'Faltan user_id o base64' });
+    const buf = Buffer.from(base64, 'base64');
+    const path = `${user_id}.jpg`;
+    const { error: upErr } = await supabase.storage
+      .from('avatars')
+      .upload(path, buf, { contentType: content_type || 'image/jpeg', upsert: true });
+    if (upErr) return res.status(500).json({ error: upErr.message });
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+    res.json({ url: `${urlData.publicUrl}?t=${Date.now()}` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // WATCHLISTS v2 (tablas watchlists + watchlist_items)
 app.get('/api/watchlists/:userId', async (req, res) => {
   const { data, error } = await supabase.from('watchlists').select('*').eq('user_id', req.params.userId).order('position', { ascending: true });
