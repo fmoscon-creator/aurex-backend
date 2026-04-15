@@ -17,6 +17,32 @@ const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const WHATSAPP_FROM = process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+14155238886';
 
+// EVOLUTION API (WhatsApp self-hosted) - primary WhatsApp sender
+const EVOLUTION_URL = process.env.EVOLUTION_API_URL;
+const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY;
+const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE || 'aurex';
+const ADMIN_WHATSAPP = process.env.ADMIN_WHATSAPP; // número admin en formato 5491167891320
+
+async function sendWhatsAppEvolution(toNumber, text) {
+  if (!EVOLUTION_URL || !EVOLUTION_KEY) throw new Error('Evolution API no configurado');
+  const number = (toNumber || '').replace(/[^0-9]/g, '');
+  if (!number) throw new Error('Número destino inválido');
+  const r = await fetch(EVOLUTION_URL + '/message/sendText/' + EVOLUTION_INSTANCE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_KEY },
+    body: JSON.stringify({ number, options: { delay: 1000, presence: 'composing' }, textMessage: { text } })
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error('Evolution: ' + (d.response?.message?.join?.(', ') || d.error || r.status));
+  return d;
+}
+
+async function notifyAdmin(subject, body) {
+  if (!ADMIN_WHATSAPP) return;
+  try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, '🚨 ' + subject + '\n\n' + body + '\n\n⏰ ' + new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })); }
+  catch(e) { console.error('[ADMIN ALERT FAILED]', e.message); }
+}
+
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   if (msg.text === '/start') {
@@ -66,8 +92,13 @@ async function dispararAlerta(alerta, precio) {
     try { await bot.sendMessage(alerta.telegram_chat_id, emoji + ' ALERTA — ' + alerta.simbolo + '\n💰 $' + precio + '  🎯 $' + alerta.valor_objetivo + '\n\n' + analisis + '\n\n⏰ ' + ts, { parse_mode: 'Markdown' }); } catch(e) { console.error('TG:', e.message); }
   }
   if (alerta.whatsapp_numero) {
-    const to = alerta.whatsapp_numero.startsWith('+') ? alerta.whatsapp_numero : '+' + alerta.whatsapp_numero;
-    try { await twilioClient.messages.create({ from: WHATSAPP_FROM, to: 'whatsapp:' + to, body: emoji + ' ALERTA — ' + alerta.simbolo + '\n💰 $' + precio + '  🎯 $' + alerta.valor_objetivo + '\n\n' + analisis + '\n\n⏰ ' + ts + '\n— Aurex IA' }); } catch(e) { console.error('WA:', e.message); }
+    const body = emoji + ' ALERTA — ' + alerta.simbolo + '\n💰 $' + precio + '  🎯 $' + alerta.valor_objetivo + '\n\n' + analisis + '\n\n⏰ ' + ts + '\n— Aurex';
+    try { await sendWhatsAppEvolution(alerta.whatsapp_numero, body); }
+    catch(e) {
+      console.error('[WA Evolution]', e.message);
+      // Fallback a Twilio si Evolution falla
+      try { const to = alerta.whatsapp_numero.startsWith('+') ? alerta.whatsapp_numero : '+' + alerta.whatsapp_numero; await twilioClient.messages.create({ from: WHATSAPP_FROM, to: 'whatsapp:' + to, body }); } catch(e2) { console.error('[WA Twilio fallback]', e2.message); }
+    }
   }
   await supabase.from('alertas_historial').insert({ alerta_id: alerta.id, simbolo: alerta.simbolo, precio_disparado: precio, analisis_ia: analisis, telegram_enviado: !!alerta.telegram_chat_id, whatsapp_enviado: !!alerta.whatsapp_numero, created_at: new Date().toISOString() });
 }
@@ -178,6 +209,34 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/test-telegram', async (req, res) => { try { await bot.sendMessage(req.body.chat_id, req.body.mensaje || '✅ Aurex Bot conectado!'); res.json({ ok: true }); } catch(e) { res.status(400).json({ error: e.message }); } });
 app.post('/api/test-whatsapp', async (req, res) => { try { const to = (req.body.numero||'').startsWith('+') ? req.body.numero : '+' + req.body.numero; await twilioClient.messages.create({ from: WHATSAPP_FROM, to: 'whatsapp:' + to, body: req.body.mensaje || '✅ Aurex WhatsApp conectado!' }); res.json({ ok: true }); } catch(e) { res.status(400).json({ error: e.message }); } });
+
+// WHATSAPP EVOLUTION API - endpoint generic envío
+app.post('/api/whatsapp/send', async (req, res) => {
+  try {
+    const { numero, mensaje } = req.body || {};
+    if (!numero || !mensaje) return res.status(400).json({ error: 'numero y mensaje requeridos' });
+    const d = await sendWhatsAppEvolution(numero, mensaje);
+    res.json({ ok: true, id: d.key?.id, status: d.status });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Estado de conexión Evolution
+app.get('/api/whatsapp/status', async (req, res) => {
+  try {
+    if (!EVOLUTION_URL) return res.status(500).json({ error: 'Evolution no configurado' });
+    const r = await fetch(EVOLUTION_URL + '/instance/connectionState/' + EVOLUTION_INSTANCE, { headers: { 'apikey': EVOLUTION_KEY } });
+    const d = await r.json();
+    res.json(d);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Test admin
+app.post('/api/test-admin-alert', async (req, res) => {
+  try {
+    await notifyAdmin(req.body?.subject || 'Test admin alert', req.body?.body || 'Esta es una prueba del canal de alertas admin.');
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
 
 // YAHOO FINANCE PROXY - server side
 const _yCache = {};
@@ -555,6 +614,64 @@ app.post('/api/ia-signals', (req, res) => {
   _iaSignalsCache = { signals: req.body || [], updatedAt: new Date().toISOString() };
   res.json({ ok: true, count: _iaSignalsCache.signals.length });
 });
+
+// HEALTH CHECK CRON — alerta admin WhatsApp si algo crítico falla
+const _health = { evolutionDown: false, supabaseDown: false, lastAlertAt: 0 };
+const HEALTH_ALERT_COOLDOWN_MS = 15 * 60 * 1000; // 15 min entre alertas repetidas
+
+async function healthCheck() {
+  const now = Date.now();
+  const canAlert = (now - _health.lastAlertAt) > HEALTH_ALERT_COOLDOWN_MS;
+
+  // 1) Evolution WhatsApp
+  try {
+    if (EVOLUTION_URL) {
+      const r = await fetch(EVOLUTION_URL + '/instance/connectionState/' + EVOLUTION_INSTANCE, { headers: { 'apikey': EVOLUTION_KEY }, timeout: 10000 });
+      const d = await r.json();
+      const state = d?.instance?.state;
+      if (state !== 'open') {
+        if (!_health.evolutionDown && canAlert) {
+          _health.evolutionDown = true;
+          _health.lastAlertAt = now;
+          console.error('[HEALTH] Evolution DOWN, state:', state);
+        }
+      } else if (_health.evolutionDown) {
+        _health.evolutionDown = false;
+        if (canAlert) { _health.lastAlertAt = now; await notifyAdmin('Evolution WhatsApp RECUPERADO', 'El canal de WhatsApp volvió a estar online.'); }
+      }
+    }
+  } catch(e) {
+    if (!_health.evolutionDown && canAlert) {
+      _health.evolutionDown = true;
+      _health.lastAlertAt = now;
+      console.error('[HEALTH] Evolution error:', e.message);
+    }
+  }
+
+  // 2) Supabase
+  try {
+    const { error } = await supabase.from('usuarios').select('id').limit(1);
+    if (error) {
+      if (!_health.supabaseDown && canAlert) {
+        _health.supabaseDown = true;
+        _health.lastAlertAt = now;
+        await notifyAdmin('Supabase DOWN', 'Error consultando Supabase: ' + (error.message || 'unknown'));
+      }
+    } else if (_health.supabaseDown) {
+      _health.supabaseDown = false;
+      if (canAlert) { _health.lastAlertAt = now; await notifyAdmin('Supabase RECUPERADO', 'La base de datos volvió a responder OK.'); }
+    }
+  } catch(e) {
+    if (!_health.supabaseDown && canAlert) {
+      _health.supabaseDown = true;
+      _health.lastAlertAt = now;
+      await notifyAdmin('Supabase DOWN', 'Excepción: ' + e.message);
+    }
+  }
+}
+
+cron.schedule('*/5 * * * *', healthCheck);
+console.log('[HEALTH] Cron configurado cada 5 min');
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Aurex Backend:', PORT));
