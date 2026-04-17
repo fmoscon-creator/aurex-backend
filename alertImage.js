@@ -328,8 +328,19 @@ async function generateAlertImage(data) {
 
   // Exportar PNG → escalar a 1600x800 (Retina) → superponer logo
   const pngBuffer = await canvasToBuffer(canvas);
-  const logoPath = LOGO_LIGHT; // transparente funciona en ambos modos
-  const logoBuffer = await sharp(logoPath).resize(110, 110).toBuffer();
+  const logoPath = data.theme === 'light' ? LOGO_DARK : LOGO_LIGHT;
+  let logoBuffer;
+  if (data.theme === 'light') {
+    // Recortar logo oscuro en círculo (quitar esquinas negras)
+    const circleMask = Buffer.from(
+      `<svg width="110" height="110"><circle cx="55" cy="55" r="55" fill="white"/></svg>`
+    );
+    logoBuffer = await sharp(logoPath).resize(110, 110)
+      .composite([{ input: circleMask, blend: 'dest-in' }])
+      .png().toBuffer();
+  } else {
+    logoBuffer = await sharp(logoPath).resize(110, 110).toBuffer();
+  }
   const finalImage = await sharp(pngBuffer)
     .resize(1600, 800, { kernel: 'lanczos3' })
     .composite([{ input: logoBuffer, top: 36, left: 60 }])
