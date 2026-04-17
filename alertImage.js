@@ -131,70 +131,70 @@ async function generateAlertImage(data) {
   ctx.fillRect(30, 68, W - 60, 1);
 
   if (type === 'ia') {
-    // Logo del activo (círculo con iniciales)
     const sym = data.symbol || 'BTC';
-    ctx.fillStyle = hexToRgba(accent);
-    ctx.beginPath();
-    ctx.arc(62, 100, 22, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(0,0,0,1)';
-    ctx.font = '14pt Inter';
-    ctx.fillText(sym.slice(0, 2), 49, 106);
+    const prob = data.probability || 82;
+    const dir = data.direction || 'ALCISTA';
 
-    // Ticker
+    // Ticker grande
     ctx.fillStyle = hexToRgba(C.text);
-    ctx.font = '32pt Inter';
-    ctx.fillText(sym, 95, 110);
+    ctx.font = '34pt Inter';
+    ctx.fillText(sym, 40, 108);
 
-    // Dirección + probabilidad (separado del ticker)
-    const symWidth = sym.length * 20 + 110;
+    // Dirección + probabilidad + al precio objetivo
+    const symWidth = sym.length * 22 + 55;
     ctx.fillStyle = hexToRgba(accent);
-    ctx.font = '22pt Inter';
-    ctx.fillText((data.direction || 'ALCISTA') + ' ' + (data.probability || '') + '%', symWidth, 110);
+    ctx.font = '20pt Inter';
+    ctx.fillText(dir + ' ' + prob + '% al precio objetivo', symWidth, 108);
 
-    // Card Precio — borde dorado + glow
-    drawCard(ctx, 40, 132, 220, 80, C.gold, true);
+    // Card Precio — fondo claro sin bordes deformes
+    ctx.fillStyle = 'rgba(30,37,46,1)';
+    ctx.fillRect(40, 130, 220, 78);
     ctx.fillStyle = 'rgba(201,209,217,1)';
-    ctx.font = '14pt Inter';
-    ctx.fillText('Precio', 60, 158);
+    ctx.font = '13pt Inter';
+    ctx.fillText('Precio', 55, 155);
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '22pt Inter';
-    ctx.fillText('$' + fmtPrice(data.price), 60, 192);
+    ctx.fillText('$' + fmtPrice(data.price), 55, 190);
 
-    // Card Objetivo — borde verde + glow
-    drawCard(ctx, 280, 132, 220, 80, C.green, true);
+    // Card Objetivo
+    ctx.fillStyle = 'rgba(30,37,46,1)';
+    ctx.fillRect(280, 130, 220, 78);
     ctx.fillStyle = 'rgba(201,209,217,1)';
-    ctx.font = '14pt Inter';
-    ctx.fillText('Objetivo', 300, 158);
+    ctx.font = '13pt Inter';
+    ctx.fillText('Objetivo', 295, 155);
     ctx.fillStyle = hexToRgba(C.green);
     ctx.font = '22pt Inter';
-    ctx.fillText('$' + fmtPrice(data.target), 300, 192);
+    ctx.fillText('$' + fmtPrice(data.target), 295, 190);
 
-    // Card Stop — borde rojo + glow
-    drawCard(ctx, 520, 132, 220, 80, C.red, true);
+    // Card Stop
+    ctx.fillStyle = 'rgba(30,37,46,1)';
+    ctx.fillRect(520, 130, 220, 78);
     ctx.fillStyle = 'rgba(201,209,217,1)';
-    ctx.font = '14pt Inter';
-    ctx.fillText('Stop', 540, 158);
+    ctx.font = '13pt Inter';
+    ctx.fillText('Stop', 535, 155);
     ctx.fillStyle = hexToRgba(C.red);
     ctx.font = '22pt Inter';
-    ctx.fillText('$' + fmtPrice(data.stop), 540, 192);
+    ctx.fillText('$' + fmtPrice(data.stop), 535, 190);
 
-    // Barra probabilidad (más gruesa)
-    ctx.fillStyle = hexToRgba(C.card);
-    roundRect(ctx, 40, 232, 700, 12, 6);
-    ctx.fill();
+    // Barra probabilidad — fondo gris 100% + relleno color
+    ctx.fillStyle = 'rgba(33,38,45,1)';
+    ctx.fillRect(40, 228, 700, 14);
     ctx.fillStyle = hexToRgba(accent);
-    const barW = Math.round(700 * (data.probability || 50) / 100);
-    roundRect(ctx, 40, 232, barW, 12, 6);
-    ctx.fill();
+    const barW = Math.round(700 * prob / 100);
+    ctx.fillRect(40, 228, barW, 14);
 
-    // Labels barra
+    // Escala 0% y 100%
+    ctx.fillStyle = hexToRgba(C.textSec);
+    ctx.font = '10pt Inter';
+    ctx.fillText('0%', 40, 258);
+    ctx.fillText('100%', 710, 258);
+
+    // Label barra
     ctx.fillStyle = 'rgba(201,209,217,1)';
-    ctx.font = '13pt Inter';
-    ctx.fillText('Motor IA v7 — 10 variables', 40, 268);
+    ctx.font = '12pt Inter';
+    ctx.fillText('Motor IA v7 — 10 variables', 200, 258);
     ctx.fillStyle = hexToRgba(accent);
-    ctx.font = '13pt Inter';
-    ctx.fillText((data.probability || 50) + '% al precio objetivo', 560, 268);
+    ctx.fillText(prob + '%', 40 + barW - 20, 258);
 
   } else if (type === 'precio') {
     ctx.fillStyle = hexToRgba(C.text);

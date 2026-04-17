@@ -266,7 +266,7 @@ app.post('/api/whatsapp/test-image', async (req, res) => {
     const imgBuf = await generateAlertImage({ type: type || 'ia', symbol: symbol || 'BTC', direction: direction || 'ALCISTA', probability: probability || 82, price: price || 67450, target: target || 72846, stop: stop || 64752, message, pulseScore, pulseZone });
     const dir = direction || 'ALCISTA';
     const dirEmoji = dir === 'ALCISTA' ? '📈' : dir === 'BAJISTA' ? '📉' : '⚡';
-    const caption = dirEmoji + ' ' + (symbol || 'BTC') + ' — ' + dir + ' ' + (probability || 82) + '%\n$' + fmtP(price || 0) + ' → $' + fmtP(target || 0) + '\naurex.live';
+    const caption = dirEmoji + ' ' + (symbol || 'BTC') + ' ' + dir + ' ' + (probability || 82) + '%\n🎯 Objetivo $' + fmtP(target || 0) + '\naurex.live';
     await sendWhatsAppImage(numero, imgBuf, caption);
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
