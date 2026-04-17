@@ -271,8 +271,9 @@ app.post('/api/whatsapp/test-image', async (req, res) => {
       const dirEmoji = dir === 'ALCISTA' ? '📈' : dir === 'BAJISTA' ? '📉' : '⚡';
       caption = dirEmoji + ' ' + (symbol || 'BTC') + ' ' + dir + ' ' + (probability || 82) + '%\n🎯 Objetivo $' + fmtP(target || 0) + '\naurex.live';
     } else if (t === 'precio') {
-      const alcanzado = (price || 0) >= (target || 0);
-      caption = (alcanzado ? '✅' : '⚠️') + ' ' + (symbol || '') + ' $' + fmtP(price || 0) + '\n🎯 Objetivo $' + fmtP(target || 0) + '\naurex.live';
+      const diffP = target && price ? ((price - target) / target * 100) : 0;
+      const diffSign = diffP >= 0 ? '+' : '';
+      caption = '🎯 ' + (symbol || '') + ' $' + fmtP(price || 0) + ' Ahora\n' + diffSign + diffP.toFixed(1) + '% del Objetivo\naurex.live';
     } else if (t === 'pulse') {
       caption = '💓 AUREX Pulse ' + (pulseScore || 50) + '\n' + (pulseZone || 'Neutral') + '\naurex.live';
     } else if (t === 'admin') {

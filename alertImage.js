@@ -281,16 +281,21 @@ async function generateAlertImage(data) {
     ctx.font = '28pt Inter';
     ctx.fillText('$' + fmtPrice(data.target), 440, 200);
 
-    // Diferencia % — grande con emoji
+    // Diferencia % — grande con indicador de color
     const diffPct = data.target && data.price ? ((data.price - data.target) / data.target * 100) : 0;
     const diffColor = diffPct >= 0 ? C.green : C.red;
-    const diffEmoji = diffPct >= 0 ? '🟢' : '🔴';
     ctx.fillStyle = C.textBright;
     ctx.font = '16pt Inter';
-    ctx.fillText('Diferencia:', 40, 250);
+    ctx.fillText('Diferencia:', 40, 252);
+    // Circulo indicador
+    ctx.fillStyle = hexToRgba(diffColor);
+    ctx.beginPath();
+    ctx.arc(170, 247, 8, 0, Math.PI * 2);
+    ctx.fill();
+    // Porcentaje grande
     ctx.fillStyle = hexToRgba(diffColor);
     ctx.font = '26pt Inter';
-    ctx.fillText(diffEmoji + ' ' + (diffPct >= 0 ? '+' : '') + diffPct.toFixed(2) + '%', 170, 252);
+    ctx.fillText((diffPct >= 0 ? '+' : '') + diffPct.toFixed(2) + '%', 188, 254);
 
   } else if (type === 'pulse') {
     const pScore = data.pulseScore || 50;
@@ -373,7 +378,7 @@ async function generateAlertImage(data) {
   }
   const finalImage = await sharp(pngBuffer)
     .resize(1600, 800, { kernel: 'lanczos3' })
-    .composite([{ input: logoBuffer, top: 16, left: 60 }])
+    .composite([{ input: logoBuffer, top: 40, left: 50 }])
     .png()
     .toBuffer();
 
