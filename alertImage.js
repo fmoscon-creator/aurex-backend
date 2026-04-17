@@ -15,15 +15,32 @@ const fontRegular = PImage.registerFont(path.join(__dirname, 'assets', 'fonts', 
 const fontsReady = Promise.all([fontBold.load(), fontMedium.load(), fontRegular.load()]);
 
 // Colores AUREX
-const C = {
+const DARK = {
   bg: '#0D1117',
   card: '#161B22',
+  cardAlt: 'rgba(30,37,46,1)',
   gold: '#D4A017',
   green: '#3FB950',
   red: '#F85149',
   text: '#E6EDF3',
+  textBright: 'rgba(201,209,217,1)',
   textSec: '#8B949E',
   border: '#21262D',
+  barBg: 'rgba(48,54,61,1)',
+};
+
+const LIGHT = {
+  bg: '#FFFFFF',
+  card: '#F6F8FA',
+  cardAlt: 'rgba(240,243,246,1)',
+  gold: '#B8860B',
+  green: '#1A7F37',
+  red: '#CF222E',
+  text: '#1F2328',
+  textBright: 'rgba(50,55,62,1)',
+  textSec: '#656D76',
+  border: '#D1D9E0',
+  barBg: 'rgba(208,215,222,1)',
 };
 
 function hexToRgba(hex) {
@@ -96,6 +113,7 @@ async function generateAlertImage(data) {
   const canvas = PImage.make(W, H);
   const ctx = canvas.getContext('2d');
   const type = data.type || 'ia';
+  const C = data.theme === 'light' ? LIGHT : DARK;
 
   // Color acento
   let accent = C.gold;
@@ -104,7 +122,7 @@ async function generateAlertImage(data) {
   else if (data.direction === 'BAJISTA') accent = C.red;
 
   // Fondo
-  const bgColor = type === 'admin' ? '#1A0808' : C.bg;
+  const bgColor = type === 'admin' ? (data.theme === 'light' ? '#FFF0F0' : '#1A0808') : C.bg;
   ctx.fillStyle = hexToRgba(bgColor);
   ctx.fillRect(0, 0, W, H);
 
@@ -121,7 +139,7 @@ async function generateAlertImage(data) {
   ctx.fillText('AUREX', 90, 50);
 
   // Subtítulo tipo — mejor contraste (#C9D1D9 en vez de #8B949E)
-  ctx.fillStyle = 'rgba(201,209,217,1)';
+  ctx.fillStyle = C.textBright;
   ctx.font = '16pt Inter';
   const subTitle = type === 'ia' ? 'Alerta IA' : type === 'precio' ? 'Alerta de Precio' : type === 'pulse' ? 'AUREX Pulse' : 'Alerta Sistema';
   ctx.fillText(subTitle, 210, 50);
@@ -145,13 +163,13 @@ async function generateAlertImage(data) {
     ctx.fillStyle = hexToRgba(accent);
     ctx.font = '24pt Inter';
     ctx.fillText(dir + ' ' + prob + '%', symWidth, 108);
-    ctx.fillStyle = hexToRgba(C.text);
+    ctx.fillStyle = C.textBright;
     ctx.font = '16pt Inter';
     const dirTextW = (dir + ' ' + prob + '%').length * 14 + symWidth + 10;
     ctx.fillText('al precio objetivo', dirTextW, 108);
 
     // Card Precio — fondo + borde grueso dorado
-    ctx.fillStyle = 'rgba(30,37,46,1)';
+    ctx.fillStyle = C.cardAlt;
     ctx.fillRect(40, 130, 220, 82);
     ctx.strokeStyle = hexToRgba(C.gold);
     ctx.lineWidth = 3;
@@ -164,7 +182,7 @@ async function generateAlertImage(data) {
     ctx.fillText('$' + fmtPrice(data.price), 55, 194);
 
     // Card Objetivo — fondo + borde grueso verde
-    ctx.fillStyle = 'rgba(30,37,46,1)';
+    ctx.fillStyle = C.cardAlt;
     ctx.fillRect(280, 130, 220, 82);
     ctx.strokeStyle = hexToRgba(C.green);
     ctx.lineWidth = 3;
@@ -177,7 +195,7 @@ async function generateAlertImage(data) {
     ctx.fillText('$' + fmtPrice(data.target), 295, 194);
 
     // Card Stop — fondo + borde grueso rojo
-    ctx.fillStyle = 'rgba(30,37,46,1)';
+    ctx.fillStyle = C.cardAlt;
     ctx.fillRect(520, 130, 220, 82);
     ctx.strokeStyle = hexToRgba(C.red);
     ctx.lineWidth = 3;
@@ -190,20 +208,20 @@ async function generateAlertImage(data) {
     ctx.fillText('$' + fmtPrice(data.stop), 535, 194);
 
     // Barra probabilidad — fondo gris más claro + relleno color
-    ctx.fillStyle = 'rgba(48,54,61,1)';
+    ctx.fillStyle = C.barBg;
     ctx.fillRect(40, 232, 700, 14);
     ctx.fillStyle = hexToRgba(accent);
     const barW = Math.round(700 * prob / 100);
     ctx.fillRect(40, 232, barW, 14);
 
     // Escala 0% y 100% — más grande y claro
-    ctx.fillStyle = 'rgba(201,209,217,1)';
+    ctx.fillStyle = C.textBright;
     ctx.font = '13pt Inter';
     ctx.fillText('0%', 40, 264);
     ctx.fillText('100%', 698, 264);
 
     // Label barra
-    ctx.fillStyle = 'rgba(201,209,217,1)';
+    ctx.fillStyle = C.textBright;
     ctx.font = '13pt Inter';
     ctx.fillText('Motor IA v7 — 10 variables', 250, 264);
     ctx.fillStyle = hexToRgba(accent);
@@ -294,7 +312,7 @@ async function generateAlertImage(data) {
   ctx.fillStyle = hexToRgba(C.border);
   ctx.fillRect(30, H - 55, W - 60, 1);
 
-  ctx.fillStyle = 'rgba(201,209,217,1)';
+  ctx.fillStyle = C.textBright;
   ctx.font = '14pt Inter';
   ctx.fillText('aurex.live', 40, H - 26);
 

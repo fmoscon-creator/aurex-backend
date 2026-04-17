@@ -261,9 +261,9 @@ function fmtP(v) { if (!v || isNaN(v)) return '---'; return v >= 1000 ? v.toLoca
 // WHATSAPP IMAGE - test endpoint
 app.post('/api/whatsapp/test-image', async (req, res) => {
   try {
-    const { numero, type, symbol, direction, probability, price, target, stop, message, pulseScore, pulseZone } = req.body || {};
+    const { numero, type, symbol, direction, probability, price, target, stop, message, pulseScore, pulseZone, theme } = req.body || {};
     if (!numero) return res.status(400).json({ error: 'numero requerido' });
-    const imgBuf = await generateAlertImage({ type: type || 'ia', symbol: symbol || 'BTC', direction: direction || 'ALCISTA', probability: probability || 82, price: price || 67450, target: target || 72846, stop: stop || 64752, message, pulseScore, pulseZone });
+    const imgBuf = await generateAlertImage({ type: type || 'ia', symbol: symbol || 'BTC', direction: direction || 'ALCISTA', probability: probability || 82, price: price || 67450, target: target || 72846, stop: stop || 64752, message, pulseScore, pulseZone, theme: theme || 'dark' });
     const dir = direction || 'ALCISTA';
     const dirEmoji = dir === 'ALCISTA' ? '📈' : dir === 'BAJISTA' ? '📉' : '⚡';
     const caption = dirEmoji + ' ' + (symbol || 'BTC') + ' ' + dir + ' ' + (probability || 82) + '%\n🎯 Objetivo $' + fmtP(target || 0) + '\naurex.live';
