@@ -11,7 +11,8 @@
     "node-cron": "^3.0.3",
     "node-telegram-bot-api": "^0.64.0",
     "node-fetch": "^2.7.0",
-    "twilio": "^4.19.0"
+    "twilio": "^4.19.0",
+    "sharp": "^0.33.0"
   },
   "engines": { "node": ">=18.0.0" }
 }

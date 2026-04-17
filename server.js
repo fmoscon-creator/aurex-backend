@@ -6,6 +6,7 @@ const { createClient } = require('@supabase/supabase-js');
 const TelegramBot = require('node-telegram-bot-api');
 const fetch = require('node-fetch');
 const twilio = require('twilio');
+const { generateAlertImage } = require('./alertImage');
 
 const app = express();
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
@@ -37,10 +38,39 @@ async function sendWhatsAppEvolution(toNumber, text) {
   return d;
 }
 
+async function sendWhatsAppImage(toNumber, imageBuffer, caption) {
+  if (!EVOLUTION_URL || !EVOLUTION_KEY) throw new Error('Evolution API no configurado');
+  const number = (toNumber || '').replace(/[^0-9]/g, '');
+  if (!number) throw new Error('Número destino inválido');
+  const base64 = imageBuffer.toString('base64');
+  const r = await fetch(EVOLUTION_URL + '/message/sendMedia/' + EVOLUTION_INSTANCE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_KEY },
+    body: JSON.stringify({
+      number,
+      options: { delay: 1000, presence: 'composing' },
+      mediaMessage: {
+        mediatype: 'image',
+        media: 'data:image/png;base64,' + base64,
+        caption: caption || '',
+      }
+    })
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error('Evolution Image: ' + (d.response?.message?.join?.(', ') || d.error || r.status));
+  return d;
+}
+
 async function notifyAdmin(subject, body) {
   if (!ADMIN_WHATSAPP) return;
-  try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, '🚨 ' + subject + '\n\n' + body + '\n\n⏰ ' + new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })); }
-  catch(e) { console.error('[ADMIN ALERT FAILED]', e.message); }
+  try {
+    const imgBuf = await generateAlertImage({ type: 'admin', message: subject + ' — ' + body });
+    await sendWhatsAppImage(ADMIN_WHATSAPP, imgBuf, '🚨 ' + subject);
+  } catch(imgErr) {
+    console.error('[ADMIN Image]', imgErr.message, '— fallback a texto');
+    try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, '🚨 ' + subject + '\n\n' + body + '\n\n⏰ ' + new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })); }
+    catch(e) { console.error('[ADMIN ALERT FAILED]', e.message); }
+  }
 }
 
 bot.on('message', async (msg) => {
@@ -92,12 +122,25 @@ async function dispararAlerta(alerta, precio) {
     try { await bot.sendMessage(alerta.telegram_chat_id, emoji + ' ALERTA — ' + alerta.simbolo + '\n💰 $' + precio + '  🎯 $' + alerta.valor_objetivo + '\n\n' + analisis + '\n\n⏰ ' + ts, { parse_mode: 'Markdown' }); } catch(e) { console.error('TG:', e.message); }
   }
   if (alerta.whatsapp_numero) {
-    const body = emoji + ' ALERTA — ' + alerta.simbolo + '\n💰 $' + precio + '  🎯 $' + alerta.valor_objetivo + '\n\n' + analisis + '\n\n⏰ ' + ts + '\n— Aurex';
-    try { await sendWhatsAppEvolution(alerta.whatsapp_numero, body); }
-    catch(e) {
-      console.error('[WA Evolution]', e.message);
-      // Fallback a Twilio si Evolution falla
-      try { const to = alerta.whatsapp_numero.startsWith('+') ? alerta.whatsapp_numero : '+' + alerta.whatsapp_numero; await twilioClient.messages.create({ from: WHATSAPP_FROM, to: 'whatsapp:' + to, body }); } catch(e2) { console.error('[WA Twilio fallback]', e2.message); }
+    const textBody = emoji + ' ALERTA — ' + alerta.simbolo + '\n💰 $' + precio + '  🎯 $' + alerta.valor_objetivo + '\n\n' + analisis + '\n\n⏰ ' + ts + '\n— Aurex';
+    try {
+      // Intentar enviar imagen generada
+      const imgBuf = await generateAlertImage({
+        type: 'precio',
+        symbol: alerta.simbolo,
+        direction: precio >= (alerta.valor_objetivo || 0) ? 'ALCISTA' : 'BAJISTA',
+        price: precio,
+        target: alerta.valor_objetivo,
+      });
+      await sendWhatsAppImage(alerta.whatsapp_numero, imgBuf, alerta.simbolo + ' — $' + precio);
+    } catch(imgErr) {
+      console.error('[WA Image]', imgErr.message, '— fallback a texto');
+      // Fallback: enviar texto plano
+      try { await sendWhatsAppEvolution(alerta.whatsapp_numero, textBody); }
+      catch(e) {
+        console.error('[WA Evolution]', e.message);
+        try { const to = alerta.whatsapp_numero.startsWith('+') ? alerta.whatsapp_numero : '+' + alerta.whatsapp_numero; await twilioClient.messages.create({ from: WHATSAPP_FROM, to: 'whatsapp:' + to, body: textBody }); } catch(e2) { console.error('[WA Twilio fallback]', e2.message); }
+      }
     }
   }
   await supabase.from('alertas_historial').insert({ alerta_id: alerta.id, simbolo: alerta.simbolo, precio_disparado: precio, analisis_ia: analisis, telegram_enviado: !!alerta.telegram_chat_id, whatsapp_enviado: !!alerta.whatsapp_numero, created_at: new Date().toISOString() });
@@ -209,6 +252,17 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/test-telegram', async (req, res) => { try { await bot.sendMessage(req.body.chat_id, req.body.mensaje || '✅ Aurex Bot conectado!'); res.json({ ok: true }); } catch(e) { res.status(400).json({ error: e.message }); } });
 app.post('/api/test-whatsapp', async (req, res) => { try { const to = (req.body.numero||'').startsWith('+') ? req.body.numero : '+' + req.body.numero; await twilioClient.messages.create({ from: WHATSAPP_FROM, to: 'whatsapp:' + to, body: req.body.mensaje || '✅ Aurex WhatsApp conectado!' }); res.json({ ok: true }); } catch(e) { res.status(400).json({ error: e.message }); } });
+
+// WHATSAPP IMAGE - test endpoint
+app.post('/api/whatsapp/test-image', async (req, res) => {
+  try {
+    const { numero, type, symbol, direction, probability, price, target, stop, message, pulseScore, pulseZone } = req.body || {};
+    if (!numero) return res.status(400).json({ error: 'numero requerido' });
+    const imgBuf = await generateAlertImage({ type: type || 'ia', symbol: symbol || 'BTC', direction: direction || 'ALCISTA', probability: probability || 82, price: price || 67450, target: target || 72846, stop: stop || 64752, message, pulseScore, pulseZone });
+    await sendWhatsAppImage(numero, imgBuf, (symbol || 'AUREX') + ' — Alerta');
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
 
 // WHATSAPP EVOLUTION API - endpoint generic envío
 app.post('/api/whatsapp/send', async (req, res) => {
