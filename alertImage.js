@@ -1,24 +1,21 @@
+const PImage = require('pureimage');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const { PassThrough } = require('stream');
 
 const LOGO_PATH = path.join(__dirname, 'assets', 'logo.png');
 
-// Cargar fuentes como base64 para embeber en SVG
-const FONT_BOLD = fs.readFileSync(path.join(__dirname, 'assets', 'fonts', 'Inter-Bold.ttf')).toString('base64');
-const FONT_REGULAR = fs.readFileSync(path.join(__dirname, 'assets', 'fonts', 'Inter-Regular.ttf')).toString('base64');
-const FONT_MEDIUM = fs.readFileSync(path.join(__dirname, 'assets', 'fonts', 'Inter-Medium.ttf')).toString('base64');
+// Registrar fuentes Inter
+const fontBold = PImage.registerFont(path.join(__dirname, 'assets', 'fonts', 'Inter-Bold.ttf'), 'Inter', 700, 'normal', 'normal');
+const fontMedium = PImage.registerFont(path.join(__dirname, 'assets', 'fonts', 'Inter-Medium.ttf'), 'Inter', 500, 'normal', 'normal');
+const fontRegular = PImage.registerFont(path.join(__dirname, 'assets', 'fonts', 'Inter-Regular.ttf'), 'Inter', 400, 'normal', 'normal');
 
-// SVG @font-face declarations
-const FONT_STYLES = `
-  <style>
-    @font-face { font-family: 'Inter'; font-weight: 400; src: url('data:font/ttf;base64,${FONT_REGULAR}') format('truetype'); }
-    @font-face { font-family: 'Inter'; font-weight: 500; src: url('data:font/ttf;base64,${FONT_MEDIUM}') format('truetype'); }
-    @font-face { font-family: 'Inter'; font-weight: 700; src: url('data:font/ttf;base64,${FONT_BOLD}') format('truetype'); }
-  </style>`;
+// Esperar a que las fuentes carguen
+const fontsReady = Promise.all([fontBold.load(), fontMedium.load(), fontRegular.load()]);
 
 // Colores AUREX
-const COLORS = {
+const C = {
   bg: '#0D1117',
   card: '#161B22',
   gold: '#D4A017',
@@ -29,167 +26,261 @@ const COLORS = {
   border: '#21262D',
 };
 
-// Escapar XML para SVG
-function esc(str) {
-  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function hexToRgba(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},1)`;
 }
 
-// Formatear precio
 function fmtPrice(p) {
   if (p == null || isNaN(p)) return '---';
-  return p >= 1000 ? p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : p >= 1 ? p.toFixed(2) : p.toFixed(4);
+  if (p >= 1000) return p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (p >= 1) return p.toFixed(2);
+  return p.toFixed(4);
+}
+
+// Helper: dibujar rectángulo con bordes redondeados
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// Helper: dibujar card
+function drawCard(ctx, x, y, w, h, borderColor) {
+  ctx.fillStyle = hexToRgba(C.card);
+  roundRect(ctx, x, y, w, h, 12);
+  ctx.fill();
+  if (borderColor) {
+    ctx.strokeStyle = hexToRgba(borderColor);
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, x, y, w, h, 12);
+    ctx.stroke();
+  }
+}
+
+// Convertir canvas a PNG buffer
+async function canvasToBuffer(canvas) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    const stream = new PassThrough();
+    stream.on('data', chunk => chunks.push(chunk));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+    stream.on('error', reject);
+    PImage.encodePNGToStream(canvas, stream).catch(reject);
+  });
 }
 
 /**
- * Genera imagen de alerta AUREX
- * @param {object} data
- * @param {string} data.type - 'ia' | 'precio' | 'pulse' | 'admin'
- * @param {string} data.symbol - Ej: 'BTC'
- * @param {string} data.direction - 'ALCISTA' | 'BAJISTA' | 'ALTA CONV-IA'
- * @param {number} data.probability - Ej: 82
- * @param {number} data.price - Precio actual
- * @param {number} data.target - Precio objetivo
- * @param {number} data.stop - Stop loss
- * @param {string} data.message - Texto libre (para admin/pulse)
- * @param {number} data.pulseScore - Score Pulse (0-100)
- * @param {string} data.pulseZone - Nombre de zona
- * @returns {Promise<Buffer>} PNG buffer
+ * Genera imagen de alerta AUREX — 800x450
  */
 async function generateAlertImage(data) {
+  await fontsReady;
+
   const W = 800, H = 450;
+  const canvas = PImage.make(W, H);
+  const ctx = canvas.getContext('2d');
   const type = data.type || 'ia';
 
-  // Color principal según dirección o tipo
-  let accentColor = COLORS.gold;
-  if (type === 'admin') accentColor = COLORS.red;
-  else if (data.direction === 'ALCISTA') accentColor = COLORS.green;
-  else if (data.direction === 'BAJISTA') accentColor = COLORS.red;
-  else if (data.direction === 'ALTA CONV-IA') accentColor = COLORS.gold;
+  // Color acento
+  let accent = C.gold;
+  if (type === 'admin') accent = C.red;
+  else if (data.direction === 'ALCISTA') accent = C.green;
+  else if (data.direction === 'BAJISTA') accent = C.red;
 
-  // Emoji según dirección
-  const dirEmoji = data.direction === 'ALCISTA' ? '📈' : data.direction === 'BAJISTA' ? '📉' : '⚡';
+  // Fondo
+  const bgColor = type === 'admin' ? '#1A0808' : C.bg;
+  ctx.fillStyle = hexToRgba(bgColor);
+  ctx.fillRect(0, 0, W, H);
 
-  // Fondo según tipo
-  const bgColor = type === 'admin' ? '#1A0808' : COLORS.bg;
+  // Borde superior dorado
+  ctx.fillStyle = hexToRgba(accent);
+  ctx.fillRect(0, 0, W, 4);
 
-  // Construir SVG
-  let svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
-  ${FONT_STYLES}
-  <rect width="${W}" height="${H}" fill="${bgColor}" rx="20"/>
-  <!-- Borde dorado superior -->
-  <rect x="0" y="0" width="${W}" height="4" fill="${accentColor}" rx="2"/>
+  // Logo (superpuesto después con sharp, por ahora espacio reservado)
+  // Logo va en 30,18 tamaño 55x55
 
-  <!-- Header: AUREX + tipo -->
-  <text x="90" y="52" font-family="Inter" font-size="28" font-weight="700" fill="${COLORS.gold}">AUREX</text>
-  <text x="210" y="52" font-family="Inter" font-size="16" font-weight="400" fill="${COLORS.textSec}">`;
+  // Header: AUREX
+  ctx.fillStyle = hexToRgba(C.gold);
+  ctx.setFont('Inter', 28, 700);
+  ctx.fillText('AUREX', 90, 50);
 
-  // Subtítulo según tipo
-  if (type === 'ia') svg += 'Alerta IA';
-  else if (type === 'precio') svg += 'Alerta de Precio';
-  else if (type === 'pulse') svg += 'AUREX Pulse';
-  else if (type === 'admin') svg += 'Alerta Sistema';
-  svg += `</text>`;
+  // Subtítulo tipo
+  ctx.fillStyle = hexToRgba(C.textSec);
+  ctx.setFont('Inter', 16, 400);
+  const subTitle = type === 'ia' ? 'Alerta IA' : type === 'precio' ? 'Alerta de Precio' : type === 'pulse' ? 'AUREX Pulse' : 'Alerta Sistema';
+  ctx.fillText(subTitle, 210, 50);
 
   // Línea separadora
-  svg += `<line x1="30" y1="72" x2="${W - 30}" y2="72" stroke="${COLORS.border}" stroke-width="1"/>`;
+  ctx.fillStyle = hexToRgba(C.border);
+  ctx.fillRect(30, 68, W - 60, 1);
 
   if (type === 'ia') {
-    // === TEMPLATE IA ===
     // Activo + dirección
-    svg += `
-  <text x="40" y="115" font-family="Inter" font-size="36" font-weight="700" fill="${COLORS.text}">${esc(data.symbol)}</text>
-  <text x="${40 + (data.symbol || '').length * 24}" y="115" font-family="Inter" font-size="24" fill="${accentColor}">  ${esc(data.direction)} ${data.probability || ''}%</text>
+    ctx.fillStyle = hexToRgba(C.text);
+    ctx.setFont('Inter', 36, 700);
+    ctx.fillText(data.symbol || 'BTC', 40, 112);
 
-  <!-- Card precio -->
-  <rect x="40" y="140" width="220" height="80" rx="12" fill="${COLORS.card}" stroke="${COLORS.border}" stroke-width="1"/>
-  <text x="60" y="168" font-family="Inter" font-size="14" fill="${COLORS.textSec}">💰 Precio</text>
-  <text x="60" y="202" font-family="Inter" font-size="26" font-weight="700" fill="${COLORS.text}">$${esc(fmtPrice(data.price))}</text>
+    const symWidth = (data.symbol || 'BTC').length * 22 + 50;
+    ctx.fillStyle = hexToRgba(accent);
+    ctx.setFont('Inter', 24, 700);
+    ctx.fillText((data.direction || 'ALCISTA') + ' ' + (data.probability || '') + '%', symWidth, 112);
 
-  <!-- Card objetivo -->
-  <rect x="280" y="140" width="220" height="80" rx="12" fill="${COLORS.card}" stroke="${COLORS.border}" stroke-width="1"/>
-  <text x="300" y="168" font-family="Inter" font-size="14" fill="${COLORS.textSec}">🎯 Objetivo</text>
-  <text x="300" y="202" font-family="Inter" font-size="26" font-weight="700" fill="${COLORS.green}">$${esc(fmtPrice(data.target))}</text>
+    // Card Precio
+    drawCard(ctx, 40, 135, 220, 80, C.border);
+    ctx.fillStyle = hexToRgba(C.textSec);
+    ctx.setFont('Inter', 14, 400);
+    ctx.fillText('Precio', 60, 163);
+    ctx.fillStyle = hexToRgba(C.text);
+    ctx.setFont('Inter', 24, 700);
+    ctx.fillText('$' + fmtPrice(data.price), 60, 197);
 
-  <!-- Card stop -->
-  <rect x="520" y="140" width="220" height="80" rx="12" fill="${COLORS.card}" stroke="${COLORS.border}" stroke-width="1"/>
-  <text x="540" y="168" font-family="Inter" font-size="14" fill="${COLORS.textSec}">🛑 Stop</text>
-  <text x="540" y="202" font-family="Inter" font-size="26" font-weight="700" fill="${COLORS.red}">$${esc(fmtPrice(data.stop))}</text>
+    // Card Objetivo
+    drawCard(ctx, 280, 135, 220, 80, C.border);
+    ctx.fillStyle = hexToRgba(C.textSec);
+    ctx.setFont('Inter', 14, 400);
+    ctx.fillText('Objetivo', 300, 163);
+    ctx.fillStyle = hexToRgba(C.green);
+    ctx.setFont('Inter', 24, 700);
+    ctx.fillText('$' + fmtPrice(data.target), 300, 197);
 
-  <!-- Barra de probabilidad -->
-  <rect x="40" y="245" width="700" height="8" rx="4" fill="${COLORS.card}"/>
-  <rect x="40" y="245" width="${Math.round(700 * (data.probability || 50) / 100)}" height="8" rx="4" fill="${accentColor}"/>
-  <text x="40" y="278" font-family="Inter" font-size="14" fill="${COLORS.textSec}">Motor IA v7 — 10 variables</text>
-  <text x="${W - 40}" y="278" font-family="Inter" font-size="14" fill="${accentColor}" text-anchor="end">${data.probability || 50}% confianza</text>`;
+    // Card Stop
+    drawCard(ctx, 520, 135, 220, 80, C.border);
+    ctx.fillStyle = hexToRgba(C.textSec);
+    ctx.setFont('Inter', 14, 400);
+    ctx.fillText('Stop', 540, 163);
+    ctx.fillStyle = hexToRgba(C.red);
+    ctx.setFont('Inter', 24, 700);
+    ctx.fillText('$' + fmtPrice(data.stop), 540, 197);
+
+    // Barra probabilidad
+    ctx.fillStyle = hexToRgba(C.card);
+    roundRect(ctx, 40, 240, 700, 8, 4);
+    ctx.fill();
+    ctx.fillStyle = hexToRgba(accent);
+    const barW = Math.round(700 * (data.probability || 50) / 100);
+    roundRect(ctx, 40, 240, barW, 8, 4);
+    ctx.fill();
+
+    // Labels barra
+    ctx.fillStyle = hexToRgba(C.textSec);
+    ctx.setFont('Inter', 14, 400);
+    ctx.fillText('Motor IA v7 — 10 variables', 40, 275);
+    ctx.fillStyle = hexToRgba(accent);
+    ctx.setFont('Inter', 14, 700);
+    ctx.fillText((data.probability || 50) + '% confianza', 600, 275);
 
   } else if (type === 'precio') {
-    // === TEMPLATE PRECIO ===
-    svg += `
-  <text x="40" y="115" font-family="Inter" font-size="36" font-weight="700" fill="${COLORS.text}">${esc(data.symbol)}</text>
-  <text x="40" y="155" font-family="Inter" font-size="18" fill="${COLORS.textSec}">Precio objetivo alcanzado</text>
+    ctx.fillStyle = hexToRgba(C.text);
+    ctx.setFont('Inter', 36, 700);
+    ctx.fillText(data.symbol || '', 40, 112);
 
-  <rect x="40" y="180" width="340" height="90" rx="12" fill="${COLORS.card}" stroke="${COLORS.border}" stroke-width="1"/>
-  <text x="60" y="210" font-family="Inter" font-size="14" fill="${COLORS.textSec}">💰 Precio actual</text>
-  <text x="60" y="248" font-family="Inter" font-size="32" font-weight="700" fill="${COLORS.text}">$${esc(fmtPrice(data.price))}</text>
+    ctx.fillStyle = hexToRgba(C.textSec);
+    ctx.setFont('Inter', 18, 400);
+    ctx.fillText('Precio objetivo alcanzado', 40, 148);
 
-  <rect x="420" y="180" width="340" height="90" rx="12" fill="${COLORS.card}" stroke="${accentColor}" stroke-width="2"/>
-  <text x="440" y="210" font-family="Inter" font-size="14" fill="${COLORS.textSec}">🎯 Objetivo</text>
-  <text x="440" y="248" font-family="Inter" font-size="32" font-weight="700" fill="${accentColor}">$${esc(fmtPrice(data.target))}</text>`;
+    // Card precio actual
+    drawCard(ctx, 40, 175, 340, 90, C.border);
+    ctx.fillStyle = hexToRgba(C.textSec);
+    ctx.setFont('Inter', 14, 400);
+    ctx.fillText('Precio actual', 60, 205);
+    ctx.fillStyle = hexToRgba(C.text);
+    ctx.setFont('Inter', 30, 700);
+    ctx.fillText('$' + fmtPrice(data.price), 60, 245);
+
+    // Card objetivo
+    drawCard(ctx, 420, 175, 340, 90, accent);
+    ctx.fillStyle = hexToRgba(C.textSec);
+    ctx.setFont('Inter', 14, 400);
+    ctx.fillText('Objetivo', 440, 205);
+    ctx.fillStyle = hexToRgba(accent);
+    ctx.setFont('Inter', 30, 700);
+    ctx.fillText('$' + fmtPrice(data.target), 440, 245);
 
   } else if (type === 'pulse') {
-    // === TEMPLATE PULSE ===
     const pScore = data.pulseScore || 50;
-    const pColor = pScore <= 20 ? COLORS.red : pScore <= 40 ? '#FF6B6B' : pScore <= 60 ? COLORS.gold : pScore <= 80 ? COLORS.green : '#00E676';
-    svg += `
-  <text x="40" y="120" font-family="Inter" font-size="64" font-weight="700" fill="${pColor}">${pScore}</text>
-  <text x="40" y="155" font-family="Inter" font-size="22" fill="${pColor}">${esc(data.pulseZone || 'Neutral')}</text>
+    const pColor = pScore <= 20 ? C.red : pScore <= 40 ? '#FF6B6B' : pScore <= 60 ? C.gold : pScore <= 80 ? C.green : '#00E676';
 
-  <!-- Barra Pulse -->
-  <rect x="40" y="180" width="700" height="12" rx="6" fill="${COLORS.card}"/>
-  <rect x="40" y="180" width="${Math.round(700 * pScore / 100)}" height="12" rx="6" fill="${pColor}"/>
+    ctx.fillStyle = hexToRgba(pColor);
+    ctx.setFont('Inter', 64, 700);
+    ctx.fillText(String(pScore), 40, 125);
 
-  <!-- Escala -->
-  <text x="40" y="215" font-family="Inter" font-size="12" fill="${COLORS.red}">0 Miedo</text>
-  <text x="${W / 2}" y="215" font-family="Inter" font-size="12" fill="${COLORS.gold}" text-anchor="middle">50 Neutral</text>
-  <text x="${W - 40}" y="215" font-family="Inter" font-size="12" fill="${COLORS.green}" text-anchor="end">100 Codicia</text>`;
+    ctx.setFont('Inter', 22, 700);
+    ctx.fillText(data.pulseZone || 'Neutral', 40, 158);
+
+    // Barra Pulse
+    ctx.fillStyle = hexToRgba(C.card);
+    roundRect(ctx, 40, 178, 700, 12, 6);
+    ctx.fill();
+    ctx.fillStyle = hexToRgba(pColor);
+    roundRect(ctx, 40, 178, Math.round(700 * pScore / 100), 12, 6);
+    ctx.fill();
+
+    // Escala
+    ctx.setFont('Inter', 12, 400);
+    ctx.fillStyle = hexToRgba(C.red);
+    ctx.fillText('0 Miedo', 40, 212);
+    ctx.fillStyle = hexToRgba(C.gold);
+    ctx.fillText('50 Neutral', 360, 212);
+    ctx.fillStyle = hexToRgba(C.green);
+    ctx.fillText('100 Codicia', 680, 212);
 
     if (data.message) {
-      svg += `<text x="40" y="260" font-family="Inter" font-size="16" fill="${COLORS.textSec}">${esc(data.message)}</text>`;
+      ctx.fillStyle = hexToRgba(C.textSec);
+      ctx.setFont('Inter', 16, 400);
+      ctx.fillText(data.message, 40, 255);
     }
 
   } else if (type === 'admin') {
-    // === TEMPLATE ADMIN (fondo rojo oscuro) ===
-    svg += `
-  <text x="40" y="115" font-family="Inter" font-size="28" font-weight="700" fill="${COLORS.red}">🚨 ALERTA SISTEMA</text>
-  <rect x="40" y="140" width="720" height="200" rx="12" fill="#1A0000" stroke="${COLORS.red}" stroke-width="1"/>
-  <text x="60" y="175" font-family="Inter" font-size="18" fill="${COLORS.text}">${esc((data.message || '').substring(0, 60))}</text>
-  <text x="60" y="210" font-family="Inter" font-size="16" fill="${COLORS.textSec}">${esc((data.message || '').substring(60, 140))}</text>
-  <text x="60" y="245" font-family="Inter" font-size="16" fill="${COLORS.textSec}">${esc((data.message || '').substring(140, 220))}</text>`;
+    ctx.fillStyle = hexToRgba(C.red);
+    ctx.setFont('Inter', 28, 700);
+    ctx.fillText('ALERTA SISTEMA', 40, 112);
+
+    drawCard(ctx, 40, 135, 720, 200, C.red);
+    ctx.fillStyle = hexToRgba(C.text);
+    ctx.setFont('Inter', 18, 400);
+    const msg = data.message || '';
+    // Wrap text manual (máx ~55 chars por línea)
+    const lines = [];
+    for (let i = 0; i < msg.length; i += 55) {
+      lines.push(msg.substring(i, i + 55));
+    }
+    lines.slice(0, 5).forEach((line, i) => {
+      ctx.fillText(line, 60, 175 + i * 30);
+    });
   }
 
   // Footer
+  ctx.fillStyle = hexToRgba(C.border);
+  ctx.fillRect(30, H - 55, W - 60, 1);
+
+  ctx.fillStyle = hexToRgba(C.textSec);
+  ctx.setFont('Inter', 13, 400);
+  ctx.fillText('aurex.live', 40, H - 28);
+
   const ts = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
-  svg += `
-  <!-- Footer -->
-  <line x1="30" y1="${H - 55}" x2="${W - 30}" y2="${H - 55}" stroke="${COLORS.border}" stroke-width="1"/>
-  <text x="40" y="${H - 25}" font-family="Inter" font-size="13" fill="${COLORS.textSec}">aurex.live</text>
-  <text x="${W - 40}" y="${H - 25}" font-family="Inter" font-size="13" fill="${COLORS.textSec}" text-anchor="end">${esc(ts)}</text>
-</svg>`;
+  ctx.fillText(ts, 620, H - 28);
 
-  // Generar imagen: SVG → PNG, con logo superpuesto
+  // Exportar PNG
+  const pngBuffer = await canvasToBuffer(canvas);
+
+  // Superponer logo con sharp
   const logoBuffer = await sharp(LOGO_PATH).resize(55, 55).toBuffer();
-
-  const svgBuffer = Buffer.from(svg);
-  const image = await sharp(svgBuffer)
+  const finalImage = await sharp(pngBuffer)
+    .composite([{ input: logoBuffer, top: 18, left: 30 }])
     .png()
-    .composite([{
-      input: logoBuffer,
-      top: 18,
-      left: 30,
-    }])
     .toBuffer();
 
-  return image;
+  return finalImage;
 }
 
 module.exports = { generateAlertImage };

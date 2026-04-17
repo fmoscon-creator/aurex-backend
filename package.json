@@ -12,7 +12,8 @@
     "node-telegram-bot-api": "^0.64.0",
     "node-fetch": "^2.7.0",
     "twilio": "^4.19.0",
-    "sharp": "^0.33.0"
+    "sharp": "^0.33.0",
+    "pureimage": "^0.4.13"
   },
   "engines": { "node": ">=18.0.0" }
 }
