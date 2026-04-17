@@ -145,16 +145,16 @@ async function generateAlertImage(data) {
     ctx.fillStyle = hexToRgba(accent);
     ctx.font = '24pt Inter';
     ctx.fillText(dir + ' ' + prob + '%', symWidth, 108);
-    ctx.fillStyle = 'rgba(201,209,217,1)';
+    ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '16pt Inter';
     const dirTextW = (dir + ' ' + prob + '%').length * 14 + symWidth + 10;
     ctx.fillText('al precio objetivo', dirTextW, 108);
 
-    // Card Precio — fondo + borde
+    // Card Precio — fondo + borde grueso dorado
     ctx.fillStyle = 'rgba(30,37,46,1)';
     ctx.fillRect(40, 130, 220, 82);
     ctx.strokeStyle = hexToRgba(C.gold);
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 3;
     ctx.strokeRect(40, 130, 220, 82);
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '16pt Inter';
@@ -163,11 +163,11 @@ async function generateAlertImage(data) {
     ctx.font = '24pt Inter';
     ctx.fillText('$' + fmtPrice(data.price), 55, 194);
 
-    // Card Objetivo — fondo + borde verde
+    // Card Objetivo — fondo + borde grueso verde
     ctx.fillStyle = 'rgba(30,37,46,1)';
     ctx.fillRect(280, 130, 220, 82);
     ctx.strokeStyle = hexToRgba(C.green);
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 3;
     ctx.strokeRect(280, 130, 220, 82);
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '16pt Inter';
@@ -176,11 +176,11 @@ async function generateAlertImage(data) {
     ctx.font = '24pt Inter';
     ctx.fillText('$' + fmtPrice(data.target), 295, 194);
 
-    // Card Stop — fondo + borde rojo
+    // Card Stop — fondo + borde grueso rojo
     ctx.fillStyle = 'rgba(30,37,46,1)';
     ctx.fillRect(520, 130, 220, 82);
     ctx.strokeStyle = hexToRgba(C.red);
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 3;
     ctx.strokeRect(520, 130, 220, 82);
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '16pt Inter';
@@ -189,18 +189,18 @@ async function generateAlertImage(data) {
     ctx.font = '24pt Inter';
     ctx.fillText('$' + fmtPrice(data.stop), 535, 194);
 
-    // Barra probabilidad — fondo gris 100% + relleno color
-    ctx.fillStyle = 'rgba(33,38,45,1)';
+    // Barra probabilidad — fondo gris más claro + relleno color
+    ctx.fillStyle = 'rgba(48,54,61,1)';
     ctx.fillRect(40, 232, 700, 14);
     ctx.fillStyle = hexToRgba(accent);
     const barW = Math.round(700 * prob / 100);
     ctx.fillRect(40, 232, barW, 14);
 
-    // Escala 0% y 100%
-    ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.font = '12pt Inter';
+    // Escala 0% y 100% — más grande y claro
+    ctx.fillStyle = 'rgba(201,209,217,1)';
+    ctx.font = '13pt Inter';
     ctx.fillText('0%', 40, 264);
-    ctx.fillText('100%', 700, 264);
+    ctx.fillText('100%', 698, 264);
 
     // Label barra
     ctx.fillStyle = 'rgba(201,209,217,1)';
@@ -294,12 +294,12 @@ async function generateAlertImage(data) {
   ctx.fillStyle = hexToRgba(C.border);
   ctx.fillRect(30, H - 55, W - 60, 1);
 
-  ctx.fillStyle = hexToRgba(C.textSec);
-  ctx.font = '13pt Inter';
-  ctx.fillText('aurex.live', 40, H - 28);
+  ctx.fillStyle = 'rgba(201,209,217,1)';
+  ctx.font = '14pt Inter';
+  ctx.fillText('aurex.live', 40, H - 26);
 
   const ts = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
-  ctx.fillText(ts, 620, H - 28);
+  ctx.fillText(ts, 580, H - 26);
 
   // Exportar PNG → escalar a 1600x800 (Retina) → superponer logo
   const pngBuffer = await canvasToBuffer(canvas);
