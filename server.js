@@ -279,7 +279,7 @@ app.post('/api/whatsapp/test-image', async (req, res) => {
       const pz = (pulseScore || 50) <= 20 ? 'Extreme Fear' : (pulseScore || 50) <= 40 ? 'Fear' : (pulseScore || 50) <= 60 ? 'Neutral' : (pulseScore || 50) <= 80 ? 'Greed' : 'Extreme Greed';
       caption = '💓 AUREX Pulse ' + (pulseScore || 50) + ' · ' + pz + '\nGlobal Market Sentiment\naurex.live';
     } else if (t === 'admin') {
-      caption = '🚨 Alerta Sistema\naurex.live';
+      caption = '🚨 System Alert\naurex.live';
     }
     await sendWhatsAppImage(numero, imgBuf, caption);
     res.json({ ok: true });
