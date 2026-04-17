@@ -51,7 +51,9 @@ async function sendWhatsAppImage(toNumber, imageBuffer, caption) {
       options: { delay: 1000, presence: 'composing' },
       mediaMessage: {
         mediatype: 'image',
-        media: 'data:image/png;base64,' + base64,
+        media: base64,
+        fileName: 'aurex-alert.png',
+        mimetype: 'image/png',
         caption: caption || '',
       }
     })
