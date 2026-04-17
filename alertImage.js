@@ -372,22 +372,37 @@ async function generateAlertImage(data) {
     });
 
   } else if (type === 'admin') {
+    // Título
     ctx.fillStyle = hexToRgba(C.red);
     ctx.font = '28pt Inter';
     ctx.fillText('SYSTEM ALERT', 40, 112);
 
-    drawCard(ctx, 40, 135, 720, 160, C.red);
+    // Card mensaje — accent bar rojo + borde
+    ctx.fillStyle = hexToRgba(C.red);
+    ctx.fillRect(40, 130, 5, 170);
+    ctx.fillStyle = C.cardAlt;
+    ctx.fillRect(45, 130, 715, 170);
+    ctx.strokeStyle = hexToRgba(C.red);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(40, 130, 720, 170);
+
+    // Mensaje con wrap
     ctx.fillStyle = hexToRgba(C.text);
-    ctx.font = '18pt Inter';
+    ctx.font = '16pt Inter';
     const msg = data.message || '';
-    // Wrap text manual (máx ~55 chars por línea)
     const lines = [];
-    for (let i = 0; i < msg.length; i += 55) {
-      lines.push(msg.substring(i, i + 55));
+    for (let i = 0; i < msg.length; i += 50) {
+      lines.push(msg.substring(i, i + 50));
     }
     lines.slice(0, 5).forEach((line, i) => {
-      ctx.fillText(line, 60, 175 + i * 30);
+      ctx.fillText(line, 60, 168 + i * 28);
     });
+
+    // Timestamp dentro de la card
+    ctx.fillStyle = hexToRgba(C.textSec);
+    ctx.font = '12pt Inter';
+    const adminTs = new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' });
+    ctx.fillText(adminTs, 60, 290);
   }
 
   // Footer — línea dorada consistente
