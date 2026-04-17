@@ -55,17 +55,23 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// Helper: dibujar card
-function drawCard(ctx, x, y, w, h, borderColor) {
+// Helper: dibujar card con efecto glow dorado (como POPs de la app)
+function drawCard(ctx, x, y, w, h, borderColor, glow) {
+  // Sombra glow si se pide
+  if (glow) {
+    ctx.fillStyle = 'rgba(212,160,23,0.08)';
+    roundRect(ctx, x - 2, y - 2, w + 4, h + 4, 14);
+    ctx.fill();
+  }
+  // Card
   ctx.fillStyle = hexToRgba(C.card);
   roundRect(ctx, x, y, w, h, 12);
   ctx.fill();
-  if (borderColor) {
-    ctx.strokeStyle = hexToRgba(borderColor);
-    ctx.lineWidth = 1.5;
-    roundRect(ctx, x, y, w, h, 12);
-    ctx.stroke();
-  }
+  // Borde
+  ctx.strokeStyle = hexToRgba(borderColor || C.gold);
+  ctx.lineWidth = glow ? 1.5 : 1;
+  roundRect(ctx, x, y, w, h, 12);
+  ctx.stroke();
 }
 
 // Convertir canvas a PNG buffer
@@ -86,7 +92,7 @@ async function canvasToBuffer(canvas) {
 async function generateAlertImage(data) {
   await fontsReady;
 
-  const W = 800, H = 450;
+  const W = 800, H = 400;
   const canvas = PImage.make(W, H);
   const ctx = canvas.getContext('2d');
   const type = data.type || 'ia';
@@ -114,8 +120,8 @@ async function generateAlertImage(data) {
   ctx.font = '28pt Inter';
   ctx.fillText('AUREX', 90, 50);
 
-  // Subtítulo tipo
-  ctx.fillStyle = hexToRgba(C.textSec);
+  // Subtítulo tipo — mejor contraste (#C9D1D9 en vez de #8B949E)
+  ctx.fillStyle = 'rgba(201,209,217,1)';
   ctx.font = '16pt Inter';
   const subTitle = type === 'ia' ? 'Alerta IA' : type === 'precio' ? 'Alerta de Precio' : type === 'pulse' ? 'AUREX Pulse' : 'Alerta Sistema';
   ctx.fillText(subTitle, 210, 50);
@@ -125,59 +131,70 @@ async function generateAlertImage(data) {
   ctx.fillRect(30, 68, W - 60, 1);
 
   if (type === 'ia') {
-    // Activo + dirección
-    ctx.fillStyle = hexToRgba(C.text);
-    ctx.font = '36pt Inter';
-    ctx.fillText(data.symbol || 'BTC', 40, 112);
-
-    const symWidth = (data.symbol || 'BTC').length * 22 + 50;
+    // Logo del activo (círculo con iniciales)
+    const sym = data.symbol || 'BTC';
     ctx.fillStyle = hexToRgba(accent);
-    ctx.font = '24pt Inter';
-    ctx.fillText((data.direction || 'ALCISTA') + ' ' + (data.probability || '') + '%', symWidth, 112);
-
-    // Card Precio
-    drawCard(ctx, 40, 135, 220, 80, C.border);
-    ctx.fillStyle = hexToRgba(C.textSec);
+    ctx.beginPath();
+    ctx.arc(62, 100, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,1)';
     ctx.font = '14pt Inter';
-    ctx.fillText('Precio', 60, 163);
+    ctx.fillText(sym.slice(0, 2), 49, 106);
+
+    // Ticker
     ctx.fillStyle = hexToRgba(C.text);
-    ctx.font = '24pt Inter';
-    ctx.fillText('$' + fmtPrice(data.price), 60, 197);
+    ctx.font = '32pt Inter';
+    ctx.fillText(sym, 95, 110);
 
-    // Card Objetivo
-    drawCard(ctx, 280, 135, 220, 80, C.border);
-    ctx.fillStyle = hexToRgba(C.textSec);
+    // Dirección + probabilidad (separado del ticker)
+    const symWidth = sym.length * 20 + 110;
+    ctx.fillStyle = hexToRgba(accent);
+    ctx.font = '22pt Inter';
+    ctx.fillText((data.direction || 'ALCISTA') + ' ' + (data.probability || '') + '%', symWidth, 110);
+
+    // Card Precio — borde dorado + glow
+    drawCard(ctx, 40, 132, 220, 80, C.gold, true);
+    ctx.fillStyle = 'rgba(201,209,217,1)';
     ctx.font = '14pt Inter';
-    ctx.fillText('Objetivo', 300, 163);
+    ctx.fillText('Precio', 60, 158);
+    ctx.fillStyle = hexToRgba(C.text);
+    ctx.font = '22pt Inter';
+    ctx.fillText('$' + fmtPrice(data.price), 60, 192);
+
+    // Card Objetivo — borde verde + glow
+    drawCard(ctx, 280, 132, 220, 80, C.green, true);
+    ctx.fillStyle = 'rgba(201,209,217,1)';
+    ctx.font = '14pt Inter';
+    ctx.fillText('Objetivo', 300, 158);
     ctx.fillStyle = hexToRgba(C.green);
-    ctx.font = '24pt Inter';
-    ctx.fillText('$' + fmtPrice(data.target), 300, 197);
+    ctx.font = '22pt Inter';
+    ctx.fillText('$' + fmtPrice(data.target), 300, 192);
 
-    // Card Stop
-    drawCard(ctx, 520, 135, 220, 80, C.border);
-    ctx.fillStyle = hexToRgba(C.textSec);
+    // Card Stop — borde rojo + glow
+    drawCard(ctx, 520, 132, 220, 80, C.red, true);
+    ctx.fillStyle = 'rgba(201,209,217,1)';
     ctx.font = '14pt Inter';
-    ctx.fillText('Stop', 540, 163);
+    ctx.fillText('Stop', 540, 158);
     ctx.fillStyle = hexToRgba(C.red);
-    ctx.font = '24pt Inter';
-    ctx.fillText('$' + fmtPrice(data.stop), 540, 197);
+    ctx.font = '22pt Inter';
+    ctx.fillText('$' + fmtPrice(data.stop), 540, 192);
 
-    // Barra probabilidad
+    // Barra probabilidad (más gruesa)
     ctx.fillStyle = hexToRgba(C.card);
-    roundRect(ctx, 40, 240, 700, 8, 4);
+    roundRect(ctx, 40, 232, 700, 12, 6);
     ctx.fill();
     ctx.fillStyle = hexToRgba(accent);
     const barW = Math.round(700 * (data.probability || 50) / 100);
-    roundRect(ctx, 40, 240, barW, 8, 4);
+    roundRect(ctx, 40, 232, barW, 12, 6);
     ctx.fill();
 
     // Labels barra
-    ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.font = '14pt Inter';
-    ctx.fillText('Motor IA v7 — 10 variables', 40, 275);
+    ctx.fillStyle = 'rgba(201,209,217,1)';
+    ctx.font = '13pt Inter';
+    ctx.fillText('Motor IA v7 — 10 variables', 40, 268);
     ctx.fillStyle = hexToRgba(accent);
-    ctx.font = '14pt Inter';
-    ctx.fillText((data.probability || 50) + '% confianza', 600, 275);
+    ctx.font = '13pt Inter';
+    ctx.fillText((data.probability || 50) + '% al precio objetivo', 560, 268);
 
   } else if (type === 'precio') {
     ctx.fillStyle = hexToRgba(C.text);
@@ -245,7 +262,7 @@ async function generateAlertImage(data) {
     ctx.font = '28pt Inter';
     ctx.fillText('ALERTA SISTEMA', 40, 112);
 
-    drawCard(ctx, 40, 135, 720, 200, C.red);
+    drawCard(ctx, 40, 135, 720, 160, C.red);
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '18pt Inter';
     const msg = data.message || '';

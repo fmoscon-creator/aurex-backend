@@ -134,7 +134,8 @@ async function dispararAlerta(alerta, precio) {
         price: precio,
         target: alerta.valor_objetivo,
       });
-      await sendWhatsAppImage(alerta.whatsapp_numero, imgBuf, alerta.simbolo + ' — $' + precio);
+      const alertEmoji = precio >= (alerta.valor_objetivo || 0) ? '📈' : '📉';
+      await sendWhatsAppImage(alerta.whatsapp_numero, imgBuf, alertEmoji + ' ' + alerta.simbolo + ' — $' + fmtP(precio) + '\n$' + fmtP(precio) + ' → $' + fmtP(alerta.valor_objetivo) + '\naurex.live');
     } catch(imgErr) {
       console.error('[WA Image]', imgErr.message, '— fallback a texto');
       // Fallback: enviar texto plano
@@ -255,13 +256,18 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/test-telegram', async (req, res) => { try { await bot.sendMessage(req.body.chat_id, req.body.mensaje || '✅ Aurex Bot conectado!'); res.json({ ok: true }); } catch(e) { res.status(400).json({ error: e.message }); } });
 app.post('/api/test-whatsapp', async (req, res) => { try { const to = (req.body.numero||'').startsWith('+') ? req.body.numero : '+' + req.body.numero; await twilioClient.messages.create({ from: WHATSAPP_FROM, to: 'whatsapp:' + to, body: req.body.mensaje || '✅ Aurex WhatsApp conectado!' }); res.json({ ok: true }); } catch(e) { res.status(400).json({ error: e.message }); } });
 
+function fmtP(v) { if (!v || isNaN(v)) return '---'; return v >= 1000 ? v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : v >= 1 ? v.toFixed(2) : v.toFixed(4); }
+
 // WHATSAPP IMAGE - test endpoint
 app.post('/api/whatsapp/test-image', async (req, res) => {
   try {
     const { numero, type, symbol, direction, probability, price, target, stop, message, pulseScore, pulseZone } = req.body || {};
     if (!numero) return res.status(400).json({ error: 'numero requerido' });
     const imgBuf = await generateAlertImage({ type: type || 'ia', symbol: symbol || 'BTC', direction: direction || 'ALCISTA', probability: probability || 82, price: price || 67450, target: target || 72846, stop: stop || 64752, message, pulseScore, pulseZone });
-    await sendWhatsAppImage(numero, imgBuf, (symbol || 'AUREX') + ' — Alerta');
+    const dir = direction || 'ALCISTA';
+    const dirEmoji = dir === 'ALCISTA' ? '📈' : dir === 'BAJISTA' ? '📉' : '⚡';
+    const caption = dirEmoji + ' ' + (symbol || 'BTC') + ' — ' + dir + ' ' + (probability || 82) + '%\n$' + fmtP(price || 0) + ' → $' + fmtP(target || 0) + '\naurex.live';
+    await sendWhatsAppImage(numero, imgBuf, caption);
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
