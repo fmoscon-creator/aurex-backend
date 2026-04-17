@@ -301,36 +301,60 @@ async function generateAlertImage(data) {
   } else if (type === 'pulse') {
     const pScore = data.pulseScore || 50;
     const pColor = pScore <= 20 ? C.red : pScore <= 40 ? '#FF6B6B' : pScore <= 60 ? C.gold : pScore <= 80 ? C.green : '#00E676';
+    const zoneLabel = data.pulseZone || 'Neutral';
 
+    // Score grande + zona
     ctx.fillStyle = hexToRgba(pColor);
-    ctx.font = '64pt Inter';
-    ctx.fillText(String(pScore), 40, 125);
+    ctx.font = '54pt Inter';
+    ctx.fillText(String(pScore), 40, 120);
 
-    ctx.font = '22pt Inter';
-    ctx.fillText(data.pulseZone || 'Neutral', 40, 158);
+    const scoreW = String(pScore).length * 34 + 50;
+    ctx.font = '24pt Inter';
+    ctx.fillText(zoneLabel, scoreW, 120);
 
-    // Barra Pulse
-    ctx.fillStyle = hexToRgba(C.card);
-    roundRect(ctx, 40, 178, 700, 12, 6);
-    ctx.fill();
+    // AUREX PULSE™
+    ctx.fillStyle = C.textBright;
+    ctx.font = '14pt Inter';
+    ctx.fillText('AUREX PULSE\u2122', scoreW, 148);
+
+    // Barra Pulse — fondo + relleno (sin roundRect)
+    ctx.fillStyle = C.barBg;
+    ctx.fillRect(40, 170, 700, 14);
     ctx.fillStyle = hexToRgba(pColor);
-    roundRect(ctx, 40, 178, Math.round(700 * pScore / 100), 12, 6);
-    ctx.fill();
+    ctx.fillRect(40, 170, Math.round(700 * pScore / 100), 14);
 
-    // Escala
-    ctx.font = '12pt Inter';
+    // Escala 5 zonas
+    ctx.font = '13pt Inter';
     ctx.fillStyle = hexToRgba(C.red);
-    ctx.fillText('0 Fear', 40, 212);
+    ctx.fillText('0 Fear', 40, 205);
+    ctx.fillStyle = 'rgba(255,107,107,1)';
+    ctx.fillText('20', 180, 205);
     ctx.fillStyle = hexToRgba(C.gold);
-    ctx.fillText('50 Neutral', 360, 212);
+    ctx.fillText('50 Neutral', 330, 205);
     ctx.fillStyle = hexToRgba(C.green);
-    ctx.fillText('100 Greed', 680, 212);
+    ctx.fillText('80', 560, 205);
+    ctx.fillStyle = 'rgba(0,230,118,1)';
+    ctx.fillText('100 Greed', 650, 205);
 
-    if (data.message) {
-      ctx.fillStyle = hexToRgba(C.textSec);
-      ctx.font = '16pt Inter';
-      ctx.fillText(data.message, 40, 255);
-    }
+    // Card sentimiento — accent bar + borde
+    ctx.fillStyle = hexToRgba(pColor);
+    ctx.fillRect(40, 225, 5, 70);
+    ctx.fillStyle = C.cardAlt;
+    ctx.fillRect(45, 225, 695, 70);
+    ctx.strokeStyle = hexToRgba(pColor);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(40, 225, 700, 70);
+    ctx.fillStyle = C.textBright;
+    ctx.font = '14pt Inter';
+    const sentMsg = pScore <= 20 ? 'Extreme panic. Historically opportunity zone for long-term investors.'
+      : pScore <= 40 ? 'Moderate fear. Market is cautious. Possible selective opportunities.'
+      : pScore <= 60 ? 'Market in balance. No clear direction. Trade with caution.'
+      : pScore <= 80 ? 'Market optimism. Prices may be elevated. Consider taking profits.'
+      : 'Extreme greed. High correction risk. Maximum caution.';
+    ctx.fillText(sentMsg, 58, 250);
+    ctx.fillStyle = hexToRgba(pColor);
+    ctx.font = '20pt Inter';
+    ctx.fillText(pScore + '/100', 58, 280);
 
   } else if (type === 'admin') {
     ctx.fillStyle = hexToRgba(C.red);
@@ -364,15 +388,8 @@ async function generateAlertImage(data) {
 
   // Exportar PNG → escalar a 1600x800 (Retina) → superponer logo
   const pngBuffer = await canvasToBuffer(canvas);
-  // Logo: 100px, dark=transparente, light=circular crop
-  let logoBuffer;
-  if (data.theme === 'light') {
-    logoBuffer = await sharp(LOGO_DARK_BG).resize(100, 100)
-      .composite([{ input: Buffer.from(`<svg width="100" height="100"><circle cx="50" cy="50" r="50" fill="white"/></svg>`), blend: 'dest-in' }])
-      .png().toBuffer();
-  } else {
-    logoBuffer = await sharp(LOGO_TRANSPARENT).resize(100, 100).toBuffer();
-  }
+  // Logo: transparente con AUREX, 100px, MISMO para dark y light
+  const logoBuffer = await sharp(LOGO_TRANSPARENT).resize(100, 100).toBuffer();
   const finalImage = await sharp(pngBuffer)
     .resize(1600, 800, { kernel: 'lanczos3' })
     .composite([{ input: logoBuffer, top: 28, left: 50 }])
