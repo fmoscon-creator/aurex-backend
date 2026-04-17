@@ -111,12 +111,12 @@ async function generateAlertImage(data) {
 
   // Header: AUREX
   ctx.fillStyle = hexToRgba(C.gold);
-  ctx.setFont('Inter', 28, 700);
+  ctx.font = '28pt Inter';
   ctx.fillText('AUREX', 90, 50);
 
   // Subtítulo tipo
   ctx.fillStyle = hexToRgba(C.textSec);
-  ctx.setFont('Inter', 16, 400);
+  ctx.font = '16pt Inter';
   const subTitle = type === 'ia' ? 'Alerta IA' : type === 'precio' ? 'Alerta de Precio' : type === 'pulse' ? 'AUREX Pulse' : 'Alerta Sistema';
   ctx.fillText(subTitle, 210, 50);
 
@@ -127,39 +127,39 @@ async function generateAlertImage(data) {
   if (type === 'ia') {
     // Activo + dirección
     ctx.fillStyle = hexToRgba(C.text);
-    ctx.setFont('Inter', 36, 700);
+    ctx.font = '36pt Inter';
     ctx.fillText(data.symbol || 'BTC', 40, 112);
 
     const symWidth = (data.symbol || 'BTC').length * 22 + 50;
     ctx.fillStyle = hexToRgba(accent);
-    ctx.setFont('Inter', 24, 700);
+    ctx.font = '24pt Inter';
     ctx.fillText((data.direction || 'ALCISTA') + ' ' + (data.probability || '') + '%', symWidth, 112);
 
     // Card Precio
     drawCard(ctx, 40, 135, 220, 80, C.border);
     ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.setFont('Inter', 14, 400);
+    ctx.font = '14pt Inter';
     ctx.fillText('Precio', 60, 163);
     ctx.fillStyle = hexToRgba(C.text);
-    ctx.setFont('Inter', 24, 700);
+    ctx.font = '24pt Inter';
     ctx.fillText('$' + fmtPrice(data.price), 60, 197);
 
     // Card Objetivo
     drawCard(ctx, 280, 135, 220, 80, C.border);
     ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.setFont('Inter', 14, 400);
+    ctx.font = '14pt Inter';
     ctx.fillText('Objetivo', 300, 163);
     ctx.fillStyle = hexToRgba(C.green);
-    ctx.setFont('Inter', 24, 700);
+    ctx.font = '24pt Inter';
     ctx.fillText('$' + fmtPrice(data.target), 300, 197);
 
     // Card Stop
     drawCard(ctx, 520, 135, 220, 80, C.border);
     ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.setFont('Inter', 14, 400);
+    ctx.font = '14pt Inter';
     ctx.fillText('Stop', 540, 163);
     ctx.fillStyle = hexToRgba(C.red);
-    ctx.setFont('Inter', 24, 700);
+    ctx.font = '24pt Inter';
     ctx.fillText('$' + fmtPrice(data.stop), 540, 197);
 
     // Barra probabilidad
@@ -173,37 +173,37 @@ async function generateAlertImage(data) {
 
     // Labels barra
     ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.setFont('Inter', 14, 400);
+    ctx.font = '14pt Inter';
     ctx.fillText('Motor IA v7 — 10 variables', 40, 275);
     ctx.fillStyle = hexToRgba(accent);
-    ctx.setFont('Inter', 14, 700);
+    ctx.font = '14pt Inter';
     ctx.fillText((data.probability || 50) + '% confianza', 600, 275);
 
   } else if (type === 'precio') {
     ctx.fillStyle = hexToRgba(C.text);
-    ctx.setFont('Inter', 36, 700);
+    ctx.font = '36pt Inter';
     ctx.fillText(data.symbol || '', 40, 112);
 
     ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.setFont('Inter', 18, 400);
+    ctx.font = '18pt Inter';
     ctx.fillText('Precio objetivo alcanzado', 40, 148);
 
     // Card precio actual
     drawCard(ctx, 40, 175, 340, 90, C.border);
     ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.setFont('Inter', 14, 400);
+    ctx.font = '14pt Inter';
     ctx.fillText('Precio actual', 60, 205);
     ctx.fillStyle = hexToRgba(C.text);
-    ctx.setFont('Inter', 30, 700);
+    ctx.font = '30pt Inter';
     ctx.fillText('$' + fmtPrice(data.price), 60, 245);
 
     // Card objetivo
     drawCard(ctx, 420, 175, 340, 90, accent);
     ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.setFont('Inter', 14, 400);
+    ctx.font = '14pt Inter';
     ctx.fillText('Objetivo', 440, 205);
     ctx.fillStyle = hexToRgba(accent);
-    ctx.setFont('Inter', 30, 700);
+    ctx.font = '30pt Inter';
     ctx.fillText('$' + fmtPrice(data.target), 440, 245);
 
   } else if (type === 'pulse') {
@@ -211,10 +211,10 @@ async function generateAlertImage(data) {
     const pColor = pScore <= 20 ? C.red : pScore <= 40 ? '#FF6B6B' : pScore <= 60 ? C.gold : pScore <= 80 ? C.green : '#00E676';
 
     ctx.fillStyle = hexToRgba(pColor);
-    ctx.setFont('Inter', 64, 700);
+    ctx.font = '64pt Inter';
     ctx.fillText(String(pScore), 40, 125);
 
-    ctx.setFont('Inter', 22, 700);
+    ctx.font = '22pt Inter';
     ctx.fillText(data.pulseZone || 'Neutral', 40, 158);
 
     // Barra Pulse
@@ -226,7 +226,7 @@ async function generateAlertImage(data) {
     ctx.fill();
 
     // Escala
-    ctx.setFont('Inter', 12, 400);
+    ctx.font = '12pt Inter';
     ctx.fillStyle = hexToRgba(C.red);
     ctx.fillText('0 Miedo', 40, 212);
     ctx.fillStyle = hexToRgba(C.gold);
@@ -236,18 +236,18 @@ async function generateAlertImage(data) {
 
     if (data.message) {
       ctx.fillStyle = hexToRgba(C.textSec);
-      ctx.setFont('Inter', 16, 400);
+      ctx.font = '16pt Inter';
       ctx.fillText(data.message, 40, 255);
     }
 
   } else if (type === 'admin') {
     ctx.fillStyle = hexToRgba(C.red);
-    ctx.setFont('Inter', 28, 700);
+    ctx.font = '28pt Inter';
     ctx.fillText('ALERTA SISTEMA', 40, 112);
 
     drawCard(ctx, 40, 135, 720, 200, C.red);
     ctx.fillStyle = hexToRgba(C.text);
-    ctx.setFont('Inter', 18, 400);
+    ctx.font = '18pt Inter';
     const msg = data.message || '';
     // Wrap text manual (máx ~55 chars por línea)
     const lines = [];
@@ -264,7 +264,7 @@ async function generateAlertImage(data) {
   ctx.fillRect(30, H - 55, W - 60, 1);
 
   ctx.fillStyle = hexToRgba(C.textSec);
-  ctx.setFont('Inter', 13, 400);
+  ctx.font = '13pt Inter';
   ctx.fillText('aurex.live', 40, H - 28);
 
   const ts = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
