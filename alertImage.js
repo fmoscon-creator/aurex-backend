@@ -345,30 +345,30 @@ async function generateAlertImage(data) {
       ctx.lineWidth = 2;
       ctx.strokeRect(x, cardY, cardW, cardH);
 
-      // Nombre filtro
-      ctx.fillStyle = C.textBright;
-      ctx.font = '11pt Inter';
-      ctx.fillText(f.name, x + 14, cardY + 22);
+      // Nombre filtro — más grande y contraste máximo
+      ctx.fillStyle = hexToRgba(C.text);
+      ctx.font = '13pt Inter';
+      ctx.fillText(f.name, x + 14, cardY + 24);
 
       // Score grande
       ctx.fillStyle = hexToRgba(zColor);
-      ctx.font = '34pt Inter';
-      ctx.fillText(String(f.score), x + 14, cardY + 68);
+      ctx.font = '38pt Inter';
+      ctx.fillText(String(f.score), x + 14, cardY + 72);
 
-      // Zona
-      ctx.font = '10pt Inter';
-      ctx.fillText(zLabel, x + 14, cardY + 88);
+      // Zona — más grande
+      ctx.font = '12pt Inter';
+      ctx.fillText(zLabel, x + 14, cardY + 92);
 
-      // Mini barra
+      // Mini barra — más gruesa
       ctx.fillStyle = C.barBg;
-      ctx.fillRect(x + 14, cardY + 100, cardW - 28, 8);
+      ctx.fillRect(x + 14, cardY + 104, cardW - 28, 10);
       ctx.fillStyle = hexToRgba(zColor);
-      ctx.fillRect(x + 14, cardY + 100, Math.round((cardW - 28) * f.score / 100), 8);
+      ctx.fillRect(x + 14, cardY + 104, Math.round((cardW - 28) * f.score / 100), 10);
 
-      // Score/100
-      ctx.fillStyle = C.textBright;
-      ctx.font = '10pt Inter';
-      ctx.fillText(f.score + '/100', x + 14, cardY + 128);
+      // Score/100 — más grande
+      ctx.fillStyle = hexToRgba(C.text);
+      ctx.font = '12pt Inter';
+      ctx.fillText(f.score + '/100', x + 14, cardY + 132);
     });
 
   } else if (type === 'admin') {
