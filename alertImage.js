@@ -141,7 +141,7 @@ async function generateAlertImage(data) {
   // Subtítulo tipo — mejor contraste (#C9D1D9 en vez de #8B949E)
   ctx.fillStyle = C.textBright;
   ctx.font = '16pt Inter';
-  const subTitle = type === 'ia' ? 'Alerta IA' : type === 'precio' ? 'Alerta de Precio' : type === 'pulse' ? 'AUREX Pulse' : 'Alerta Sistema';
+  const subTitle = type === 'ia' ? 'AI Alert' : type === 'precio' ? 'Price Alert' : type === 'pulse' ? 'AUREX Pulse' : 'System Alert';
   ctx.fillText(subTitle, 210, 50);
 
   // Línea separadora — dorada consistente
@@ -166,7 +166,7 @@ async function generateAlertImage(data) {
     ctx.fillStyle = C.textBright;
     ctx.font = '16pt Inter';
     const dirTextW = (dir + ' ' + prob + '%').length * 14 + symWidth + 10;
-    ctx.fillText('al precio objetivo', dirTextW, 108);
+    ctx.fillText('to target price', dirTextW, 108);
 
     // Card Precio — accent bar izquierdo dorado + borde
     ctx.fillStyle = hexToRgba(C.gold);
@@ -178,7 +178,7 @@ async function generateAlertImage(data) {
     ctx.strokeRect(40, 130, 220, 82);      // borde
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '16pt Inter';
-    ctx.fillText('Precio', 58, 158);
+    ctx.fillText('Price', 58, 158);
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '24pt Inter';
     ctx.fillText('$' + fmtPrice(data.price), 58, 194);
@@ -193,7 +193,7 @@ async function generateAlertImage(data) {
     ctx.strokeRect(280, 130, 220, 82);
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '16pt Inter';
-    ctx.fillText('Objetivo', 298, 158);
+    ctx.fillText('Target', 298, 158);
     ctx.fillStyle = hexToRgba(C.green);
     ctx.font = '24pt Inter';
     ctx.fillText('$' + fmtPrice(data.target), 298, 194);
@@ -229,7 +229,7 @@ async function generateAlertImage(data) {
     // Label barra
     ctx.fillStyle = C.textBright;
     ctx.font = '13pt Inter';
-    ctx.fillText('Motor IA v7 — 10 variables', 250, 264);
+    ctx.fillText('AI Engine v7 — 10 variables', 250, 264);
     ctx.fillStyle = hexToRgba(accent);
     ctx.font = '13pt Inter';
     ctx.fillText(prob + '%', 40 + barW - 15, 264);
@@ -247,7 +247,7 @@ async function generateAlertImage(data) {
     ctx.fillStyle = hexToRgba(accent);
     ctx.font = '20pt Inter';
     const symW = sym.length * 22 + 55;
-    ctx.fillText(alcanzado ? 'OBJETIVO ALCANZADO' : 'ALERTA DE PRECIO', symW, 108);
+    ctx.fillText(alcanzado ? 'TARGET REACHED' : 'PRICE ALERT', symW, 108);
 
     // Card Precio actual — accent bar dorado
     ctx.fillStyle = hexToRgba(C.gold);
@@ -259,7 +259,7 @@ async function generateAlertImage(data) {
     ctx.strokeRect(40, 130, 340, 90);
     ctx.fillStyle = C.textBright;
     ctx.font = '16pt Inter';
-    ctx.fillText('Precio actual', 60, 160);
+    ctx.fillText('Current Price', 60, 160);
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '28pt Inter';
     ctx.fillText('$' + fmtPrice(data.price), 60, 200);
@@ -275,7 +275,7 @@ async function generateAlertImage(data) {
     ctx.strokeRect(420, 130, 340, 90);
     ctx.fillStyle = C.textBright;
     ctx.font = '16pt Inter';
-    ctx.fillText('Objetivo', 440, 160);
+    ctx.fillText('Target', 440, 160);
     ctx.fillStyle = hexToRgba(objColor);
     ctx.font = '28pt Inter';
     ctx.fillText('$' + fmtPrice(data.target), 440, 200);
@@ -285,7 +285,7 @@ async function generateAlertImage(data) {
     const diffColor = diffPct >= 0 ? C.green : C.red;
     ctx.fillStyle = C.textBright;
     ctx.font = '16pt Inter';
-    ctx.fillText('Diferencia:', 40, 252);
+    ctx.fillText('Difference:', 40, 252);
     // Circulo indicador
     ctx.fillStyle = hexToRgba(diffColor);
     ctx.beginPath();
@@ -318,11 +318,11 @@ async function generateAlertImage(data) {
     // Escala
     ctx.font = '12pt Inter';
     ctx.fillStyle = hexToRgba(C.red);
-    ctx.fillText('0 Miedo', 40, 212);
+    ctx.fillText('0 Fear', 40, 212);
     ctx.fillStyle = hexToRgba(C.gold);
     ctx.fillText('50 Neutral', 360, 212);
     ctx.fillStyle = hexToRgba(C.green);
-    ctx.fillText('100 Codicia', 680, 212);
+    ctx.fillText('100 Greed', 680, 212);
 
     if (data.message) {
       ctx.fillStyle = hexToRgba(C.textSec);
@@ -333,7 +333,7 @@ async function generateAlertImage(data) {
   } else if (type === 'admin') {
     ctx.fillStyle = hexToRgba(C.red);
     ctx.font = '28pt Inter';
-    ctx.fillText('ALERTA SISTEMA', 40, 112);
+    ctx.fillText('SYSTEM ALERT', 40, 112);
 
     drawCard(ctx, 40, 135, 720, 160, C.red);
     ctx.fillStyle = hexToRgba(C.text);
@@ -362,9 +362,9 @@ async function generateAlertImage(data) {
 
   // Exportar PNG → escalar a 1600x800 (Retina) → superponer logo
   const pngBuffer = await canvasToBuffer(canvas);
-  // Logo: ícono circular, mismo para dark y light
-  const logoBuffer = await sharp(LOGO_ICON).resize(90, 90)
-    .composite([{ input: Buffer.from(`<svg width="90" height="90"><circle cx="45" cy="45" r="45" fill="white"/></svg>`), blend: 'dest-in' }])
+  // Logo: ícono circular 100px, mismo para dark y light
+  const logoBuffer = await sharp(LOGO_ICON).resize(100, 100)
+    .composite([{ input: Buffer.from(`<svg width="100" height="100"><circle cx="50" cy="50" r="50" fill="white"/></svg>`), blend: 'dest-in' }])
     .png().toBuffer();
   const finalImage = await sharp(pngBuffer)
     .resize(1600, 800, { kernel: 'lanczos3' })

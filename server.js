@@ -269,11 +269,11 @@ app.post('/api/whatsapp/test-image', async (req, res) => {
     if (t === 'ia') {
       const dir = direction || 'ALCISTA';
       const dirEmoji = dir === 'ALCISTA' ? '📈' : dir === 'BAJISTA' ? '📉' : '⚡';
-      caption = dirEmoji + ' ' + (symbol || 'BTC') + ' ' + dir + ' ' + (probability || 82) + '%\n🎯 Objetivo $' + fmtP(target || 0) + '\naurex.live';
+      caption = dirEmoji + ' ' + (symbol || 'BTC') + ' ' + dir + ' ' + (probability || 82) + '%\n🎯 Target $' + fmtP(target || 0) + '\naurex.live';
     } else if (t === 'precio') {
       const diffP = target && price ? ((price - target) / target * 100) : 0;
       const diffSign = diffP >= 0 ? '+' : '';
-      caption = '🎯 ' + (symbol || '') + ' $' + fmtP(price || 0) + ' Ahora\n' + diffSign + diffP.toFixed(1) + '% del Objetivo\naurex.live';
+      caption = '🎯 ' + (symbol || '') + ' $' + fmtP(price || 0) + ' Now\n' + diffSign + diffP.toFixed(1) + '% of Target\naurex.live';
     } else if (t === 'pulse') {
       caption = '💓 AUREX Pulse ' + (pulseScore || 50) + '\n' + (pulseZone || 'Neutral') + '\naurex.live';
     } else if (t === 'admin') {
