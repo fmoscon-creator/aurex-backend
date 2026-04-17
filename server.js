@@ -261,9 +261,9 @@ function fmtP(v) { if (!v || isNaN(v)) return '---'; return v >= 1000 ? v.toLoca
 // WHATSAPP IMAGE - test endpoint
 app.post('/api/whatsapp/test-image', async (req, res) => {
   try {
-    const { numero, type, symbol, direction, probability, price, target, stop, message, pulseScore, pulseZone, theme } = req.body || {};
+    const { numero, type, symbol, direction, probability, price, target, stop, message, pulseScore, pulseZone, pulseCrypto, pulseStocks, pulseCommod, pulseFutures, theme } = req.body || {};
     if (!numero) return res.status(400).json({ error: 'numero requerido' });
-    const imgBuf = await generateAlertImage({ type: type || 'ia', symbol: symbol || 'BTC', direction: direction || 'ALCISTA', probability: probability || 82, price: price || 67450, target: target || 72846, stop: stop || 64752, message, pulseScore, pulseZone, theme: theme || 'dark' });
+    const imgBuf = await generateAlertImage({ type: type || 'ia', symbol: symbol || 'BTC', direction: direction || 'ALCISTA', probability: probability || 82, price: price || 67450, target: target || 72846, stop: stop || 64752, message, pulseScore, pulseZone, pulseCrypto, pulseStocks, pulseCommod, pulseFutures, theme: theme || 'dark' });
     let caption = '';
     const t = type || 'ia';
     if (t === 'ia') {
@@ -276,7 +276,8 @@ app.post('/api/whatsapp/test-image', async (req, res) => {
       const diffSign = diffP >= 0 ? '+' : '';
       caption = '🎯 ' + (symbol || '') + ' $' + fmtP(price || 0) + ' Now\n' + diffSign + diffP.toFixed(1) + '% of Target\naurex.live';
     } else if (t === 'pulse') {
-      caption = '💓 AUREX Pulse ' + (pulseScore || 50) + '\n' + (pulseZone || 'Neutral') + '\naurex.live';
+      const pz = (pulseScore || 50) <= 20 ? 'Extreme Fear' : (pulseScore || 50) <= 40 ? 'Fear' : (pulseScore || 50) <= 60 ? 'Neutral' : (pulseScore || 50) <= 80 ? 'Greed' : 'Extreme Greed';
+      caption = '💓 AUREX Pulse ' + (pulseScore || 50) + ' · ' + pz + '\nGlobal Market Sentiment\naurex.live';
     } else if (t === 'admin') {
       caption = '🚨 Alerta Sistema\naurex.live';
     }

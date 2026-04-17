@@ -299,62 +299,77 @@ async function generateAlertImage(data) {
     ctx.fillText((diffPct >= 0 ? '+' : '') + diffPct.toFixed(2) + '%', 188, 254);
 
   } else if (type === 'pulse') {
-    const pScore = data.pulseScore || 50;
-    const pColor = pScore <= 20 ? C.red : pScore <= 40 ? '#FF6B6B' : pScore <= 60 ? C.gold : pScore <= 80 ? C.green : '#00E676';
-    const zoneLabel = data.pulseZone || 'Neutral';
+    // 5 filtros con scores
+    const filters = [
+      { name: 'GLOBAL', score: data.pulseScore || 50 },
+      { name: 'CRYPTO', score: data.pulseCrypto || data.pulseScore || 50 },
+      { name: 'STOCKS', score: data.pulseStocks || data.pulseScore || 50 },
+      { name: 'COMMOD', score: data.pulseCommod || data.pulseScore || 50 },
+      { name: 'FUTURES', score: data.pulseFutures || data.pulseScore || 50 },
+    ];
 
-    // Score grande + zona
-    ctx.fillStyle = hexToRgba(pColor);
-    ctx.font = '54pt Inter';
-    ctx.fillText(String(pScore), 40, 120);
+    function getZoneColor(s) {
+      return s <= 20 ? C.red : s <= 40 ? '#FF6B6B' : s <= 60 ? C.gold : s <= 80 ? C.green : '#00E676';
+    }
+    function getZoneLabel(s) {
+      return s <= 20 ? 'Extreme Fear' : s <= 40 ? 'Fear' : s <= 60 ? 'Neutral' : s <= 80 ? 'Greed' : 'Extreme Greed';
+    }
 
-    const scoreW = String(pScore).length * 34 + 50;
-    ctx.font = '24pt Inter';
-    ctx.fillText(zoneLabel, scoreW, 120);
-
-    // AUREX PULSE™
-    ctx.fillStyle = C.textBright;
-    ctx.font = '14pt Inter';
-    ctx.fillText('AUREX PULSE\u2122', scoreW, 148);
-
-    // Barra Pulse — fondo + relleno (sin roundRect)
-    ctx.fillStyle = C.barBg;
-    ctx.fillRect(40, 170, 700, 14);
-    ctx.fillStyle = hexToRgba(pColor);
-    ctx.fillRect(40, 170, Math.round(700 * pScore / 100), 14);
-
-    // Escala 5 zonas
-    ctx.font = '13pt Inter';
-    ctx.fillStyle = hexToRgba(C.red);
-    ctx.fillText('0 Fear', 40, 205);
-    ctx.fillStyle = 'rgba(255,107,107,1)';
-    ctx.fillText('20', 180, 205);
+    // Título AUREX PULSE™
     ctx.fillStyle = hexToRgba(C.gold);
-    ctx.fillText('50 Neutral', 330, 205);
-    ctx.fillStyle = hexToRgba(C.green);
-    ctx.fillText('80', 560, 205);
-    ctx.fillStyle = 'rgba(0,230,118,1)';
-    ctx.fillText('100 Greed', 650, 205);
-
-    // Card sentimiento — accent bar + borde
-    ctx.fillStyle = hexToRgba(pColor);
-    ctx.fillRect(40, 225, 5, 70);
-    ctx.fillStyle = C.cardAlt;
-    ctx.fillRect(45, 225, 695, 70);
-    ctx.strokeStyle = hexToRgba(pColor);
-    ctx.lineWidth = 2;
-    ctx.strokeRect(40, 225, 700, 70);
-    ctx.fillStyle = C.textBright;
-    ctx.font = '14pt Inter';
-    const sentMsg = pScore <= 20 ? 'Extreme panic. Historically opportunity zone for long-term investors.'
-      : pScore <= 40 ? 'Moderate fear. Market is cautious. Possible selective opportunities.'
-      : pScore <= 60 ? 'Market in balance. No clear direction. Trade with caution.'
-      : pScore <= 80 ? 'Market optimism. Prices may be elevated. Consider taking profits.'
-      : 'Extreme greed. High correction risk. Maximum caution.';
-    ctx.fillText(sentMsg, 58, 250);
-    ctx.fillStyle = hexToRgba(pColor);
     ctx.font = '20pt Inter';
-    ctx.fillText(pScore + '/100', 58, 280);
+    ctx.fillText('AUREX PULSE\u2122', 40, 100);
+
+    // 5 cards en fila
+    const cardW = 130;
+    const gap = 10;
+    const startX = 40;
+    const cardY = 118;
+    const cardH = 140;
+
+    filters.forEach((f, i) => {
+      const x = startX + i * (cardW + gap);
+      const zColor = getZoneColor(f.score);
+      const zLabel = getZoneLabel(f.score);
+
+      // Accent bar izquierdo
+      ctx.fillStyle = hexToRgba(zColor);
+      ctx.fillRect(x, cardY, 4, cardH);
+
+      // Fondo card
+      ctx.fillStyle = C.cardAlt;
+      ctx.fillRect(x + 4, cardY, cardW - 4, cardH);
+
+      // Borde
+      ctx.strokeStyle = hexToRgba(zColor);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, cardY, cardW, cardH);
+
+      // Nombre filtro
+      ctx.fillStyle = C.textBright;
+      ctx.font = '11pt Inter';
+      ctx.fillText(f.name, x + 14, cardY + 22);
+
+      // Score grande
+      ctx.fillStyle = hexToRgba(zColor);
+      ctx.font = '34pt Inter';
+      ctx.fillText(String(f.score), x + 14, cardY + 68);
+
+      // Zona
+      ctx.font = '10pt Inter';
+      ctx.fillText(zLabel, x + 14, cardY + 88);
+
+      // Mini barra
+      ctx.fillStyle = C.barBg;
+      ctx.fillRect(x + 14, cardY + 100, cardW - 28, 8);
+      ctx.fillStyle = hexToRgba(zColor);
+      ctx.fillRect(x + 14, cardY + 100, Math.round((cardW - 28) * f.score / 100), 8);
+
+      // Score/100
+      ctx.fillStyle = C.textBright;
+      ctx.font = '10pt Inter';
+      ctx.fillText(f.score + '/100', x + 14, cardY + 128);
+    });
 
   } else if (type === 'admin') {
     ctx.fillStyle = hexToRgba(C.red);
