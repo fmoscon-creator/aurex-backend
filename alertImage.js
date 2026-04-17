@@ -35,7 +35,7 @@ const LIGHT = {
   card: '#FFFFFF',
   cardAlt: 'rgba(255,255,255,1)',
   gold: '#996B00',       // dorado más oscuro para contraste
-  green: '#116329',      // verde más oscuro
+  green: '#3FB950',      // mismo verde AUREX nativa
   red: '#B31D28',        // rojo más oscuro
   text: '#0D1117',       // casi negro
   textBright: 'rgba(30,35,45,1)',  // más oscuro
@@ -328,7 +328,7 @@ async function generateAlertImage(data) {
 
   // Exportar PNG → escalar a 1600x800 (Retina) → superponer logo
   const pngBuffer = await canvasToBuffer(canvas);
-  const logoPath = data.theme === 'light' ? LOGO_DARK : LOGO_LIGHT;
+  const logoPath = LOGO_LIGHT; // transparente funciona en ambos modos
   const logoBuffer = await sharp(logoPath).resize(110, 110).toBuffer();
   const finalImage = await sharp(pngBuffer)
     .resize(1600, 800, { kernel: 'lanczos3' })
