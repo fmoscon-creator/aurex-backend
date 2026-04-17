@@ -30,17 +30,17 @@ const DARK = {
 };
 
 const LIGHT = {
-  bg: '#FFFFFF',
-  card: '#F6F8FA',
-  cardAlt: 'rgba(240,243,246,1)',
+  bg: '#F5F0E8',        // crema dorado suave (paleta AUREX claro)
+  card: '#FFFFFF',
+  cardAlt: 'rgba(255,255,255,1)',
   gold: '#B8860B',
   green: '#1A7F37',
   red: '#CF222E',
-  text: '#1F2328',
-  textBright: 'rgba(50,55,62,1)',
-  textSec: '#656D76',
-  border: '#D1D9E0',
-  barBg: 'rgba(208,215,222,1)',
+  text: '#1A1F2E',       // navy oscuro
+  textBright: 'rgba(40,45,60,1)',
+  textSec: '#5A6070',
+  border: '#D4A01740',   // dorado sutil
+  barBg: 'rgba(212,190,150,0.3)',  // dorado muy claro
 };
 
 function hexToRgba(hex) {
@@ -168,44 +168,50 @@ async function generateAlertImage(data) {
     const dirTextW = (dir + ' ' + prob + '%').length * 14 + symWidth + 10;
     ctx.fillText('al precio objetivo', dirTextW, 108);
 
-    // Card Precio — fondo + borde grueso dorado
+    // Card Precio — accent bar izquierdo dorado + borde
+    ctx.fillStyle = hexToRgba(C.gold);
+    ctx.fillRect(40, 130, 5, 82);          // accent bar izquierdo
     ctx.fillStyle = C.cardAlt;
-    ctx.fillRect(40, 130, 220, 82);
+    ctx.fillRect(45, 130, 215, 82);        // fondo card
     ctx.strokeStyle = hexToRgba(C.gold);
-    ctx.lineWidth = 3;
-    ctx.strokeRect(40, 130, 220, 82);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(40, 130, 220, 82);      // borde
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '16pt Inter';
-    ctx.fillText('Precio', 55, 158);
+    ctx.fillText('Precio', 58, 158);
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '24pt Inter';
-    ctx.fillText('$' + fmtPrice(data.price), 55, 194);
+    ctx.fillText('$' + fmtPrice(data.price), 58, 194);
 
-    // Card Objetivo — fondo + borde grueso verde
+    // Card Objetivo — accent bar izquierdo verde + borde
+    ctx.fillStyle = hexToRgba(C.green);
+    ctx.fillRect(280, 130, 5, 82);
     ctx.fillStyle = C.cardAlt;
-    ctx.fillRect(280, 130, 220, 82);
+    ctx.fillRect(285, 130, 215, 82);
     ctx.strokeStyle = hexToRgba(C.green);
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
     ctx.strokeRect(280, 130, 220, 82);
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '16pt Inter';
-    ctx.fillText('Objetivo', 295, 158);
+    ctx.fillText('Objetivo', 298, 158);
     ctx.fillStyle = hexToRgba(C.green);
     ctx.font = '24pt Inter';
-    ctx.fillText('$' + fmtPrice(data.target), 295, 194);
+    ctx.fillText('$' + fmtPrice(data.target), 298, 194);
 
-    // Card Stop — fondo + borde grueso rojo
+    // Card Stop — accent bar izquierdo rojo + borde
+    ctx.fillStyle = hexToRgba(C.red);
+    ctx.fillRect(520, 130, 5, 82);
     ctx.fillStyle = C.cardAlt;
-    ctx.fillRect(520, 130, 220, 82);
+    ctx.fillRect(525, 130, 215, 82);
     ctx.strokeStyle = hexToRgba(C.red);
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
     ctx.strokeRect(520, 130, 220, 82);
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '16pt Inter';
-    ctx.fillText('Stop', 535, 158);
+    ctx.fillText('Stop', 538, 158);
     ctx.fillStyle = hexToRgba(C.red);
     ctx.font = '24pt Inter';
-    ctx.fillText('$' + fmtPrice(data.stop), 535, 194);
+    ctx.fillText('$' + fmtPrice(data.stop), 538, 194);
 
     // Barra probabilidad — fondo gris más claro + relleno color
     ctx.fillStyle = C.barBg;
