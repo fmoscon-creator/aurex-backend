@@ -4,8 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { PassThrough } = require('stream');
 
-const LOGO_LIGHT = path.join(__dirname, 'assets', 'logo.png');       // transparente, para dark mode
-const LOGO_DARK = path.join(__dirname, 'assets', 'logo-dark.png');   // fondo oscuro, para light mode
+const LOGO_ICON = path.join(__dirname, 'assets', 'logo-dark.png');   // ícono solo (sin texto AUREX)
 
 // Registrar fuentes Inter
 const fontBold = PImage.registerFont(path.join(__dirname, 'assets', 'fonts', 'Inter-Bold.ttf'), 'Inter', 700, 'normal', 'normal');
@@ -34,14 +33,14 @@ const LIGHT = {
   bg: '#F5F0E8',        // crema dorado suave (paleta AUREX claro)
   card: '#FFFFFF',
   cardAlt: 'rgba(255,255,255,1)',
-  gold: '#996B00',       // dorado más oscuro para contraste
-  green: '#3FB950',      // mismo verde AUREX nativa
-  red: '#B31D28',        // rojo más oscuro
+  gold: '#D4A017',       // MISMO que dark
+  green: '#3FB950',      // MISMO que dark
+  red: '#F85149',        // MISMO que dark
   text: '#0D1117',       // casi negro
-  textBright: 'rgba(30,35,45,1)',  // más oscuro
-  textSec: '#3D434D',    // gris oscuro (era #5A6070)
-  border: '#D4A01750',
-  barBg: 'rgba(180,160,120,0.35)',
+  textBright: 'rgba(30,35,45,1)',
+  textSec: '#3D434D',
+  border: '#D4A017',     // MISMO dorado que dark (era semi-transparente)
+  barBg: 'rgba(180,160,120,0.4)',
 };
 
 function hexToRgba(hex) {
@@ -145,9 +144,9 @@ async function generateAlertImage(data) {
   const subTitle = type === 'ia' ? 'Alerta IA' : type === 'precio' ? 'Alerta de Precio' : type === 'pulse' ? 'AUREX Pulse' : 'Alerta Sistema';
   ctx.fillText(subTitle, 210, 50);
 
-  // Línea separadora
-  ctx.fillStyle = hexToRgba(C.border);
-  ctx.fillRect(30, 68, W - 60, 1);
+  // Línea separadora — dorada consistente
+  ctx.fillStyle = hexToRgba(C.gold);
+  ctx.fillRect(30, 68, W - 60, 2);
 
   if (type === 'ia') {
     const sym = data.symbol || 'BTC';
@@ -350,9 +349,9 @@ async function generateAlertImage(data) {
     });
   }
 
-  // Footer
-  ctx.fillStyle = hexToRgba(C.border);
-  ctx.fillRect(30, H - 55, W - 60, 1);
+  // Footer — línea dorada consistente
+  ctx.fillStyle = hexToRgba(C.gold);
+  ctx.fillRect(30, H - 55, W - 60, 2);
 
   ctx.fillStyle = C.textBright;
   ctx.font = '14pt Inter';
@@ -363,19 +362,10 @@ async function generateAlertImage(data) {
 
   // Exportar PNG → escalar a 1600x800 (Retina) → superponer logo
   const pngBuffer = await canvasToBuffer(canvas);
-  const logoPath = data.theme === 'light' ? LOGO_DARK : LOGO_LIGHT;
-  let logoBuffer;
-  if (data.theme === 'light') {
-    // Recortar logo oscuro en círculo (quitar esquinas negras)
-    const circleMask = Buffer.from(
-      `<svg width="110" height="110"><circle cx="55" cy="55" r="55" fill="white"/></svg>`
-    );
-    logoBuffer = await sharp(logoPath).resize(80, 80)
-      .composite([{ input: Buffer.from(`<svg width="80" height="80"><circle cx="40" cy="40" r="40" fill="white"/></svg>`), blend: 'dest-in' }])
-      .png().toBuffer();
-  } else {
-    logoBuffer = await sharp(logoPath).resize(80, 80).toBuffer();
-  }
+  // Logo: ícono circular, mismo para dark y light
+  const logoBuffer = await sharp(LOGO_ICON).resize(90, 90)
+    .composite([{ input: Buffer.from(`<svg width="90" height="90"><circle cx="45" cy="45" r="45" fill="white"/></svg>`), blend: 'dest-in' }])
+    .png().toBuffer();
   const finalImage = await sharp(pngBuffer)
     .resize(1600, 800, { kernel: 'lanczos3' })
     .composite([{ input: logoBuffer, top: 40, left: 50 }])
