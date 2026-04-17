@@ -140,61 +140,75 @@ async function generateAlertImage(data) {
     ctx.font = '34pt Inter';
     ctx.fillText(sym, 40, 108);
 
-    // Dirección + probabilidad + al precio objetivo
+    // Dirección + probabilidad + al precio objetivo — MÁS GRANDE
     const symWidth = sym.length * 22 + 55;
     ctx.fillStyle = hexToRgba(accent);
-    ctx.font = '20pt Inter';
-    ctx.fillText(dir + ' ' + prob + '% al precio objetivo', symWidth, 108);
-
-    // Card Precio — fondo claro sin bordes deformes
-    ctx.fillStyle = 'rgba(30,37,46,1)';
-    ctx.fillRect(40, 130, 220, 78);
+    ctx.font = '24pt Inter';
+    ctx.fillText(dir + ' ' + prob + '%', symWidth, 108);
     ctx.fillStyle = 'rgba(201,209,217,1)';
-    ctx.font = '13pt Inter';
-    ctx.fillText('Precio', 55, 155);
+    ctx.font = '16pt Inter';
+    const dirTextW = (dir + ' ' + prob + '%').length * 14 + symWidth + 10;
+    ctx.fillText('al precio objetivo', dirTextW, 108);
+
+    // Card Precio — fondo + borde
+    ctx.fillStyle = 'rgba(30,37,46,1)';
+    ctx.fillRect(40, 130, 220, 82);
+    ctx.strokeStyle = hexToRgba(C.gold);
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(40, 130, 220, 82);
     ctx.fillStyle = hexToRgba(C.text);
-    ctx.font = '22pt Inter';
-    ctx.fillText('$' + fmtPrice(data.price), 55, 190);
+    ctx.font = '16pt Inter';
+    ctx.fillText('Precio', 55, 158);
+    ctx.fillStyle = hexToRgba(C.text);
+    ctx.font = '24pt Inter';
+    ctx.fillText('$' + fmtPrice(data.price), 55, 194);
 
-    // Card Objetivo
+    // Card Objetivo — fondo + borde verde
     ctx.fillStyle = 'rgba(30,37,46,1)';
-    ctx.fillRect(280, 130, 220, 78);
-    ctx.fillStyle = 'rgba(201,209,217,1)';
-    ctx.font = '13pt Inter';
-    ctx.fillText('Objetivo', 295, 155);
+    ctx.fillRect(280, 130, 220, 82);
+    ctx.strokeStyle = hexToRgba(C.green);
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(280, 130, 220, 82);
+    ctx.fillStyle = hexToRgba(C.text);
+    ctx.font = '16pt Inter';
+    ctx.fillText('Objetivo', 295, 158);
     ctx.fillStyle = hexToRgba(C.green);
-    ctx.font = '22pt Inter';
-    ctx.fillText('$' + fmtPrice(data.target), 295, 190);
+    ctx.font = '24pt Inter';
+    ctx.fillText('$' + fmtPrice(data.target), 295, 194);
 
-    // Card Stop
+    // Card Stop — fondo + borde rojo
     ctx.fillStyle = 'rgba(30,37,46,1)';
-    ctx.fillRect(520, 130, 220, 78);
-    ctx.fillStyle = 'rgba(201,209,217,1)';
-    ctx.font = '13pt Inter';
-    ctx.fillText('Stop', 535, 155);
+    ctx.fillRect(520, 130, 220, 82);
+    ctx.strokeStyle = hexToRgba(C.red);
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(520, 130, 220, 82);
+    ctx.fillStyle = hexToRgba(C.text);
+    ctx.font = '16pt Inter';
+    ctx.fillText('Stop', 535, 158);
     ctx.fillStyle = hexToRgba(C.red);
-    ctx.font = '22pt Inter';
-    ctx.fillText('$' + fmtPrice(data.stop), 535, 190);
+    ctx.font = '24pt Inter';
+    ctx.fillText('$' + fmtPrice(data.stop), 535, 194);
 
     // Barra probabilidad — fondo gris 100% + relleno color
     ctx.fillStyle = 'rgba(33,38,45,1)';
-    ctx.fillRect(40, 228, 700, 14);
+    ctx.fillRect(40, 232, 700, 14);
     ctx.fillStyle = hexToRgba(accent);
     const barW = Math.round(700 * prob / 100);
-    ctx.fillRect(40, 228, barW, 14);
+    ctx.fillRect(40, 232, barW, 14);
 
     // Escala 0% y 100%
     ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.font = '10pt Inter';
-    ctx.fillText('0%', 40, 258);
-    ctx.fillText('100%', 710, 258);
+    ctx.font = '12pt Inter';
+    ctx.fillText('0%', 40, 264);
+    ctx.fillText('100%', 700, 264);
 
     // Label barra
     ctx.fillStyle = 'rgba(201,209,217,1)';
-    ctx.font = '12pt Inter';
-    ctx.fillText('Motor IA v7 — 10 variables', 200, 258);
+    ctx.font = '13pt Inter';
+    ctx.fillText('Motor IA v7 — 10 variables', 250, 264);
     ctx.fillStyle = hexToRgba(accent);
-    ctx.fillText(prob + '%', 40 + barW - 20, 258);
+    ctx.font = '13pt Inter';
+    ctx.fillText(prob + '%', 40 + barW - 15, 264);
 
   } else if (type === 'precio') {
     ctx.fillStyle = hexToRgba(C.text);
@@ -287,13 +301,12 @@ async function generateAlertImage(data) {
   const ts = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
   ctx.fillText(ts, 620, H - 28);
 
-  // Exportar PNG
+  // Exportar PNG → escalar a 1600x800 (Retina) → superponer logo
   const pngBuffer = await canvasToBuffer(canvas);
-
-  // Superponer logo con sharp
-  const logoBuffer = await sharp(LOGO_PATH).resize(55, 55).toBuffer();
+  const logoBuffer = await sharp(LOGO_PATH).resize(110, 110).toBuffer();
   const finalImage = await sharp(pngBuffer)
-    .composite([{ input: logoBuffer, top: 18, left: 30 }])
+    .resize(1600, 800, { kernel: 'lanczos3' })
+    .composite([{ input: logoBuffer, top: 36, left: 60 }])
     .png()
     .toBuffer();
 
