@@ -236,31 +236,60 @@ async function generateAlertImage(data) {
     ctx.fillText(prob + '%', 40 + barW - 15, 264);
 
   } else if (type === 'precio') {
+    const sym = data.symbol || 'BTC';
+    const alcanzado = data.price >= (data.target || 0);
+
+    // Ticker
     ctx.fillStyle = hexToRgba(C.text);
-    ctx.font = '36pt Inter';
-    ctx.fillText(data.symbol || '', 40, 112);
+    ctx.font = '34pt Inter';
+    ctx.fillText(sym, 40, 108);
 
-    ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.font = '18pt Inter';
-    ctx.fillText('Precio objetivo alcanzado', 40, 148);
-
-    // Card precio actual
-    drawCard(ctx, 40, 175, 340, 90, C.border);
-    ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.font = '14pt Inter';
-    ctx.fillText('Precio actual', 60, 205);
-    ctx.fillStyle = hexToRgba(C.text);
-    ctx.font = '30pt Inter';
-    ctx.fillText('$' + fmtPrice(data.price), 60, 245);
-
-    // Card objetivo
-    drawCard(ctx, 420, 175, 340, 90, accent);
-    ctx.fillStyle = hexToRgba(C.textSec);
-    ctx.font = '14pt Inter';
-    ctx.fillText('Objetivo', 440, 205);
+    // Subtítulo
     ctx.fillStyle = hexToRgba(accent);
-    ctx.font = '30pt Inter';
-    ctx.fillText('$' + fmtPrice(data.target), 440, 245);
+    ctx.font = '20pt Inter';
+    const symW = sym.length * 22 + 55;
+    ctx.fillText(alcanzado ? 'OBJETIVO ALCANZADO' : 'ALERTA DE PRECIO', symW, 108);
+
+    // Card Precio actual — accent bar dorado
+    ctx.fillStyle = hexToRgba(C.gold);
+    ctx.fillRect(40, 130, 5, 90);
+    ctx.fillStyle = C.cardAlt;
+    ctx.fillRect(45, 130, 335, 90);
+    ctx.strokeStyle = hexToRgba(C.gold);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(40, 130, 340, 90);
+    ctx.fillStyle = C.textBright;
+    ctx.font = '16pt Inter';
+    ctx.fillText('Precio actual', 60, 160);
+    ctx.fillStyle = hexToRgba(C.text);
+    ctx.font = '28pt Inter';
+    ctx.fillText('$' + fmtPrice(data.price), 60, 200);
+
+    // Card Objetivo — accent bar verde/rojo
+    const objColor = alcanzado ? C.green : C.red;
+    ctx.fillStyle = hexToRgba(objColor);
+    ctx.fillRect(420, 130, 5, 90);
+    ctx.fillStyle = C.cardAlt;
+    ctx.fillRect(425, 130, 335, 90);
+    ctx.strokeStyle = hexToRgba(objColor);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(420, 130, 340, 90);
+    ctx.fillStyle = C.textBright;
+    ctx.font = '16pt Inter';
+    ctx.fillText('Objetivo', 440, 160);
+    ctx.fillStyle = hexToRgba(objColor);
+    ctx.font = '28pt Inter';
+    ctx.fillText('$' + fmtPrice(data.target), 440, 200);
+
+    // Diferencia %
+    const diffPct = data.target && data.price ? ((data.price - data.target) / data.target * 100) : 0;
+    const diffColor = diffPct >= 0 ? C.green : C.red;
+    ctx.fillStyle = C.textBright;
+    ctx.font = '14pt Inter';
+    ctx.fillText('Diferencia:', 40, 252);
+    ctx.fillStyle = hexToRgba(diffColor);
+    ctx.font = '20pt Inter';
+    ctx.fillText((diffPct >= 0 ? '+' : '') + diffPct.toFixed(2) + '%', 160, 252);
 
   } else if (type === 'pulse') {
     const pScore = data.pulseScore || 50;
