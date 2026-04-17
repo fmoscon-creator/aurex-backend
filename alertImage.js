@@ -4,7 +4,8 @@ const path = require('path');
 const fs = require('fs');
 const { PassThrough } = require('stream');
 
-const LOGO_ICON = path.join(__dirname, 'assets', 'logo-dark.png');   // ícono solo (sin texto AUREX)
+const LOGO_TRANSPARENT = path.join(__dirname, 'assets', 'logo.png');       // dorado sobre transparente (para dark)
+const LOGO_DARK_BG = path.join(__dirname, 'assets', 'logo-dark.png');    // dorado sobre negro (para light)
 
 // Registrar fuentes Inter
 const fontBold = PImage.registerFont(path.join(__dirname, 'assets', 'fonts', 'Inter-Bold.ttf'), 'Inter', 700, 'normal', 'normal');
@@ -152,20 +153,21 @@ async function generateAlertImage(data) {
     const sym = data.symbol || 'BTC';
     const prob = data.probability || 82;
     const dir = data.direction || 'ALCISTA';
+    const dirEn = dir === 'ALCISTA' ? 'BULLISH' : dir === 'BAJISTA' ? 'BEARISH' : 'HIGH CONV';
 
     // Ticker grande
     ctx.fillStyle = hexToRgba(C.text);
     ctx.font = '34pt Inter';
     ctx.fillText(sym, 40, 108);
 
-    // Dirección + probabilidad + al precio objetivo — MÁS GRANDE
+    // Dirección en inglés + probabilidad
     const symWidth = sym.length * 22 + 55;
     ctx.fillStyle = hexToRgba(accent);
     ctx.font = '24pt Inter';
-    ctx.fillText(dir + ' ' + prob + '%', symWidth, 108);
+    ctx.fillText(dirEn + ' ' + prob + '%', symWidth, 108);
     ctx.fillStyle = C.textBright;
     ctx.font = '16pt Inter';
-    const dirTextW = (dir + ' ' + prob + '%').length * 14 + symWidth + 10;
+    const dirTextW = (dirEn + ' ' + prob + '%').length * 14 + symWidth + 10;
     ctx.fillText('to target price', dirTextW, 108);
 
     // Card Precio — accent bar izquierdo dorado + borde
@@ -362,13 +364,18 @@ async function generateAlertImage(data) {
 
   // Exportar PNG → escalar a 1600x800 (Retina) → superponer logo
   const pngBuffer = await canvasToBuffer(canvas);
-  // Logo: ícono circular 100px, mismo para dark y light
-  const logoBuffer = await sharp(LOGO_ICON).resize(100, 100)
-    .composite([{ input: Buffer.from(`<svg width="100" height="100"><circle cx="50" cy="50" r="50" fill="white"/></svg>`), blend: 'dest-in' }])
-    .png().toBuffer();
+  // Logo: 100px, dark=transparente, light=circular crop
+  let logoBuffer;
+  if (data.theme === 'light') {
+    logoBuffer = await sharp(LOGO_DARK_BG).resize(100, 100)
+      .composite([{ input: Buffer.from(`<svg width="100" height="100"><circle cx="50" cy="50" r="50" fill="white"/></svg>`), blend: 'dest-in' }])
+      .png().toBuffer();
+  } else {
+    logoBuffer = await sharp(LOGO_TRANSPARENT).resize(100, 100).toBuffer();
+  }
   const finalImage = await sharp(pngBuffer)
     .resize(1600, 800, { kernel: 'lanczos3' })
-    .composite([{ input: logoBuffer, top: 40, left: 50 }])
+    .composite([{ input: logoBuffer, top: 28, left: 50 }])
     .png()
     .toBuffer();
 

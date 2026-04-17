@@ -268,8 +268,9 @@ app.post('/api/whatsapp/test-image', async (req, res) => {
     const t = type || 'ia';
     if (t === 'ia') {
       const dir = direction || 'ALCISTA';
+      const dirEn = dir === 'ALCISTA' ? 'BULLISH' : dir === 'BAJISTA' ? 'BEARISH' : 'HIGH CONV';
       const dirEmoji = dir === 'ALCISTA' ? '📈' : dir === 'BAJISTA' ? '📉' : '⚡';
-      caption = dirEmoji + ' ' + (symbol || 'BTC') + ' ' + dir + ' ' + (probability || 82) + '%\n🎯 Target $' + fmtP(target || 0) + '\naurex.live';
+      caption = dirEmoji + ' ' + (symbol || 'BTC') + ' ' + dirEn + ' ' + (probability || 82) + '%\n🎯 Target $' + fmtP(target || 0) + '\naurex.live';
     } else if (t === 'precio') {
       const diffP = target && price ? ((price - target) / target * 100) : 0;
       const diffSign = diffP >= 0 ? '+' : '';
