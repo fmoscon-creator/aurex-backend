@@ -264,9 +264,20 @@ app.post('/api/whatsapp/test-image', async (req, res) => {
     const { numero, type, symbol, direction, probability, price, target, stop, message, pulseScore, pulseZone, theme } = req.body || {};
     if (!numero) return res.status(400).json({ error: 'numero requerido' });
     const imgBuf = await generateAlertImage({ type: type || 'ia', symbol: symbol || 'BTC', direction: direction || 'ALCISTA', probability: probability || 82, price: price || 67450, target: target || 72846, stop: stop || 64752, message, pulseScore, pulseZone, theme: theme || 'dark' });
-    const dir = direction || 'ALCISTA';
-    const dirEmoji = dir === 'ALCISTA' ? '📈' : dir === 'BAJISTA' ? '📉' : '⚡';
-    const caption = dirEmoji + ' ' + (symbol || 'BTC') + ' ' + dir + ' ' + (probability || 82) + '%\n🎯 Objetivo $' + fmtP(target || 0) + '\naurex.live';
+    let caption = '';
+    const t = type || 'ia';
+    if (t === 'ia') {
+      const dir = direction || 'ALCISTA';
+      const dirEmoji = dir === 'ALCISTA' ? '📈' : dir === 'BAJISTA' ? '📉' : '⚡';
+      caption = dirEmoji + ' ' + (symbol || 'BTC') + ' ' + dir + ' ' + (probability || 82) + '%\n🎯 Objetivo $' + fmtP(target || 0) + '\naurex.live';
+    } else if (t === 'precio') {
+      const alcanzado = (price || 0) >= (target || 0);
+      caption = (alcanzado ? '✅' : '⚠️') + ' ' + (symbol || '') + ' $' + fmtP(price || 0) + '\n🎯 Objetivo $' + fmtP(target || 0) + '\naurex.live';
+    } else if (t === 'pulse') {
+      caption = '💓 AUREX Pulse ' + (pulseScore || 50) + '\n' + (pulseZone || 'Neutral') + '\naurex.live';
+    } else if (t === 'admin') {
+      caption = '🚨 Alerta Sistema\naurex.live';
+    }
     await sendWhatsAppImage(numero, imgBuf, caption);
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
