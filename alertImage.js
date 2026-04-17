@@ -335,15 +335,15 @@ async function generateAlertImage(data) {
     const circleMask = Buffer.from(
       `<svg width="110" height="110"><circle cx="55" cy="55" r="55" fill="white"/></svg>`
     );
-    logoBuffer = await sharp(logoPath).resize(110, 110)
-      .composite([{ input: circleMask, blend: 'dest-in' }])
+    logoBuffer = await sharp(logoPath).resize(80, 80)
+      .composite([{ input: Buffer.from(`<svg width="80" height="80"><circle cx="40" cy="40" r="40" fill="white"/></svg>`), blend: 'dest-in' }])
       .png().toBuffer();
   } else {
-    logoBuffer = await sharp(logoPath).resize(110, 110).toBuffer();
+    logoBuffer = await sharp(logoPath).resize(80, 80).toBuffer();
   }
   const finalImage = await sharp(pngBuffer)
     .resize(1600, 800, { kernel: 'lanczos3' })
-    .composite([{ input: logoBuffer, top: 36, left: 60 }])
+    .composite([{ input: logoBuffer, top: 24, left: 60 }])
     .png()
     .toBuffer();
 
