@@ -4,7 +4,8 @@ const path = require('path');
 const fs = require('fs');
 const { PassThrough } = require('stream');
 
-const LOGO_PATH = path.join(__dirname, 'assets', 'logo.png');
+const LOGO_LIGHT = path.join(__dirname, 'assets', 'logo.png');       // transparente, para dark mode
+const LOGO_DARK = path.join(__dirname, 'assets', 'logo-dark.png');   // fondo oscuro, para light mode
 
 // Registrar fuentes Inter
 const fontBold = PImage.registerFont(path.join(__dirname, 'assets', 'fonts', 'Inter-Bold.ttf'), 'Inter', 700, 'normal', 'normal');
@@ -33,14 +34,14 @@ const LIGHT = {
   bg: '#F5F0E8',        // crema dorado suave (paleta AUREX claro)
   card: '#FFFFFF',
   cardAlt: 'rgba(255,255,255,1)',
-  gold: '#B8860B',
-  green: '#1A7F37',
-  red: '#CF222E',
-  text: '#1A1F2E',       // navy oscuro
-  textBright: 'rgba(40,45,60,1)',
-  textSec: '#5A6070',
-  border: '#D4A01740',   // dorado sutil
-  barBg: 'rgba(212,190,150,0.3)',  // dorado muy claro
+  gold: '#996B00',       // dorado más oscuro para contraste
+  green: '#116329',      // verde más oscuro
+  red: '#B31D28',        // rojo más oscuro
+  text: '#0D1117',       // casi negro
+  textBright: 'rgba(30,35,45,1)',  // más oscuro
+  textSec: '#3D434D',    // gris oscuro (era #5A6070)
+  border: '#D4A01750',
+  barBg: 'rgba(180,160,120,0.35)',
 };
 
 function hexToRgba(hex) {
@@ -327,7 +328,8 @@ async function generateAlertImage(data) {
 
   // Exportar PNG → escalar a 1600x800 (Retina) → superponer logo
   const pngBuffer = await canvasToBuffer(canvas);
-  const logoBuffer = await sharp(LOGO_PATH).resize(110, 110).toBuffer();
+  const logoPath = data.theme === 'light' ? LOGO_DARK : LOGO_LIGHT;
+  const logoBuffer = await sharp(logoPath).resize(110, 110).toBuffer();
   const finalImage = await sharp(pngBuffer)
     .resize(1600, 800, { kernel: 'lanczos3' })
     .composite([{ input: logoBuffer, top: 36, left: 60 }])
