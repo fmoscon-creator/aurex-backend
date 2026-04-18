@@ -936,6 +936,12 @@ async function healthCheck() {
       } else {
         await openAlert('binance', 'DOWN. Error: ' + e.message);
       }
+    } else {
+      // Binance ya caído — verificar si fallback activo y mitigar
+      const src = global._lastCryptoSource || 'unknown';
+      if (src === 'cryptocompare' || src === 'coingecko') {
+        await mitigateAlert('binance', src);
+      }
     }
   }
 
