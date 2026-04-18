@@ -1004,10 +1004,11 @@ async function restoreHealthState() {
   }
 }
 
-restoreHealthState();
-cron.schedule('*/5 * * * *', healthCheck);
-cron.schedule('0 11 * * *', dailyHealthReport); // 11:00 UTC = 08:00 Argentina
-console.log('[HEALTH] Cron: check 5min + daily report 08:00 AR');
+restoreHealthState().then(() => {
+  cron.schedule('*/5 * * * *', healthCheck);
+  cron.schedule('0 11 * * *', dailyHealthReport); // 11:00 UTC = 08:00 Argentina
+  console.log('[HEALTH] Cron: check 5min + daily report 08:00 AR');
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Aurex Backend:', PORT));
