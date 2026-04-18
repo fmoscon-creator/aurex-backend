@@ -506,6 +506,7 @@ async function calcularSenalesIA() {
     const ba = signals.filter(s=>s.direccion==='BAJISTA').length;
     const hc = signals.filter(s=>s.direccion==='ALTA CONV-IA').length;
     console.log('[IA] Listo:', signals.length + '/' + IA_ACTIVOS.length, '|', al, 'alcistas', ba, 'bajistas', hc, 'alta conv');
+    global._iaLastCalc = Date.now();
   } catch(e) { console.error('[IA] Error:', e.message); }
 }
 
@@ -692,7 +693,7 @@ app.post('/api/ia-signals', (req, res) => {
 });
 
 // HEALTH CHECK CRON — alerta admin WhatsApp si algo crítico falla
-const _health = { evolutionDown: false, supabaseDown: false, lastAlertAt: 0 };
+const _health = { evolutionDown: false, supabaseDown: false, binanceDown: false, iaStale: false, lastAlertAt: 0 };
 const HEALTH_ALERT_COOLDOWN_MS = 15 * 60 * 1000; // 15 min entre alertas repetidas
 
 async function healthCheck() {
@@ -710,6 +711,7 @@ async function healthCheck() {
           _health.evolutionDown = true;
           _health.lastAlertAt = now;
           console.error('[HEALTH] Evolution DOWN, state:', state);
+          await notifyAdmin('Evolution WhatsApp DOWN', 'Estado: ' + (state || 'unknown') + '. Las alertas WhatsApp no se van a enviar hasta que se reconecte.');
         }
       } else if (_health.evolutionDown) {
         _health.evolutionDown = false;
@@ -743,6 +745,37 @@ async function healthCheck() {
       _health.lastAlertAt = now;
       await notifyAdmin('Supabase DOWN', 'Excepción: ' + e.message);
     }
+  }
+
+  // 3) Binance API (precios crypto)
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', { signal: controller.signal });
+    clearTimeout(timeout);
+    const d = await r.json();
+    if (!d.price) throw new Error('No price in response');
+    if (_health.binanceDown) {
+      _health.binanceDown = false;
+      if (canAlert) { _health.lastAlertAt = now; await notifyAdmin('Binance RECUPERADO', 'Precios crypto volvieron a funcionar.'); }
+    }
+  } catch(e) {
+    if (!_health.binanceDown && canAlert) {
+      _health.binanceDown = true;
+      _health.lastAlertAt = now;
+      await notifyAdmin('Binance DOWN', 'No se pueden obtener precios crypto. Error: ' + e.message);
+    }
+  }
+
+  // 4) Señales IA (verificar que se calcularon recientemente)
+  if (global._iaLastCalc && (now - global._iaLastCalc) > 600000) {
+    if (!_health.iaStale && canAlert) {
+      _health.iaStale = true;
+      _health.lastAlertAt = now;
+      await notifyAdmin('Señales IA STALE', 'Último cálculo hace más de 10 minutos. Las señales pueden estar desactualizadas.');
+    }
+  } else if (_health.iaStale) {
+    _health.iaStale = false;
   }
 }
 
