@@ -692,95 +692,158 @@ app.post('/api/ia-signals', (req, res) => {
   res.json({ ok: true, count: _iaSignalsCache.signals.length });
 });
 
-// HEALTH CHECK CRON — alerta admin WhatsApp si algo crítico falla
-const _health = { evolutionDown: false, supabaseDown: false, binanceDown: false, iaStale: false, lastAlertAt: 0 };
-const HEALTH_ALERT_COOLDOWN_MS = 15 * 60 * 1000; // 15 min entre alertas repetidas
+// ═══ HEALTH CHECK SYSTEM — alertas con ID, persistencia, reporte diario ═══
+const _health = {};
+const HEALTH_COOLDOWN = 15 * 60 * 1000;
+const PREFIXES = { evolution: 'WA', supabase: 'DB', binance: 'BN', ia_stale: 'IA', system: 'SYS' };
+
+async function getNextAlertId(type) {
+  const prefix = PREFIXES[type] || 'SYS';
+  try {
+    const { data } = await supabase.from('health_events').select('alert_id').eq('type', type).order('triggered_at', { ascending: false }).limit(1);
+    if (data && data.length > 0) {
+      const num = parseInt(data[0].alert_id.split('-')[1]) || 0;
+      return prefix + '-' + String(num + 1).padStart(3, '0');
+    }
+  } catch(e) {}
+  return prefix + '-001';
+}
+
+async function openAlert(type, message) {
+  // Check if already active for this type
+  const { data: existing } = await supabase.from('health_events').select('id').eq('type', type).eq('status', 'active').limit(1);
+  if (existing && existing.length > 0) return null; // already active, skip
+
+  const alertId = await getNextAlertId(type);
+  const { data, error: insertErr } = await supabase.from('health_events').insert({
+    alert_id: alertId, type, status: 'active', message, notified: false, resolution_notified: false
+  }).select().single();
+  if (insertErr || !data) { console.error('[HEALTH] Insert failed:', insertErr?.message); return null; }
+
+  // Send WhatsApp
+  const typeLabel = { evolution: 'Evolution WhatsApp', supabase: 'Supabase Database', binance: 'Binance API', ia_stale: 'AI Signals', system: 'System' }[type] || type;
+  try {
+    const imgBuf = await generateAlertImage({ type: 'admin', message: alertId + ' — ' + typeLabel + ' DOWN\n' + message, theme: 'dark' });
+    await sendWhatsAppImage(ADMIN_WHATSAPP, imgBuf, '🚨 ALERT ' + alertId + ' — ' + typeLabel + ' DOWN\n' + new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }) + '\naurex.live');
+  } catch(e) {
+    // Fallback text
+    try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, '🚨 ALERT ' + alertId + ' — ' + typeLabel + ' DOWN\n' + message + '\n' + new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' })); } catch(e2) {}
+  }
+
+  await supabase.from('health_events').update({ notified: true }).eq('id', data.id);
+  console.log('[HEALTH] ALERT', alertId, typeLabel, 'DOWN:', message);
+  return alertId;
+}
+
+async function resolveAlert(type) {
+  const { data } = await supabase.from('health_events').select('*').eq('type', type).eq('status', 'active').limit(1);
+  if (!data || data.length === 0) return;
+
+  const evt = data[0];
+  const resolvedAt = new Date();
+  const triggeredAt = new Date(evt.triggered_at);
+  const durationSec = Math.round((resolvedAt - triggeredAt) / 1000);
+  const durStr = durationSec >= 60 ? Math.floor(durationSec / 60) + 'm ' + (durationSec % 60) + 's' : durationSec + 's';
+
+  await supabase.from('health_events').update({
+    status: 'resolved', resolved_at: resolvedAt.toISOString(), duration_seconds: durationSec,
+    resolution_message: 'Service restored after ' + durStr
+  }).eq('id', evt.id);
+
+  const typeLabel = { evolution: 'Evolution WhatsApp', supabase: 'Supabase Database', binance: 'Binance API', ia_stale: 'AI Signals', system: 'System' }[type] || type;
+  try {
+    await sendWhatsAppEvolution(ADMIN_WHATSAPP, '✅ RESOLVED ' + evt.alert_id + ' — ' + typeLabel + ' OK\nDuration: ' + durStr + '\n' + resolvedAt.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }) + '\naurex.live');
+  } catch(e) {}
+
+  await supabase.from('health_events').update({ resolution_notified: true }).eq('id', evt.id);
+  console.log('[HEALTH] RESOLVED', evt.alert_id, typeLabel, 'Duration:', durStr);
+}
 
 async function healthCheck() {
-  const now = Date.now();
-  const canAlert = (now - _health.lastAlertAt) > HEALTH_ALERT_COOLDOWN_MS;
-
   // 1) Evolution WhatsApp
   try {
     if (EVOLUTION_URL) {
-      const r = await fetch(EVOLUTION_URL + '/instance/connectionState/' + EVOLUTION_INSTANCE, { headers: { 'apikey': EVOLUTION_KEY }, timeout: 10000 });
+      const r = await fetch(EVOLUTION_URL + '/instance/connectionState/' + EVOLUTION_INSTANCE, { headers: { 'apikey': EVOLUTION_KEY } });
       const d = await r.json();
-      const state = d?.instance?.state;
-      if (state !== 'open') {
-        if (!_health.evolutionDown && canAlert) {
-          _health.evolutionDown = true;
-          _health.lastAlertAt = now;
-          console.error('[HEALTH] Evolution DOWN, state:', state);
-          await notifyAdmin('Evolution WhatsApp DOWN', 'Estado: ' + (state || 'unknown') + '. Las alertas WhatsApp no se van a enviar hasta que se reconecte.');
-        }
-      } else if (_health.evolutionDown) {
-        _health.evolutionDown = false;
-        if (canAlert) { _health.lastAlertAt = now; await notifyAdmin('Evolution WhatsApp RECUPERADO', 'El canal de WhatsApp volvió a estar online.'); }
-      }
+      if (d?.instance?.state !== 'open') {
+        if (!_health.evolution) { _health.evolution = true; await openAlert('evolution', 'State: ' + (d?.instance?.state || 'unknown')); }
+      } else if (_health.evolution) { _health.evolution = false; await resolveAlert('evolution'); }
     }
   } catch(e) {
-    if (!_health.evolutionDown && canAlert) {
-      _health.evolutionDown = true;
-      _health.lastAlertAt = now;
-      console.error('[HEALTH] Evolution error:', e.message);
-    }
+    if (!_health.evolution) { _health.evolution = true; await openAlert('evolution', 'Connection error: ' + e.message); }
   }
 
   // 2) Supabase
   try {
     const { error } = await supabase.from('usuarios').select('id').limit(1);
     if (error) {
-      if (!_health.supabaseDown && canAlert) {
-        _health.supabaseDown = true;
-        _health.lastAlertAt = now;
-        await notifyAdmin('Supabase DOWN', 'Error consultando Supabase: ' + (error.message || 'unknown'));
-      }
-    } else if (_health.supabaseDown) {
-      _health.supabaseDown = false;
-      if (canAlert) { _health.lastAlertAt = now; await notifyAdmin('Supabase RECUPERADO', 'La base de datos volvió a responder OK.'); }
-    }
+      if (!_health.supabase) { _health.supabase = true; await openAlert('supabase', 'Query error: ' + (error.message || 'unknown')); }
+    } else if (_health.supabase) { _health.supabase = false; await resolveAlert('supabase'); }
   } catch(e) {
-    if (!_health.supabaseDown && canAlert) {
-      _health.supabaseDown = true;
-      _health.lastAlertAt = now;
-      await notifyAdmin('Supabase DOWN', 'Excepción: ' + e.message);
-    }
+    if (!_health.supabase) { _health.supabase = true; await openAlert('supabase', 'Exception: ' + e.message); }
   }
 
-  // 3) Binance API (precios crypto)
+  // 3) Binance (5s timeout)
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', { signal: controller.signal });
-    clearTimeout(timeout);
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', { signal: ctrl.signal });
+    clearTimeout(t);
     const d = await r.json();
-    if (!d.price) throw new Error('No price in response');
-    if (_health.binanceDown) {
-      _health.binanceDown = false;
-      if (canAlert) { _health.lastAlertAt = now; await notifyAdmin('Binance RECUPERADO', 'Precios crypto volvieron a funcionar.'); }
-    }
+    if (!d.price) throw new Error('No price');
+    if (_health.binance) { _health.binance = false; await resolveAlert('binance'); }
   } catch(e) {
-    if (!_health.binanceDown && canAlert) {
-      _health.binanceDown = true;
-      _health.lastAlertAt = now;
-      await notifyAdmin('Binance DOWN', 'No se pueden obtener precios crypto. Error: ' + e.message);
-    }
+    if (!_health.binance) { _health.binance = true; await openAlert('binance', 'Error: ' + e.message); }
   }
 
-  // 4) Señales IA (verificar que se calcularon recientemente)
-  if (global._iaLastCalc && (now - global._iaLastCalc) > 600000) {
-    if (!_health.iaStale && canAlert) {
-      _health.iaStale = true;
-      _health.lastAlertAt = now;
-      await notifyAdmin('Señales IA STALE', 'Último cálculo hace más de 10 minutos. Las señales pueden estar desactualizadas.');
+  // 4) IA signals stale (>10min)
+  if (global._iaLastCalc && (Date.now() - global._iaLastCalc) > 600000) {
+    if (!_health.ia_stale) { _health.ia_stale = true; await openAlert('ia_stale', 'Last calc ' + Math.round((Date.now() - global._iaLastCalc) / 60000) + ' min ago'); }
+  } else if (_health.ia_stale) { _health.ia_stale = false; await resolveAlert('ia_stale'); }
+}
+
+// Daily report — 08:00 AM Argentina (11:00 UTC)
+async function dailyHealthReport() {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: events } = await supabase.from('health_events').select('*').gte('triggered_at', since).order('triggered_at', { ascending: false });
+
+  const resolved = (events || []).filter(e => e.status === 'resolved');
+  const active = (events || []).filter(e => e.status === 'active');
+  const total = (events || []).length;
+
+  let msg = '📊 AUREX Daily Health Report\n━━━━━━━━━━━━━━━━━━\n\n';
+
+  if (total === 0) {
+    msg += '✅ All systems operational.\nNo incidents in last 24h.\n';
+  } else {
+    if (resolved.length > 0) {
+      msg += '✅ RESOLVED (' + resolved.length + '):\n';
+      resolved.slice(0, 6).forEach(e => {
+        const dur = e.duration_seconds >= 60 ? Math.floor(e.duration_seconds / 60) + 'm' : e.duration_seconds + 's';
+        msg += '  ' + e.alert_id + '  ' + e.type + '  ' + dur + '\n';
+      });
+      if (resolved.length > 6) msg += '  ... and ' + (resolved.length - 6) + ' more\n';
+      msg += '\n';
     }
-  } else if (_health.iaStale) {
-    _health.iaStale = false;
+    if (active.length > 0) {
+      msg += '🔴 ACTIVE (' + active.length + '):\n';
+      active.forEach(e => {
+        msg += '  ' + e.alert_id + '  ' + e.type + '  ⚠️\n';
+      });
+      msg += '\n';
+    }
+    msg += 'Total: ' + resolved.length + ' resolved, ' + active.length + ' active\n';
   }
+
+  msg += '━━━━━━━━━━━━━━━━━━\naurex.live';
+
+  try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, msg); } catch(e) { console.error('[HEALTH REPORT]', e.message); }
+  console.log('[HEALTH] Daily report sent');
 }
 
 cron.schedule('*/5 * * * *', healthCheck);
-console.log('[HEALTH] Cron configurado cada 5 min');
+cron.schedule('0 11 * * *', dailyHealthReport); // 11:00 UTC = 08:00 Argentina
+console.log('[HEALTH] Cron: check 5min + daily report 08:00 AR');
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Aurex Backend:', PORT));
