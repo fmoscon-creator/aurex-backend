@@ -841,6 +841,21 @@ async function dailyHealthReport() {
   console.log('[HEALTH] Daily report sent');
 }
 
+async function restoreHealthState() {
+  try {
+    const { data } = await supabase.from('health_events').select('type').eq('status', 'active');
+    if (data && data.length > 0) {
+      data.forEach(function(evt) { _health[evt.type] = true; });
+      console.log('[HEALTH] Restored active alerts:', data.map(function(e) { return e.type; }).join(', '));
+    } else {
+      console.log('[HEALTH] No active alerts to restore');
+    }
+  } catch(e) {
+    console.error('[HEALTH] Restore failed:', e.message);
+  }
+}
+
+restoreHealthState();
 cron.schedule('*/5 * * * *', healthCheck);
 cron.schedule('0 11 * * *', dailyHealthReport); // 11:00 UTC = 08:00 Argentina
 console.log('[HEALTH] Cron: check 5min + daily report 08:00 AR');
