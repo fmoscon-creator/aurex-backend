@@ -404,6 +404,29 @@ app.get('/api/whatsapp/status', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// Health status — estado actual de alertas (público, sin credenciales)
+app.get('/api/health/status', async (req, res) => {
+  try {
+    const { data: events } = await supabase.from('health_events')
+      .select('alert_id,type,status,message,triggered_at,resolved_at,duration_seconds,mitigated_at,mitigation_source')
+      .order('triggered_at', { ascending: false })
+      .limit(20);
+
+    const activeFlags = {};
+    for (const k of Object.keys(_health)) {
+      if (_health[k]) activeFlags[k] = true;
+    }
+
+    res.json({
+      ok: true,
+      timestamp: new Date().toISOString(),
+      lastCryptoSource: global._lastCryptoSource || 'unknown',
+      activeFlags,
+      events: events || []
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // Test admin
 app.post('/api/test-admin-alert', async (req, res) => {
   try {
@@ -926,9 +949,26 @@ async function healthCheck() {
     if (!d.price) throw new Error('No price');
     if (_health.binance) { _health.binance = false; await resolveAlert('binance'); }
   } catch(e) {
+    // Binance falló — verificar fallbacks directamente
+    let src = 'unknown';
+    try {
+      const r2 = await fetch('https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD', { signal: AbortSignal.timeout(5000) });
+      const d2 = await r2.json();
+      if (d2.USD) src = 'cryptocompare';
+    } catch(_) {}
+    if (src === 'unknown') {
+      try {
+        const r3 = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', { signal: AbortSignal.timeout(5000) });
+        const d3 = await r3.json();
+        if (d3.bitcoin?.usd) src = 'coingecko';
+      } catch(_) {}
+    }
+    if (src === 'unknown' && cryptoCache['BTC']?.price) src = 'cache';
+
+    global._lastCryptoSource = src;
+
     if (!_health.binance) {
       _health.binance = true;
-      const src = global._lastCryptoSource || 'unknown';
       if (src === 'cryptocompare' || src === 'coingecko') {
         await openAlert('binance', 'DOWN — using ' + src + ' fallback. Data OK.');
       } else if (src === 'cache') {
@@ -937,11 +977,10 @@ async function healthCheck() {
         await openAlert('binance', 'DOWN. Error: ' + e.message);
       }
     } else {
-      // Binance ya caído — verificar si fallback activo y mitigar
-      const src = global._lastCryptoSource || 'unknown';
       if (src === 'cryptocompare' || src === 'coingecko') {
         await mitigateAlert('binance', src);
       }
+      console.log('[HEALTH] Binance still down, lastSource:', src);
     }
   }
 
