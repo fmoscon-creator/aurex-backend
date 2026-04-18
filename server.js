@@ -89,6 +89,101 @@ bot.on('message', async (msg) => {
 
 const ALPHA_KEY = process.env.ALPHA_VANTAGE_KEY;
 const priceCache = {};
+
+// ═══ FALLBACK SYSTEM — Auto-resolución SPEC v3 ═══
+const COINGECKO_IDS = {
+  BTC:'bitcoin',ETH:'ethereum',SOL:'solana',BNB:'binancecoin',XRP:'ripple',
+  ADA:'cardano',AVAX:'avalanche-2',DOT:'polkadot',LINK:'chainlink',
+  MATIC:'matic-network',DOGE:'dogecoin',SHIB:'shiba-inu',LTC:'litecoin',
+  ATOM:'cosmos',UNI:'uniswap',NEAR:'near',APT:'aptos',ARB:'arbitrum',
+  OP:'optimism',TRX:'tron',TON:'the-open-network',SUI:'sui',PEPE:'pepe',
+  WIF:'dogwifcoin',FIL:'filecoin',INJ:'injective-protocol',RUNE:'thorchain',
+  USDT:'tether',USDC:'usd-coin',
+};
+const cryptoCache = {};
+const CRYPTO_CACHE_EMERGENCY_TTL = 1800000; // 30min
+global._lastCryptoSource = 'binance';
+
+async function fetchCryptoPriceBatch(symbols) {
+  const result = {};
+  const now = Date.now();
+
+  // 1. Binance batch (primaria)
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const pairs = symbols.map(s => s + 'USDT');
+    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbols=' + JSON.stringify(pairs), { signal: ctrl.signal });
+    clearTimeout(t);
+    const data = await r.json();
+    if (Array.isArray(data) && data.length > 0) {
+      data.forEach(p => {
+        const sym = p.symbol.replace('USDT', '');
+        result[sym] = { price: parseFloat(p.price), source: 'binance', stale: false, ts: now };
+        cryptoCache[sym] = result[sym];
+      });
+      global._lastCryptoSource = 'binance';
+      return result;
+    }
+  } catch(e) {}
+
+  // 2. CryptoCompare batch (fallback 1 — 100k/mes)
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://min-api.cryptocompare.com/data/pricemulti?fsyms=' + symbols.join(',') + '&tsyms=USD', { signal: ctrl.signal });
+    clearTimeout(t);
+    const data = await r.json();
+    if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+      Object.keys(data).forEach(sym => {
+        if (data[sym]?.USD) {
+          result[sym] = { price: data[sym].USD, source: 'cryptocompare', stale: false, ts: now };
+          cryptoCache[sym] = result[sym];
+        }
+      });
+      global._lastCryptoSource = 'cryptocompare';
+      return result;
+    }
+  } catch(e) {}
+
+  // 3. CoinGecko batch (fallback 2 — 10k/mes)
+  try {
+    const ids = symbols.map(s => COINGECKO_IDS[s]).filter(Boolean).join(',');
+    if (ids) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 5000);
+      const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd', { signal: ctrl.signal });
+      clearTimeout(t);
+      const data = await r.json();
+      if (data && Object.keys(data).length > 0) {
+        symbols.forEach(sym => {
+          const id = COINGECKO_IDS[sym];
+          if (id && data[id]?.usd) {
+            result[sym] = { price: data[id].usd, source: 'coingecko', stale: false, ts: now };
+            cryptoCache[sym] = result[sym];
+          }
+        });
+        global._lastCryptoSource = 'coingecko';
+        return result;
+      }
+    }
+  } catch(e) {}
+
+  // 4. Caché (último recurso)
+  symbols.forEach(sym => {
+    if (cryptoCache[sym]) {
+      const age = now - cryptoCache[sym].ts;
+      if (age < CRYPTO_CACHE_EMERGENCY_TTL) {
+        result[sym] = {
+          price: cryptoCache[sym].price, source: 'cache', stale: true,
+          staleSince: cryptoCache[sym].ts, ageMinutes: Math.round(age / 60000), ts: cryptoCache[sym].ts
+        };
+      }
+    }
+  });
+  global._lastCryptoSource = Object.keys(result).length > 0 ? 'cache' : 'none';
+  return result;
+}
 async function getStockPrice(symbol) {
   const now = Date.now();
   if (priceCache[symbol] && (now - priceCache[symbol].ts) < 60000) return priceCache[symbol].data;
@@ -153,10 +248,11 @@ async function checkAlertas() {
   try {
     const { data: alertas } = await supabase.from('alertas').select('*').eq('activa', true).eq('disparada', false);
     if (!alertas || !alertas.length) return;
-    const cryptoSyms = [...new Set(alertas.filter(a => a.tipo_activo === 'cripto').map(a => a.simbolo + 'USDT'))];
+    const cryptoSyms = [...new Set(alertas.filter(a => a.tipo_activo === 'cripto').map(a => a.simbolo))];
     let cp = {};
     if (cryptoSyms.length) {
-      try { const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbols=' + JSON.stringify(cryptoSyms)); (await r.json()).forEach(p => { cp[p.symbol.replace('USDT','')] = parseFloat(p.price); }); } catch(e) {}
+      const cpResult = await fetchCryptoPriceBatch(cryptoSyms);
+      Object.keys(cpResult).forEach(sym => { cp[sym] = cpResult[sym].price; });
     }
     for (const a of alertas) {
       const precio = a.tipo_activo === 'cripto' ? cp[a.simbolo] : (await getStockPrice(a.simbolo))?.price;
@@ -385,6 +481,25 @@ async function _fetchBinanceIA(sym) {
   } catch(e) { return null; }
 }
 
+// Fallback para motor IA — CryptoCompare histoday OHLCV (mapeo 9 campos verificado)
+async function _fetchCryptoCompareIA(sym) {
+  try {
+    const [tickerR, histR] = await Promise.all([
+      fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=' + sym + '&tsyms=USD', { signal: AbortSignal.timeout(5000) }),
+      fetch('https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + sym + '&tsym=USD&limit=16', { signal: AbortSignal.timeout(5000) })
+    ]);
+    const ticker = await tickerR.json();
+    const hist = await histR.json();
+    const t = ticker?.RAW?.[sym]?.USD;
+    const klines = hist?.Data?.Data;
+    if (!t || !Array.isArray(klines) || klines.length === 0) return null;
+    const cls = klines.map(k => k.close).filter(x => x > 0);
+    const vols = klines.map(k => k.volumefrom).filter(x => x > 0);
+    const av = vols.length > 1 ? vols.slice(0, -1).reduce((a, b) => a + b, 0) / (vols.length - 1) : vols[0] || 1;
+    return { precio: t.PRICE, precio24h: t.OPEN24HOUR, vol24h: t.VOLUME24HOUR, volProm: av, hi: t.HIGH24HOUR, lo: t.LOW24HOUR, cls, hiMax: Math.max(...cls), loMin: Math.min(...cls) };
+  } catch(e) { return null; }
+}
+
 async function _fetchYahooIA(sym) {
   try {
     const base = ['https://','query1.finance','.yahoo.com/v8/finance/chart/'].join('');
@@ -489,7 +604,11 @@ async function calcularSenalesIA() {
       const results = await Promise.allSettled(
         batch.map(async (act) => {
           try {
-            const d = await _fetchYahooIA(act.y);
+            let d = await _fetchYahooIA(act.y);
+            if (!d || !d.precio) {
+              // Fallback: CryptoCompare para crypto, null para stocks
+              if (act.t === 'Cripto' || act.t === 'Stable') d = await _fetchCryptoCompareIA(act.s);
+            }
             if (!d || !d.precio) return null;
             d.btcC = btcC; d.spyC = spyC; d.pOro = pOro; d.pPet = pPet;
             return _calcIAScore(act.t, act.s, d);
@@ -783,7 +902,7 @@ async function healthCheck() {
     if (!_health.supabase) { _health.supabase = true; await openAlert('supabase', 'Exception: ' + e.message); }
   }
 
-  // 3) Binance (5s timeout)
+  // 3) Binance (5s timeout) + mensajes diferenciados según fallback activo
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 5000);
@@ -793,7 +912,17 @@ async function healthCheck() {
     if (!d.price) throw new Error('No price');
     if (_health.binance) { _health.binance = false; await resolveAlert('binance'); }
   } catch(e) {
-    if (!_health.binance) { _health.binance = true; await openAlert('binance', 'Error: ' + e.message); }
+    if (!_health.binance) {
+      _health.binance = true;
+      const src = global._lastCryptoSource || 'unknown';
+      if (src === 'cryptocompare' || src === 'coingecko') {
+        await openAlert('binance', 'DOWN — using ' + src + ' fallback. Data OK.');
+      } else if (src === 'cache') {
+        await openAlert('binance', 'ALL crypto sources DOWN. Serving cached data.');
+      } else {
+        await openAlert('binance', 'DOWN. Error: ' + e.message);
+      }
+    }
   }
 
   // 4) IA signals stale (>10min)
