@@ -142,6 +142,7 @@ async function fetchCryptoPriceBatch(symbols) {
         }
       });
       global._lastCryptoSource = 'cryptocompare';
+      if (_health.binance) mitigateAlert('binance', 'cryptocompare');
       return result;
     }
   } catch(e) {}
@@ -164,6 +165,7 @@ async function fetchCryptoPriceBatch(symbols) {
           }
         });
         global._lastCryptoSource = 'coingecko';
+        if (_health.binance) mitigateAlert('binance', 'coingecko');
         return result;
       }
     }
@@ -876,6 +878,18 @@ async function resolveAlert(type) {
 
   await supabase.from('health_events').update({ resolution_notified: true }).eq('id', evt.id);
   console.log('[HEALTH] RESOLVED', evt.alert_id, typeLabel, 'Duration:', durStr);
+}
+
+async function mitigateAlert(type, source) {
+  const { data } = await supabase.from('health_events').select('*').eq('type', type).eq('status', 'active').is('mitigated_at', null).limit(1);
+  if (!data || data.length === 0) return;
+  const evt = data[0];
+  const typeLabel = { evolution: 'Evolution WhatsApp', supabase: 'Supabase Database', binance: 'Binance API', ia_stale: 'AI Signals', system: 'System' }[type] || type;
+  await supabase.from('health_events').update({ mitigated_at: new Date().toISOString(), mitigation_source: source }).eq('id', evt.id);
+  try {
+    await sendWhatsAppEvolution(ADMIN_WHATSAPP, '🟡 MITIGATED ' + evt.alert_id + ' — ' + typeLabel + ' DOWN, data OK via ' + source + '\n' + new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }) + '\naurex.live');
+  } catch(e) { console.error('[HEALTH] Mitigate WA failed:', e.message); }
+  console.log('[HEALTH] MITIGATED', evt.alert_id, 'via', source);
 }
 
 async function healthCheck() {
