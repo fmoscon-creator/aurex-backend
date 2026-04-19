@@ -434,6 +434,14 @@ app.get('/api/health/status', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// Test daily report — fuerza envío manual del reporte diario
+app.post('/api/health/test-report', async (req, res) => {
+  try {
+    await dailyHealthReport();
+    res.json({ ok: true, message: 'Daily report sent + persisted' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // Test admin
 app.post('/api/test-admin-alert', async (req, res) => {
   try {
