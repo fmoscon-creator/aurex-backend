@@ -417,12 +417,19 @@ app.get('/api/health/status', async (req, res) => {
       if (_health[k]) activeFlags[k] = true;
     }
 
+    // Últimos 7 reportes diarios
+    const { data: dailyReports } = await supabase.from('daily_reports')
+      .select('reported_at,resolved_count,active_count,total_count,report_text')
+      .order('reported_at', { ascending: false })
+      .limit(7);
+
     res.json({
       ok: true,
       timestamp: new Date().toISOString(),
       lastCryptoSource: global._lastCryptoSource || 'unknown',
       activeFlags,
-      events: events || []
+      events: events || [],
+      dailyReports: dailyReports || []
     });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -992,41 +999,128 @@ async function healthCheck() {
 
 // Daily report — 08:00 AM Argentina (11:00 UTC)
 async function dailyHealthReport() {
+  const now = new Date();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  // ═══ BLOQUE 1: CONEXIONES ACTUALES ═══
+  let conns = '';
+
+  conns += '  Railway Backend    ✅ Online\n';
+
+  try {
+    const r = await fetch(EVOLUTION_URL + '/instance/connectionState/' + EVOLUTION_INSTANCE, { headers: { 'apikey': EVOLUTION_KEY } });
+    const d = await r.json();
+    conns += d?.instance?.state === 'open'
+      ? '  Evolution API      ✅ Online (state: open)\n'
+      : '  Evolution API      🔴 ' + (d?.instance?.state || 'unknown') + '\n';
+  } catch(e) {
+    conns += '  Evolution API      🔴 Error: ' + e.message + '\n';
+  }
+
+  try {
+    const { error } = await supabase.from('usuarios').select('id').limit(1);
+    conns += error
+      ? '  Supabase           🔴 Error: ' + error.message + '\n'
+      : '  Supabase           ✅ Online\n';
+  } catch(e) {
+    conns += '  Supabase           🔴 Error: ' + e.message + '\n';
+  }
+
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', { signal: ctrl.signal });
+    clearTimeout(t);
+    const d = await r.json();
+    conns += d.price
+      ? '  Binance            ✅ Online\n'
+      : '  Binance            🔴 No price\n';
+  } catch(e) {
+    const src = global._lastCryptoSource || 'unknown';
+    if (src === 'cryptocompare') {
+      conns += '  Binance            🟡 Fallback → CryptoCompare\n';
+      conns += '  CryptoCompare      ✅ Sirviendo datos\n';
+    } else if (src === 'coingecko') {
+      conns += '  Binance            🟡 Fallback → CoinGecko\n';
+      conns += '  CoinGecko          ✅ Sirviendo datos\n';
+    } else if (src === 'cache') {
+      conns += '  Binance            🔴 DOWN (cache)\n';
+    } else {
+      conns += '  Binance            🔴 DOWN\n';
+    }
+  }
+
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL&apikey=' + ALPHA_KEY, { signal: ctrl.signal });
+    clearTimeout(t);
+    const d = await r.json();
+    conns += d['Global Quote']?.['05. price']
+      ? '  Alpha Vantage      ✅ Online\n'
+      : '  Alpha Vantage      🟡 Sin datos\n';
+  } catch(e) {
+    conns += '  Alpha Vantage      🔴 Error\n';
+  }
+
+  // ═══ BLOQUE 2: INCIDENTES ÚLTIMAS 24H ═══
   const { data: events } = await supabase.from('health_events').select('*').gte('triggered_at', since).order('triggered_at', { ascending: false });
 
   const resolved = (events || []).filter(e => e.status === 'resolved');
   const active = (events || []).filter(e => e.status === 'active');
   const total = (events || []).length;
 
-  let msg = '📊 AUREX Daily Health Report\n━━━━━━━━━━━━━━━━━━\n\n';
+  let incidents = '';
 
   if (total === 0) {
-    msg += '✅ All systems operational.\nNo incidents in last 24h.\n';
+    incidents += '✅ No incidents in last 24h.\n';
   } else {
     if (resolved.length > 0) {
-      msg += '✅ RESOLVED (' + resolved.length + '):\n';
       resolved.slice(0, 6).forEach(e => {
-        const dur = e.duration_seconds >= 60 ? Math.floor(e.duration_seconds / 60) + 'm' : e.duration_seconds + 's';
-        msg += '  ' + e.alert_id + '  ' + e.type + '  ' + dur + '\n';
+        const trig = new Date(e.triggered_at).toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+        const dur = e.duration_seconds >= 3600
+          ? Math.floor(e.duration_seconds / 3600) + 'h ' + Math.floor((e.duration_seconds % 3600) / 60) + 'm'
+          : e.duration_seconds >= 60
+            ? Math.floor(e.duration_seconds / 60) + 'm ' + (e.duration_seconds % 60) + 's'
+            : e.duration_seconds + 's';
+        incidents += '  ✅ ' + e.alert_id + '  ' + e.type + '  ' + trig + '  Duración: ' + dur + '\n';
       });
-      if (resolved.length > 6) msg += '  ... and ' + (resolved.length - 6) + ' more\n';
-      msg += '\n';
+      if (resolved.length > 6) incidents += '  ... and ' + (resolved.length - 6) + ' more\n';
     }
     if (active.length > 0) {
-      msg += '🔴 ACTIVE (' + active.length + '):\n';
       active.forEach(e => {
-        msg += '  ' + e.alert_id + '  ' + e.type + '  ⚠️\n';
+        const trig = new Date(e.triggered_at).toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+        const elapsed = Math.round((now - new Date(e.triggered_at)) / 1000);
+        const elStr = elapsed >= 3600
+          ? Math.floor(elapsed / 3600) + 'h ' + Math.floor((elapsed % 3600) / 60) + 'm'
+          : Math.floor(elapsed / 60) + 'm';
+        const mitInfo = e.mitigated_at ? ' (mitigated via ' + e.mitigation_source + ')' : '';
+        incidents += '  🟡 ' + e.alert_id + '  ' + e.type + '  ' + trig + '  Sin resolver: ' + elStr + mitInfo + '\n';
       });
-      msg += '\n';
     }
-    msg += 'Total: ' + resolved.length + ' resolved, ' + active.length + ' active\n';
   }
 
+  // ═══ ARMAR MENSAJE COMPLETO ═══
+  let msg = '📊 AUREX Daily Health Report\n━━━━━━━━━━━━━━━━━━\n\n';
+  msg += '🔌 CONEXIONES ACTUALES:\n' + conns + '\n';
+  msg += '📋 INCIDENTES ÚLTIMAS 24H:\n' + incidents + '\n';
+  if (total > 0) msg += 'Total: ' + resolved.length + ' resolved, ' + active.length + ' active\n';
   msg += '━━━━━━━━━━━━━━━━━━\naurex.live';
 
+  // Persistir en Supabase
+  try {
+    await supabase.from('daily_reports').insert({
+      reported_at: now.toISOString(),
+      resolved_count: resolved.length,
+      active_count: active.length,
+      total_count: total,
+      report_text: msg,
+      events_snapshot: events || []
+    });
+  } catch(e) { console.error('[HEALTH REPORT] Persist failed:', e.message); }
+
   try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, msg); } catch(e) { console.error('[HEALTH REPORT]', e.message); }
-  console.log('[HEALTH] Daily report sent');
+  console.log('[HEALTH] Daily report sent + persisted');
 }
 
 async function restoreHealthState() {
