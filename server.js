@@ -854,7 +854,7 @@ app.post('/api/ia-signals', (req, res) => {
 // ═══ HEALTH CHECK SYSTEM — alertas con ID, persistencia, reporte diario ═══
 const _health = {};
 const HEALTH_COOLDOWN = 15 * 60 * 1000;
-const PREFIXES = { evolution: 'WA', supabase: 'DB', binance: 'BN', ia_stale: 'IA', system: 'SYS' };
+const PREFIXES = { evolution: 'WA', supabase: 'DB', binance: 'BN', cryptocompare: 'CC', cache: 'CA', ia_stale: 'IA', system: 'SYS' };
 
 async function getNextAlertId(type) {
   const prefix = PREFIXES[type] || 'SYS';
@@ -880,7 +880,7 @@ async function openAlert(type, message) {
   if (insertErr || !data) { console.error('[HEALTH] Insert failed:', insertErr?.message); return null; }
 
   // Send WhatsApp
-  const typeLabel = { evolution: 'Evolution WhatsApp', supabase: 'Supabase Database', binance: 'Binance API', ia_stale: 'AI Signals', system: 'System' }[type] || type;
+  const typeLabel = { evolution: 'Evolution WhatsApp', supabase: 'Supabase Database', binance: 'Binance API', cryptocompare: 'CryptoCompare API', cache: 'All Price Sources', ia_stale: 'AI Signals', system: 'System' }[type] || type;
   try {
     const imgBuf = await generateAlertImage({ type: 'admin', message: alertId + ' — ' + typeLabel + ' DOWN\n' + message, theme: 'dark' });
     await sendWhatsAppImage(ADMIN_WHATSAPP, imgBuf, '🚨 ALERT ' + alertId + ' — ' + typeLabel + ' DOWN\n' + new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }) + '\naurex.live');
@@ -909,7 +909,7 @@ async function resolveAlert(type) {
     resolution_message: 'Service restored after ' + durStr
   }).eq('id', evt.id);
 
-  const typeLabel = { evolution: 'Evolution WhatsApp', supabase: 'Supabase Database', binance: 'Binance API', ia_stale: 'AI Signals', system: 'System' }[type] || type;
+  const typeLabel = { evolution: 'Evolution WhatsApp', supabase: 'Supabase Database', binance: 'Binance API', cryptocompare: 'CryptoCompare API', cache: 'All Price Sources', ia_stale: 'AI Signals', system: 'System' }[type] || type;
   try {
     await sendWhatsAppEvolution(ADMIN_WHATSAPP, '✅ RESOLVED ' + evt.alert_id + ' — ' + typeLabel + ' OK\nDuration: ' + durStr + '\n' + resolvedAt.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }) + '\naurex.live');
   } catch(e) {}
@@ -922,7 +922,7 @@ async function mitigateAlert(type, source) {
   const { data } = await supabase.from('health_events').select('*').eq('type', type).eq('status', 'active').is('mitigated_at', null).limit(1);
   if (!data || data.length === 0) return;
   const evt = data[0];
-  const typeLabel = { evolution: 'Evolution WhatsApp', supabase: 'Supabase Database', binance: 'Binance API', ia_stale: 'AI Signals', system: 'System' }[type] || type;
+  const typeLabel = { evolution: 'Evolution WhatsApp', supabase: 'Supabase Database', binance: 'Binance API', cryptocompare: 'CryptoCompare API', cache: 'All Price Sources', ia_stale: 'AI Signals', system: 'System' }[type] || type;
   await supabase.from('health_events').update({ mitigated_at: new Date().toISOString(), mitigation_source: source }).eq('id', evt.id);
   try {
     await sendWhatsAppEvolution(ADMIN_WHATSAPP, '🟡 MITIGATED ' + evt.alert_id + ' — ' + typeLabel + ' DOWN, data OK via ' + source + '\n' + new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }) + '\naurex.live');
@@ -963,6 +963,8 @@ async function healthCheck() {
     const d = await r.json();
     if (!d.price) throw new Error('No price');
     if (_health.binance) { _health.binance = false; await resolveAlert('binance'); }
+    if (_health.cryptocompare) { _health.cryptocompare = false; await resolveAlert('cryptocompare'); }
+    if (_health.cache) { _health.cache = false; await resolveAlert('cache'); }
   } catch(e) {
     // Binance falló — verificar fallbacks directamente
     let src = 'unknown';
@@ -979,9 +981,11 @@ async function healthCheck() {
       } catch(_) {}
     }
     if (src === 'unknown' && cryptoCache['BTC']?.price) src = 'cache';
+    if (src === 'unknown') src = 'none';
 
     global._lastCryptoSource = src;
 
+    // --- Alerta Binance (BN) ---
     if (!_health.binance) {
       _health.binance = true;
       if (src === 'cryptocompare' || src === 'coingecko') {
@@ -996,6 +1000,36 @@ async function healthCheck() {
         await mitigateAlert('binance', src);
       }
       console.log('[HEALTH] Binance still down, lastSource:', src);
+    }
+
+    // --- Alerta CryptoCompare (CC) ---
+    if (src === 'coingecko' || src === 'cache' || src === 'none') {
+      if (!_health.cryptocompare) {
+        _health.cryptocompare = true;
+        if (src === 'coingecko') {
+          await openAlert('cryptocompare', 'DOWN — using CoinGecko fallback. Data OK.');
+        } else {
+          await openAlert('cryptocompare', 'DOWN — no live fallback available.');
+        }
+      }
+    } else if (src === 'cryptocompare' && _health.cryptocompare) {
+      _health.cryptocompare = false;
+      await resolveAlert('cryptocompare');
+    }
+
+    // --- Alerta Caché (CA) ---
+    if (src === 'cache' || src === 'none') {
+      if (!_health.cache) {
+        _health.cache = true;
+        if (src === 'cache') {
+          await openAlert('cache', 'ALL live sources DOWN. Serving cached data (max 30min stale).');
+        } else {
+          await openAlert('cache', 'ALL sources DOWN. No data available.');
+        }
+      }
+    } else if (_health.cache) {
+      _health.cache = false;
+      await resolveAlert('cache');
     }
   }
 
