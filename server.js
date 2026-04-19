@@ -1013,25 +1013,25 @@ async function dailyHealthReport() {
   // ═══ BLOQUE 1: CONEXIONES ACTUALES ═══
   let conns = '';
 
-  conns += '  Railway Backend    ✅ Online\n';
+  conns += '✅ Railway Backend\n';
 
   try {
     const r = await fetch(EVOLUTION_URL + '/instance/connectionState/' + EVOLUTION_INSTANCE, { headers: { 'apikey': EVOLUTION_KEY } });
     const d = await r.json();
     conns += d?.instance?.state === 'open'
-      ? '  Evolution API      ✅ Online (state: open)\n'
-      : '  Evolution API      🔴 ' + (d?.instance?.state || 'unknown') + '\n';
+      ? '✅ Evolution API (state: open)\n'
+      : '🔴 Evolution API (' + (d?.instance?.state || 'unknown') + ')\n';
   } catch(e) {
-    conns += '  Evolution API      🔴 Error: ' + e.message + '\n';
+    conns += '🔴 Evolution API (Error: ' + e.message + ')\n';
   }
 
   try {
     const { error } = await supabase.from('usuarios').select('id').limit(1);
     conns += error
-      ? '  Supabase           🔴 Error: ' + error.message + '\n'
-      : '  Supabase           ✅ Online\n';
+      ? '🔴 Supabase (Error: ' + error.message + ')\n'
+      : '✅ Supabase\n';
   } catch(e) {
-    conns += '  Supabase           🔴 Error: ' + e.message + '\n';
+    conns += '🔴 Supabase (Error: ' + e.message + ')\n';
   }
 
   let binanceOk = false;
@@ -1045,19 +1045,17 @@ async function dailyHealthReport() {
   } catch(e) {}
 
   if (binanceOk) {
-    conns += '  Binance            ✅ Online\n';
+    conns += '✅ Binance\n';
   } else {
     const src = global._lastCryptoSource || 'unknown';
     if (src === 'cryptocompare') {
-      conns += '  Binance            🟡 Fallback → CryptoCompare\n';
-      conns += '  CryptoCompare      ✅ Sirviendo datos\n';
+      conns += '🟡 Binance → Fallback CryptoCompare OK\n';
     } else if (src === 'coingecko') {
-      conns += '  Binance            🟡 Fallback → CoinGecko\n';
-      conns += '  CoinGecko          ✅ Sirviendo datos\n';
+      conns += '🟡 Binance → Fallback CoinGecko OK\n';
     } else if (src === 'cache') {
-      conns += '  Binance            🔴 DOWN (cache)\n';
+      conns += '🔴 Binance DOWN (sirviendo cache)\n';
     } else {
-      conns += '  Binance            🔴 DOWN\n';
+      conns += '🔴 Binance DOWN\n';
     }
   }
 
@@ -1068,10 +1066,10 @@ async function dailyHealthReport() {
     clearTimeout(t);
     const d = await r.json();
     conns += d['Global Quote']?.['05. price']
-      ? '  Alpha Vantage      ✅ Online\n'
-      : '  Alpha Vantage      🟡 Sin datos\n';
+      ? '✅ Alpha Vantage\n'
+      : '🟡 Alpha Vantage (sin datos)\n';
   } catch(e) {
-    conns += '  Alpha Vantage      🔴 Error\n';
+    conns += '🔴 Alpha Vantage (Error)\n';
   }
 
   // ═══ BLOQUE 2: INCIDENTES ÚLTIMAS 24H ═══
@@ -1100,9 +1098,9 @@ async function dailyHealthReport() {
           : e.duration_seconds >= 60
             ? Math.floor(e.duration_seconds / 60) + 'm ' + (e.duration_seconds % 60) + 's'
             : e.duration_seconds + 's';
-        incidents += '  ✅ ' + e.alert_id + '  ' + e.type + '  ' + trig + '  Duración: ' + dur + '\n';
+        incidents += '✅ ' + e.alert_id + ' · ' + e.type + ' · ' + trig + ' · Duración: ' + dur + '\n';
       });
-      if (resolved.length > 6) incidents += '  ... and ' + (resolved.length - 6) + ' more\n';
+      if (resolved.length > 6) incidents += '... and ' + (resolved.length - 6) + ' more\n';
     }
     if (active.length > 0) {
       active.forEach(e => {
@@ -1112,7 +1110,7 @@ async function dailyHealthReport() {
           ? Math.floor(elapsed / 3600) + 'h ' + Math.floor((elapsed % 3600) / 60) + 'm'
           : Math.floor(elapsed / 60) + 'm';
         const mitInfo = e.mitigated_at ? ' (mitigated via ' + e.mitigation_source + ')' : '';
-        incidents += '  🟡 ' + e.alert_id + '  ' + e.type + '  ' + trig + '  Sin resolver: ' + elStr + mitInfo + '\n';
+        incidents += '🟡 ' + e.alert_id + ' · ' + e.type + ' · ' + trig + ' · Sin resolver: ' + elStr + mitInfo + '\n';
       });
     }
   }
