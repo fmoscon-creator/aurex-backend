@@ -1034,16 +1034,19 @@ async function dailyHealthReport() {
     conns += '  Supabase           🔴 Error: ' + e.message + '\n';
   }
 
+  let binanceOk = false;
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 5000);
     const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', { signal: ctrl.signal });
     clearTimeout(t);
     const d = await r.json();
-    conns += d.price
-      ? '  Binance            ✅ Online\n'
-      : '  Binance            🔴 No price\n';
-  } catch(e) {
+    if (d.price) binanceOk = true;
+  } catch(e) {}
+
+  if (binanceOk) {
+    conns += '  Binance            ✅ Online\n';
+  } else {
     const src = global._lastCryptoSource || 'unknown';
     if (src === 'cryptocompare') {
       conns += '  Binance            🟡 Fallback → CryptoCompare\n';
@@ -1078,6 +1081,12 @@ async function dailyHealthReport() {
   const active = (events || []).filter(e => e.status === 'active');
   const total = (events || []).length;
 
+  const _meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  function _fmtAR(ts) {
+    const d = new Date(new Date(ts).getTime() - 3 * 60 * 60 * 1000);
+    return d.getDate() + '/' + _meses[d.getMonth()] + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+
   let incidents = '';
 
   if (total === 0) {
@@ -1085,7 +1094,7 @@ async function dailyHealthReport() {
   } else {
     if (resolved.length > 0) {
       resolved.slice(0, 6).forEach(e => {
-        const trig = new Date(e.triggered_at).toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+        const trig = _fmtAR(e.triggered_at);
         const dur = e.duration_seconds >= 3600
           ? Math.floor(e.duration_seconds / 3600) + 'h ' + Math.floor((e.duration_seconds % 3600) / 60) + 'm'
           : e.duration_seconds >= 60
@@ -1097,7 +1106,7 @@ async function dailyHealthReport() {
     }
     if (active.length > 0) {
       active.forEach(e => {
-        const trig = new Date(e.triggered_at).toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+        const trig = _fmtAR(e.triggered_at);
         const elapsed = Math.round((now - new Date(e.triggered_at)) / 1000);
         const elStr = elapsed >= 3600
           ? Math.floor(elapsed / 3600) + 'h ' + Math.floor((elapsed % 3600) / 60) + 'm'
