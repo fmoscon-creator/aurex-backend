@@ -348,6 +348,14 @@ async function checkAlertas() {
 
 cron.schedule('*/30 * * * * *', checkAlertas);
 
+// Mantener cryptoCache siempre lleno (para /api/crypto-prices fallback)
+async function refreshCryptoCache() {
+  const cryptoSyms = IA_ACTIVOS.filter(a => a.t === 'Cripto' || a.t === 'Stable').map(a => a.s);
+  if (cryptoSyms.length > 0) await fetchCryptoPriceBatch(cryptoSyms);
+}
+cron.schedule('*/2 * * * *', refreshCryptoCache); // cada 2 min
+setTimeout(refreshCryptoCache, 5000); // al iniciar
+
 app.get('/', (req, res) => res.json({ status: 'ok', app: 'Aurex Backend', version: '1.0.0', time: new Date().toISOString() }));
 app.get('/api/stock/:symbol', async (req, res) => { const d = await getStockPrice(req.params.symbol.toUpperCase()); d ? res.json(d) : res.status(404).json({ error: 'No encontrado' }); });
 app.get('/api/alertas/:userId', async (req, res) => { const { data, error } = await supabase.from('alertas').select('*').eq('user_id', req.params.userId); error ? res.status(500).json({ error }) : res.json(data); });
