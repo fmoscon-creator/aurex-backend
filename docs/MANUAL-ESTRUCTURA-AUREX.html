@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MANUAL DE ESTRUCTURA — AUREX</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">MANUAL DE ESTRUCTURA — AUREX</h1>
+</header>
+<h1 id="manual-de-estructura-aurex">MANUAL DE ESTRUCTURA — AUREX</h1>
+<p>v1.0 — 21 abril 2026</p>
+<hr />
+<h2 id="repositorios">REPOSITORIOS</h2>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 12%" />
+<col style="width: 20%" />
+<col style="width: 32%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Repo</th>
+<th>URL</th>
+<th>Branch</th>
+<th>Safety Point</th>
+<th>Deploy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>aurex-backend</td>
+<td>github.com/fmoscon-creator/aurex-backend</td>
+<td>main</td>
+<td><code>03a6892</code></td>
+<td>Railway auto-deploy</td>
+</tr>
+<tr>
+<td>aurex-app (PWA)</td>
+<td>github.com/fmoscon-creator/aurex-app</td>
+<td>main</td>
+<td><code>e314c13</code></td>
+<td>GitHub Pages auto</td>
+</tr>
+<tr>
+<td>AurexApp (Nativa)</td>
+<td>github.com/fmoscon-creator/AurexApp</td>
+<td>dev</td>
+<td><code>7874f0f</code></td>
+<td>Xcode → TestFlight</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Build Nativa:</strong> Build 12 en TestFlight (10/04/2026, NO
+incluye fallback). Build 14 pendiente con fallback.</p>
+<hr />
+<h2 id="backend-server.js-1477-líneas">BACKEND — server.js (1477+
+líneas)</h2>
+<h3 id="funciones-principales">Funciones principales</h3>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 34%" />
+<col style="width: 15%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Función</th>
+<th>Línea aprox</th>
+<th>Cron</th>
+<th>Qué hace</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fetchCryptoPriceBatch(symbols)</code></td>
+<td>L153</td>
+<td>—</td>
+<td>Cadena: Binance→CC→Kraken→CoinGecko→Cache. Escribe en
+<code>cryptoCache</code></td>
+</tr>
+<tr>
+<td><code>refreshCryptoCache()</code></td>
+<td>L351-357</td>
+<td><code>*/2 * * * *</code> + boot 5s</td>
+<td>Llama fetchCryptoPriceBatch con 53 crypto/stable</td>
+</tr>
+<tr>
+<td><code>checkAlertas()</code></td>
+<td>L305</td>
+<td><code>*/30 * * * * *</code></td>
+<td>Chequea alertas de usuario, usa fetchCryptoPriceBatch para
+crypto</td>
+</tr>
+<tr>
+<td><code>calcularSenalesIA()</code></td>
+<td>~L700</td>
+<td><code>*/5 * * * *</code></td>
+<td>Motor IA 350 activos. Yahoo → CC fallback para crypto</td>
+</tr>
+<tr>
+<td><code>calcularPulse()</code></td>
+<td>~L810</td>
+<td><code>*/5 * * * *</code></td>
+<td>AUREX Pulse. Binance (BTC/ETH) + Yahoo (resto)</td>
+</tr>
+<tr>
+<td><code>healthCheck()</code></td>
+<td>~L680</td>
+<td><code>*/5 * * * *</code></td>
+<td>Monitorea Evolution, Supabase, Binance</td>
+</tr>
+<tr>
+<td><code>dailyHealthReport()</code></td>
+<td>~L1200</td>
+<td><code>0 11 * * *</code> (08:00 AR)</td>
+<td>Reporte diario WhatsApp + Supabase</td>
+</tr>
+<tr>
+<td><code>monthlyHealthReport()</code></td>
+<td>~L1292</td>
+<td>Último día hábil</td>
+<td>Reporte mensual</td>
+</tr>
+<tr>
+<td><code>_buildAndSendMonthlyReport()</code></td>
+<td>~L1330</td>
+<td>—</td>
+<td>Construye y envía el mensual</td>
+</tr>
+<tr>
+<td><code>restoreHealthState()</code></td>
+<td>~L900</td>
+<td>boot</td>
+<td>Restaura flags de health desde Supabase</td>
+</tr>
+<tr>
+<td><code>_ccLoadCounter()</code></td>
+<td>L112</td>
+<td>boot 3s</td>
+<td>Lee contador CC de Supabase</td>
+</tr>
+<tr>
+<td><code>_ccIncrement(n)</code></td>
+<td>L129</td>
+<td>—</td>
+<td>Incrementa contador, persiste cada 50, alertas 80k/95k</td>
+</tr>
+<tr>
+<td><code>_fetchCryptoCompareIA(sym)</code></td>
+<td>~L595</td>
+<td>—</td>
+<td>Fallback CC para motor IA (2 calls: precio + historial)</td>
+</tr>
+<tr>
+<td><code>_fetchYahooIA(sym)</code></td>
+<td>~L615</td>
+<td>—</td>
+<td>Yahoo para motor IA</td>
+</tr>
+<tr>
+<td><code>_fetchBinanceIA(sym)</code></td>
+<td>~L580</td>
+<td>—</td>
+<td>Binance para motor IA</td>
+</tr>
+</tbody>
+</table>
+<h3 id="endpoint-apicrypto-prices">Endpoint
+<code>/api/crypto-prices</code></h3>
+<ul>
+<li>URL:
+<code>GET https://aurex-app-production.up.railway.app/api/crypto-prices</code></li>
+<li>Respuesta:
+<code>{ ok: true, source: "cryptocompare", count: 53, prices: { BTC: {price, source, ts}, ... } }</code></li>
+<li>Se llena via <code>refreshCryptoCache</code> cada 2 min</li>
+<li>Sirve como fallback para PWA y Nativa cuando Binance falla</li>
+</ul>
+<hr />
+<h2 id="tablas-supabase">TABLAS SUPABASE</h2>
+<table>
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tabla</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>alertas</td>
+<td>Alertas de precio de usuario</td>
+</tr>
+<tr>
+<td>alertas_historial</td>
+<td>Historial de alertas disparadas</td>
+</tr>
+<tr>
+<td>health_events</td>
+<td>Incidentes de salud (BN-001, BN-002, etc.)</td>
+</tr>
+<tr>
+<td>daily_reports</td>
+<td>Reportes diarios persistidos</td>
+</tr>
+<tr>
+<td>monthly_reports</td>
+<td>Reportes mensuales persistidos</td>
+</tr>
+<tr>
+<td>system_config</td>
+<td>Configuración sistema (cc_monthly_calls) — creada 21/04/2026</td>
+</tr>
+<tr>
+<td>usuarios</td>
+<td>Datos de usuarios</td>
+</tr>
+<tr>
+<td>portfolio</td>
+<td>Portfolio de usuarios</td>
+</tr>
+<tr>
+<td>watchlists</td>
+<td>Listas watchlist</td>
+</tr>
+<tr>
+<td>watchlist_items</td>
+<td>Items dentro de watchlists</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="variables-de-entorno-railway">VARIABLES DE ENTORNO RAILWAY</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CRYPTOCOMPARE_KEY</td>
+<td>API key CryptoCompare (configurada 21/04/2026)</td>
+</tr>
+<tr>
+<td>ADMIN_WHATSAPP</td>
+<td>Número admin para alertas WhatsApp</td>
+</tr>
+<tr>
+<td>EVOLUTION_API_URL</td>
+<td>URL de Evolution API</td>
+</tr>
+<tr>
+<td>EVOLUTION_API_KEY</td>
+<td>Key de Evolution API</td>
+</tr>
+<tr>
+<td>EVOLUTION_INSTANCE</td>
+<td>Nombre instancia Evolution (default: aurex)</td>
+</tr>
+<tr>
+<td>SUPABASE_URL</td>
+<td>URL de Supabase</td>
+</tr>
+<tr>
+<td>SUPABASE_SERVICE_KEY</td>
+<td>Service key de Supabase</td>
+</tr>
+<tr>
+<td>TELEGRAM_BOT_TOKEN</td>
+<td>Token bot Telegram</td>
+</tr>
+<tr>
+<td>TWILIO_ACCOUNT_SID</td>
+<td>SID cuenta Twilio</td>
+</tr>
+<tr>
+<td>TWILIO_AUTH_TOKEN</td>
+<td>Token Twilio</td>
+</tr>
+<tr>
+<td>TWILIO_WHATSAPP_FROM</td>
+<td>Número WhatsApp Twilio</td>
+</tr>
+<tr>
+<td>ALPHA_KEY</td>
+<td>API key Alpha Vantage</td>
+</tr>
+<tr>
+<td>ANTHROPIC_API_KEY</td>
+<td>API key Claude (análisis alertas)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="fallback-pwa-aurex-features.js-commit-e314c13">FALLBACK PWA
+(aurex-features.js, commit e314c13)</h2>
+<p>En el catch vacío de fetchBinance (~L394): - Fetch a
+<code>/api/crypto-prices</code> - Actualiza DOM <code>p-{sym}</code> y
+<code>c-{sym}</code> con <code>_fmt</code> - Persiste en
+<code>window._pcPrices[sym]</code></p>
+<h2 id="fallback-nativa-commit-7874f0f-branch-dev">FALLBACK NATIVA
+(commit 7874f0f, branch dev)</h2>
+<table>
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 36%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Screen</th>
+<th>Archivo</th>
+<th>Lógica</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IAScreen</td>
+<td>L136-159</td>
+<td>catch → fetch <code>/api/crypto-prices</code> →
+<code>setPrices(d.prices)</code></td>
+</tr>
+<tr>
+<td>MercadosScreen</td>
+<td>L359-370</td>
+<td>catch → fetch <code>/api/crypto-prices</code> →
+<code>setPrices</code></td>
+</tr>
+<tr>
+<td>PortfolioScreen</td>
+<td>L125-133</td>
+<td>Detecta <code>missing</code>, solo pide backend si hay faltantes,
+llena <code>allPrices[s]</code>, catch con log</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="safety-points">SAFETY POINTS</h2>
+<table>
+<thead>
+<tr>
+<th>Fecha</th>
+<th>PWA</th>
+<th>Nativa</th>
+<th>Backend</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>21/04/2026</td>
+<td><code>e314c13</code> (main)</td>
+<td><code>7874f0f</code> (dev)</td>
+<td><code>03a6892</code> (main)</td>
+</tr>
+<tr>
+<td>15/04/2026</td>
+<td><code>5505c41</code> (main)</td>
+<td><code>72ac92b</code> (dev)</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

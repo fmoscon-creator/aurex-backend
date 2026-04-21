@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MANUAL DE CONEXIONES — AUREX</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">MANUAL DE CONEXIONES — AUREX</h1>
+</header>
+<h1 id="manual-de-conexiones-aurex">MANUAL DE CONEXIONES — AUREX</h1>
+<p>v1.0 — 21 abril 2026</p>
+<hr />
+<h2 id="cadena-de-fallback-backend-fetchcryptopricebatch">CADENA DE
+FALLBACK BACKEND (fetchCryptoPriceBatch)</h2>
+<pre><code>Binance (L160-175) → CryptoCompare (L177-197) → Kraken (L199-230) → CoinGecko (L232-250) → Cache stale (L252-267)</code></pre>
+<p>Cada paso tiene timeout de 5 segundos. Si un paso responde OK →
+return inmediato, no prueba el siguiente.</p>
+<hr />
+<h2 id="fuentes-de-datos">FUENTES DE DATOS</h2>
+<h3 id="fuente-1-binance">Fuente 1 — Binance</h3>
+<ul>
+<li><strong>URL:</strong>
+<code>https://api.binance.com/api/v3/ticker/price</code></li>
+<li><strong>API key:</strong> NO requiere</li>
+<li><strong>Estado:</strong> FALLA en Railway desde 18/04/2026 (bloqueo
+IP). Alerta BN-002 activa.</li>
+<li><strong>Escribe en:</strong> <code>cryptoCache[sym]</code> L170</li>
+<li><strong>Funciona desde:</strong> browser del usuario (PWA y
+Nativa)</li>
+</ul>
+<h3 id="fuente-2-cryptocompare">Fuente 2 — CryptoCompare</h3>
+<ul>
+<li><strong>URL:</strong>
+<code>https://min-api.cryptocompare.com/data/pricemulti</code></li>
+<li><strong>API key:</strong> Sí, via header
+<code>authorization: Apikey ${CRYPTOCOMPARE_KEY}</code>. Env var en
+Railway configurada 21/04/2026.</li>
+<li><strong>Límite:</strong> 100.000 calls/mes (plan gratuito con
+key)</li>
+<li><strong>Contador:</strong> Persistido en Supabase
+<code>system_config</code> key <code>cc_monthly_calls</code></li>
+<li><strong>Alertas límite:</strong> 80k (80%) y 95k (95%) por WhatsApp,
+una vez por mes</li>
+<li><strong>Reset:</strong> Día 1 cada mes 00:00 AR (cron
+<code>0 3 1 * *</code>)</li>
+<li><strong>Escribe en:</strong> <code>cryptoCache[sym]</code> L189</li>
+<li><strong>Estado:</strong> ACTIVA como fuente primaria desde
+18/04/2026</li>
+</ul>
+<h3 id="fuente-3-kraken">Fuente 3 — Kraken</h3>
+<ul>
+<li><strong>URL:</strong>
+<code>https://api.kraken.com/0/public/Ticker</code></li>
+<li><strong>API key:</strong> NO requiere</li>
+<li><strong>Mapeo tickers:</strong>
+<ul>
+<li>BTC → XXBTZUSD</li>
+<li>ETH → XETHZUSD</li>
+<li>XRP → XXRPZUSD</li>
+<li>LTC → XLTCZUSD</li>
+<li>DOGE → XDGUSD</li>
+<li>Resto → SIMBOLOUSD</li>
+</ul></li>
+<li><strong>Sin cobertura (4):</strong> FTM, MKR, ROSE, THETA → saltan a
+CoinGecko</li>
+<li><strong>Escribe en:</strong> <code>cryptoCache[sym]</code>
+directamente</li>
+<li><strong>Estado:</strong> Fallback 2, activa solo si CC falla</li>
+</ul>
+<h3 id="fuente-4-coingecko">Fuente 4 — CoinGecko</h3>
+<ul>
+<li><strong>URL:</strong>
+<code>https://api.coingecko.com/api/v3/simple/price</code></li>
+<li><strong>API key:</strong> NO requiere</li>
+<li><strong>Límite:</strong> ~10.000 calls/mes (plan gratuito)</li>
+<li><strong>Mapeo:</strong> Usa <code>COINGECKO_IDS</code> (L85-102
+server.js)</li>
+<li><strong>Estado:</strong> Fallback 3, activa solo si CC y Kraken
+fallan</li>
+</ul>
+<h3 id="fuente-5-yahoo-finance">Fuente 5 — Yahoo Finance</h3>
+<ul>
+<li><strong>URL:</strong>
+<code>https://query1.finance.yahoo.com/v8/finance/chart/</code></li>
+<li><strong>Proxy:</strong> Via Railway
+<code>GET /api/yahoo?symbol=X</code></li>
+<li><strong>API key:</strong> NO requiere</li>
+<li><strong>Uso:</strong> Stocks, ETFs, Bonos, Commodities, Metales,
+Divisas, Materias Primas + Motor IA todos los activos</li>
+</ul>
+<h3 id="fuente-6-alpha-vantage">Fuente 6 — Alpha Vantage</h3>
+<ul>
+<li><strong>URL:</strong>
+<code>https://www.alphavantage.co/query</code></li>
+<li><strong>API key:</strong> Sí, env var <code>ALPHA_KEY</code> en
+Railway</li>
+<li><strong>Límite:</strong> 25 calls/min</li>
+<li><strong>Uso:</strong> Precios acciones en <code>checkAlertas</code>
+(backend)</li>
+</ul>
+<h3 id="cache-de-emergencia">Cache de emergencia</h3>
+<ul>
+<li><strong>TTL:</strong> 30 minutos
+(<code>CRYPTO_CACHE_EMERGENCY_TTL = 1800000</code>)</li>
+<li><strong>Cuándo:</strong> Solo si las 4 fuentes anteriores
+fallan</li>
+<li><strong>Marca:</strong>
+<code>source: 'cache', stale: true</code></li>
+</ul>
+<hr />
+<h2 id="cadena-pwa">CADENA PWA</h2>
+<pre><code>Binance directo (browser del usuario)
+  ↓ si falla (catch)
+fetch /api/crypto-prices (Railway backend)
+  ↓ responde con datos de CC/Kraken/CoinGecko/Cache
+Actualiza DOM + window._pcPrices</code></pre>
+<p>Archivo: aurex-features.js, commit e314c13</p>
+<h2 id="cadena-nativa">CADENA NATIVA</h2>
+<pre><code>Binance directo (celular del usuario)
+  ↓ si falla (catch)
+fetch /api/crypto-prices (Railway backend)
+  ↓ responde con datos de CC/Kraken/CoinGecko/Cache
+setPrices() con los precios del backend</code></pre>
+<p>Archivos (commit 7874f0f, branch dev): - IAScreen.js L136-159 -
+MercadosScreen.js L359-370 - PortfolioScreen.js L125-133 (solo pide
+missing)</p>
+<hr />
+<h2 id="endpoint-apicrypto-prices">ENDPOINT
+<code>/api/crypto-prices</code></h2>
+<ul>
+<li><strong>URL:</strong>
+<code>https://aurex-app-production.up.railway.app/api/crypto-prices</code></li>
+<li><strong>Método:</strong> GET</li>
+<li><strong>Respuesta:</strong>
+<code>{ ok: true, source: "cryptocompare", count: 53, prices: { BTC: { price: 75870, source: "cryptocompare", ts: 1713... }, ... } }</code></li>
+<li><strong>Actualización:</strong> Cada 2 min via
+<code>refreshCryptoCache</code> (cron <code>*/2 * * * *</code>) + al
+boot (5s)</li>
+<li><strong>Sirve a:</strong> PWA y Nativa como fallback cuando Binance
+falla desde el dispositivo</li>
+</ul>
+<hr />
+<h2 id="estado-actual-21042026">ESTADO ACTUAL (21/04/2026)</h2>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 28%" />
+<col style="width: 26%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Fuente</th>
+<th>Backend Railway</th>
+<th>PWA (browser)</th>
+<th>Nativa (celular)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Binance</td>
+<td>❌ Bloqueado</td>
+<td>✅ Funciona</td>
+<td>✅ Funciona</td>
+</tr>
+<tr>
+<td>CryptoCompare</td>
+<td>✅ Activa (con key)</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Kraken</td>
+<td>✅ Disponible</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>CoinGecko</td>
+<td>✅ Disponible</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Yahoo</td>
+<td>✅ Funciona</td>
+<td>✅ Via proxy</td>
+<td>✅ Via proxy</td>
+</tr>
+<tr>
+<td>Alpha Vantage</td>
+<td>✅ Funciona</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>/api/crypto-prices</td>
+<td>✅ count:53</td>
+<td>✅ Fallback</td>
+<td>✅ Fallback (build 14)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="consumo-estimado-cryptocompare-binance-caído">CONSUMO ESTIMADO
+CRYPTOCOMPARE (Binance caído)</h2>
+<table>
+<thead>
+<tr>
+<th>Origen</th>
+<th>Frecuencia</th>
+<th>Calls/día</th>
+<th>Calls/mes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>refreshCryptoCache</td>
+<td>cada 2 min</td>
+<td>720</td>
+<td>21.600</td>
+</tr>
+<tr>
+<td>checkAlertas (si hay alertas)</td>
+<td>cada 30 seg</td>
+<td>2.880</td>
+<td>86.400</td>
+</tr>
+<tr>
+<td>Motor IA (fallback Yahoo)</td>
+<td>variable</td>
+<td>~50-500</td>
+<td>~1.500-15.000</td>
+</tr>
+<tr>
+<td><strong>Total estimado</strong></td>
+<td>—</td>
+<td>~3.650-4.100</td>
+<td><strong>~109.500-123.000</strong></td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Puede superar el límite de 100k/mes. Monitorear con el contador +
+alertas.</p>
+</body>
+</html>

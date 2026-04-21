@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MONITORING — AUREX v2.0</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">MONITORING — AUREX v2.0</h1>
+</header>
+<h1 id="aurex-sistema-de-monitoreo-y-alertas-admin">🚨 AUREX — Sistema
+de Monitoreo y Alertas Admin</h1>
+<blockquote>
+<p><strong>Documento vivo.</strong> Se actualiza cada vez que agregamos,
+cambiamos o removemos alertas. Última actualización:
+<strong>2026-04-21</strong> — v2.0 (Kraken fallback + CC counter +
+/api/crypto-prices)</p>
+</blockquote>
+<hr />
+<h2 id="arquitectura-del-sistema">📡 Arquitectura del sistema</h2>
+<pre><code>                   ┌─────────────────┐
+                   │  Backend AUREX  │
+                   │  (aurex-app)    │
+                   │   Railway       │
+                   └────────┬────────┘
+                            │ cron cada 5min
+                            ▼
+                   ┌─────────────────┐
+                   │  healthCheck()  │
+                   │  + notifyAdmin  │
+                   └────────┬────────┘
+                            │
+                            ▼
+                   ┌─────────────────┐
+                   │  Evolution API  │   ← HTTP POST /message/sendText
+                   │  (evo-v1)       │
+                   │   Railway       │
+                   └────────┬────────┘
+                            │
+                            ▼
+              ┌─────────────────────────┐
+              │ WhatsApp Business AUREX │
+              │    +54 9 11 3360 2563   │
+              └────────┬────────────────┘
+                       │
+                       ▼
+              ┌─────────────────────────┐
+              │  Personal Fernando      │
+              │    +54 9 11 6789 1320   │
+              └─────────────────────────┘</code></pre>
+<hr />
+<h2 id="destinatario-y-canal">👤 Destinatario y canal</h2>
+<table>
+<thead>
+<tr>
+<th>Parámetro</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Destinatario</strong> (personal Fernando)</td>
+<td><code>+54 9 11 6789 1320</code></td>
+</tr>
+<tr>
+<td><strong>Emisor</strong> (WhatsApp Business AUREX)</td>
+<td><code>+54 9 11 3360 2563</code></td>
+</tr>
+<tr>
+<td><strong>Nombre que ve el destinatario</strong></td>
+<td><code>Aurex</code></td>
+</tr>
+<tr>
+<td><strong>Método</strong></td>
+<td>WhatsApp vía Evolution API self-hosted</td>
+</tr>
+<tr>
+<td><strong>Variable de env backend</strong></td>
+<td><code>ADMIN_WHATSAPP=5491167891320</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="cuándo-se-ejecuta">⏰ Cuándo se ejecuta</h2>
+<ul>
+<li><strong>healthCheck</strong>: <code>*/5 * * * *</code> (cada 5
+minutos, 24/7)</li>
+<li><strong>refreshCryptoCache</strong>: <code>*/2 * * * *</code> (cada
+2 minutos)</li>
+<li><strong>checkAlertas</strong>: <code>*/30 * * * * *</code> (cada 30
+segundos)</li>
+<li><strong>calcularSenalesIA</strong>: <code>*/5 * * * *</code> (cada 5
+minutos)</li>
+<li><strong>dailyHealthReport</strong>: <code>0 11 * * *</code> (08:00
+AR)</li>
+<li><strong>monthlyHealthReport</strong>: último día hábil del mes</li>
+<li><strong>CC counter reset</strong>: <code>0 3 1 * *</code> (día 1
+cada mes, 00:00 AR)</li>
+</ul>
+<hr />
+<h2 id="alertas-de-precios-crypto">🚨 Alertas de precios crypto</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 25%" />
+<col style="width: 33%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Código</th>
+<th>Servicio</th>
+<th>Qué detecta</th>
+<th>Acción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BN-XXX</td>
+<td>Binance</td>
+<td>Sin precio de crypto</td>
+<td>Mitiga via CC/Kraken/CoinGecko</td>
+</tr>
+<tr>
+<td>CC-XXX</td>
+<td>CryptoCompare</td>
+<td>CryptoCompare falla</td>
+<td>Escala a Kraken</td>
+</tr>
+<tr>
+<td>KR-XXX</td>
+<td>Kraken</td>
+<td>Kraken falla</td>
+<td>Escala a CoinGecko</td>
+</tr>
+<tr>
+<td>CA-XXX</td>
+<td>Cache</td>
+<td>Todas las fuentes fallan, usando cache stale</td>
+<td>Alerta crítica</td>
+</tr>
+</tbody>
+</table>
+<p><strong>BN-002 activa</strong> desde 18/04/2026 — Binance bloqueado
+en Railway, mitigada por CryptoCompare.</p>
+<p><strong>Cooldown:</strong> 15 minutos entre alertas del mismo tipo
+(<code>HEALTH_ALERT_COOLDOWN_MS = 900000</code>).</p>
+<hr />
+<h2 id="alertas-de-límite-cryptocompare">📊 Alertas de límite
+CryptoCompare</h2>
+<table>
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 12%" />
+<col style="width: 32%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr>
+<th>Umbral</th>
+<th>%</th>
+<th>Acción</th>
+<th>Flag</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>80.000 calls</td>
+<td>80%</td>
+<td>WhatsApp: “⚠️ CryptoCompare al 80%”</td>
+<td><code>_ccAlerted80k</code></td>
+</tr>
+<tr>
+<td>95.000 calls</td>
+<td>95%</td>
+<td>WhatsApp: “🔴 CRITICO — CryptoCompare al 95%”</td>
+<td><code>_ccAlerted95k</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Límite:</strong> 100.000 calls/mes (plan gratuito con API
+key)</li>
+<li><strong>Contador:</strong> Variable <code>_ccCallsMonth</code>,
+persistida en Supabase <code>system_config</code></li>
+<li><strong>Persistencia:</strong> Cada 50 incrementos (no cada
+call)</li>
+<li><strong>Reset:</strong> Día 1 cada mes 00:00 AR via cron
+<code>0 3 1 * *</code></li>
+<li><strong>Función:</strong> <code>_ccIncrement(n)</code> — incrementa
++ persiste + chequea umbrales</li>
+<li><strong>Disparo:</strong> Una sola vez por umbral por mes (flags se
+resetean con el cron)</li>
+</ul>
+<hr />
+<h2 id="alertas-de-servicios">🚨 Alertas de servicios</h2>
+<h3 id="evolution-whatsapp-down-recuperado">Evolution WhatsApp DOWN /
+RECUPERADO</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Detalle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Qué detecta</strong></td>
+<td>Sesión WhatsApp desconectada</td>
+</tr>
+<tr>
+<td><strong>Cómo</strong></td>
+<td><code>GET /instance/connectionState/aurex</code>, si
+<code>state != "open"</code> → down</td>
+</tr>
+<tr>
+<td><strong>Limitación</strong></td>
+<td>Si Evolution está caído, NO puede mandar esta alerta por
+WhatsApp</td>
+</tr>
+</tbody>
+</table>
+<h3 id="supabase-down-recuperado">Supabase DOWN / RECUPERADO</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>Detalle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Qué detecta</strong></td>
+<td>Base de datos inaccesible</td>
+</tr>
+<tr>
+<td><strong>Cómo</strong></td>
+<td>Query <code>supabase.from('usuarios').select('id').limit(1)</code>,
+si error → down</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="reportes-automáticos-adm">📋 Reportes automáticos ADM</h2>
+<h3 id="reporte-diario-0800-ar">Reporte diario (08:00 AR)</h3>
+<p><strong>Cron:</strong> <code>0 11 * * *</code> (11:00 UTC = 08:00
+AR)</p>
+<p><strong>Estructura del mensaje:</strong></p>
+<pre><code>📊 AUREX Daily Health Report
+━━━━━━━━━━━━━━━━━━
+
+🔌 CONEXIONES ACTUALES:
+✅ Railway Backend
+✅ Evolution API (state: open)
+✅ Supabase
+🟡 Binance → Fallback CryptoCompare OK
+✅ Alpha Vantage
+
+📊 CryptoCompare este mes: X / 100,000 calls (X%)
+
+📋 INCIDENTES ÚLTIMAS 24H:
+✅ No incidents in last 24h.
+
+━━━━━━━━━━━━━━━━━━
+aurex.live</code></pre>
+<p><strong>Persistencia:</strong> Tabla <code>daily_reports</code> en
+Supabase - Campos: reported_at, resolved_count, active_count,
+total_count, report_text, events_snapshot</p>
+<h3 id="reporte-mensual-último-día-hábil">Reporte mensual (último día
+hábil)</h3>
+<p><strong>Estructura:</strong> Resumen por service type + top 10
+incidentes + uptime/downtime</p>
+<p><strong>Service types:</strong> evolution, supabase, binance,
+cryptocompare, kraken, cache, ia_stale</p>
+<p><strong>Persistencia:</strong> Tabla <code>monthly_reports</code> en
+Supabase - Campos: reported_at, month_label, report_text,
+total_incidents, resolved_count, active_count, services,
+events_snapshot</p>
+<hr />
+<h2 id="endpoints-del-sistema">🔗 Endpoints del sistema</h2>
+<table>
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 28%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Método</th>
+<th>Qué hace</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/api/crypto-prices</code></td>
+<td>GET</td>
+<td>Precios crypto del cache (fallback PWA/Nativa)</td>
+</tr>
+<tr>
+<td><code>/api/health/status</code></td>
+<td>GET</td>
+<td>Estado completo: source, flags, events, reports</td>
+</tr>
+<tr>
+<td><code>/api/health/test-report</code></td>
+<td>POST</td>
+<td>Fuerza reporte diario</td>
+</tr>
+<tr>
+<td><code>/api/health/test-monthly</code></td>
+<td>POST</td>
+<td>Fuerza reporte mensual</td>
+</tr>
+<tr>
+<td><code>/api/whatsapp/status</code></td>
+<td>GET</td>
+<td>Estado conexión Evolution</td>
+</tr>
+<tr>
+<td><code>/api/whatsapp/send</code></td>
+<td>POST</td>
+<td>Envío WhatsApp manual</td>
+</tr>
+<tr>
+<td><code>/api/test-admin-alert</code></td>
+<td>POST</td>
+<td>Test alerta admin</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="cómo-probar-manualmente">🧪 Cómo probar manualmente</h2>
+<h3 id="test-1-crypto-prices-endpoint">Test 1 — Crypto prices
+endpoint</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> https://aurex-app-production.up.railway.app/api/crypto-prices</span></code></pre></div>
+<p>Respuesta esperada:
+<code>{"ok":true,"source":"cryptocompare","count":53,"prices":{...}}</code></p>
+<h3 id="test-2-health-status">Test 2 — Health status</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> https://aurex-app-production.up.railway.app/api/health/status</span></code></pre></div>
+<h3 id="test-3-forzar-reporte-diario">Test 3 — Forzar reporte
+diario</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST https://aurex-app-production.up.railway.app/api/health/test-report</span></code></pre></div>
+<h3 id="test-4-estado-whatsapp">Test 4 — Estado WhatsApp</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> https://aurex-app-production.up.railway.app/api/whatsapp/status</span></code></pre></div>
+<p>Respuesta esperada: <code>{"instance":{"state":"open"}}</code></p>
+</body>
+</html>
