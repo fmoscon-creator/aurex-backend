@@ -104,6 +104,53 @@ const cryptoCache = {};
 const CRYPTO_CACHE_EMERGENCY_TTL = 1800000; // 30min
 global._lastCryptoSource = 'binance';
 
+// ── Contador CryptoCompare calls ──
+let _ccCallsMonth = 0;
+let _ccAlerted80k = false;
+let _ccAlerted95k = false;
+const CC_LIMIT = 100000;
+
+async function _ccLoadCounter() {
+  try {
+    const { data } = await supabase.from('system_config').select('value,updated_at').eq('key', 'cc_monthly_calls').single();
+    if (data) {
+      const updMonth = new Date(data.updated_at).getMonth();
+      const nowMonth = new Date().getMonth();
+      if (updMonth === nowMonth) { _ccCallsMonth = parseInt(data.value) || 0; }
+      else { _ccCallsMonth = 0; await _ccPersist(); }
+    }
+  } catch(e) { _ccCallsMonth = 0; }
+  console.log('[CC] Counter loaded:', _ccCallsMonth);
+}
+
+async function _ccPersist() {
+  try {
+    await supabase.from('system_config').upsert({ key: 'cc_monthly_calls', value: String(_ccCallsMonth), updated_at: new Date().toISOString() }, { onConflict: 'key' });
+  } catch(e) { console.error('[CC] Persist error:', e.message); }
+}
+
+function _ccIncrement(count) {
+  _ccCallsMonth += count;
+  if (_ccCallsMonth % 50 < count) _ccPersist();
+  if (!_ccAlerted80k && _ccCallsMonth >= CC_LIMIT * 0.8) {
+    _ccAlerted80k = true;
+    notifyAdmin('⚠️ CryptoCompare al 80%', 'Consumidas ' + _ccCallsMonth + ' de ' + CC_LIMIT + ' calls este mes.');
+  }
+  if (!_ccAlerted95k && _ccCallsMonth >= CC_LIMIT * 0.95) {
+    _ccAlerted95k = true;
+    notifyAdmin('🔴 CRITICO — CryptoCompare al 95%', 'Consumidas ' + _ccCallsMonth + ' de ' + CC_LIMIT + ' calls — riesgo de corte inminente.');
+  }
+}
+
+// Reset el día 1 de cada mes a las 00:00 AR
+cron.schedule('0 3 1 * *', async () => { // 03:00 UTC = 00:00 AR
+  _ccCallsMonth = 0; _ccAlerted80k = false; _ccAlerted95k = false;
+  await _ccPersist();
+  console.log('[CC] Monthly counter reset');
+});
+
+setTimeout(_ccLoadCounter, 3000);
+
 async function fetchCryptoPriceBatch(symbols) {
   const result = {};
   const now = Date.now();
@@ -131,7 +178,8 @@ async function fetchCryptoPriceBatch(symbols) {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 5000);
-    const r = await fetch('https://min-api.cryptocompare.com/data/pricemulti?fsyms=' + symbols.join(',') + '&tsyms=USD', { signal: ctrl.signal });
+    const _ccHeaders = process.env.CRYPTOCOMPARE_KEY ? { 'authorization': 'Apikey ' + process.env.CRYPTOCOMPARE_KEY } : {};
+    const r = await fetch('https://min-api.cryptocompare.com/data/pricemulti?fsyms=' + symbols.join(',') + '&tsyms=USD', { signal: ctrl.signal, headers: _ccHeaders });
     clearTimeout(t);
     const data = await r.json();
     if (data && typeof data === 'object' && Object.keys(data).length > 0) {
@@ -142,12 +190,45 @@ async function fetchCryptoPriceBatch(symbols) {
         }
       });
       global._lastCryptoSource = 'cryptocompare';
+      _ccIncrement(1);
       if (_health.binance) mitigateAlert('binance', 'cryptocompare');
       return result;
     }
   } catch(e) {}
 
-  // 3. CoinGecko batch (fallback 2 — 10k/mes)
+  // 3. Kraken batch (fallback 2 — gratuito sin key)
+  try {
+    const KRAKEN_MAP = {BTC:'XXBTZUSD',ETH:'XETHZUSD',XRP:'XXRPZUSD',LTC:'XLTCZUSD',DOGE:'XDGUSD'};
+    const KRAKEN_SKIP = ['FTM','MKR','ROSE','THETA'];
+    const krakenSyms = symbols.filter(s => !KRAKEN_SKIP.includes(s));
+    if (krakenSyms.length > 0) {
+      const pairs = krakenSyms.map(s => KRAKEN_MAP[s] || (s + 'USD')).join(',');
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 5000);
+      const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=' + pairs, { signal: ctrl.signal });
+      clearTimeout(t);
+      const data = await r.json();
+      if (data && data.result && Object.keys(data.result).length > 0) {
+        const reverseMap = {};
+        krakenSyms.forEach(s => { reverseMap[KRAKEN_MAP[s] || (s + 'USD')] = s; });
+        Object.keys(data.result).forEach(pair => {
+          const sym = reverseMap[pair] || pair.replace('USD','').replace('XX','').replace('ZUSD','').replace('XDG','DOGE');
+          const price = parseFloat(data.result[pair].c[0]);
+          if (price > 0) {
+            result[sym] = { price, source: 'kraken', stale: false, ts: now };
+            cryptoCache[sym] = result[sym];
+          }
+        });
+        if (Object.keys(result).length > 0) {
+          global._lastCryptoSource = 'kraken';
+          if (_health.binance) mitigateAlert('binance', 'kraken');
+          return result;
+        }
+      }
+    }
+  } catch(e) {}
+
+  // 4. CoinGecko batch (fallback 3 — 10k/mes gratuito) (fallback 2 — 10k/mes)
   try {
     const ids = symbols.map(s => COINGECKO_IDS[s]).filter(Boolean).join(',');
     if (ids) {
@@ -171,7 +252,7 @@ async function fetchCryptoPriceBatch(symbols) {
     }
   } catch(e) {}
 
-  // 4. Caché (último recurso)
+  // 5. Caché (último recurso)
   symbols.forEach(sym => {
     if (cryptoCache[sym]) {
       const age = now - cryptoCache[sym].ts;
@@ -404,6 +485,17 @@ app.get('/api/whatsapp/status', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// Crypto prices — expone cryptoCache para fallback de nativa y PWA cuando Binance falla
+app.get('/api/crypto-prices', (req, res) => {
+  const result = {};
+  Object.keys(cryptoCache).forEach(sym => {
+    if (cryptoCache[sym] && cryptoCache[sym].price) {
+      result[sym] = { price: cryptoCache[sym].price, source: cryptoCache[sym].source || global._lastCryptoSource, ts: cryptoCache[sym].ts };
+    }
+  });
+  res.json({ ok: true, source: global._lastCryptoSource, count: Object.keys(result).length, prices: result });
+});
+
 // Health status — estado actual de alertas (público, sin credenciales)
 app.get('/api/health/status', async (req, res) => {
   try {
@@ -539,10 +631,12 @@ async function _fetchBinanceIA(sym) {
 // Fallback para motor IA — CryptoCompare histoday OHLCV (mapeo 9 campos verificado)
 async function _fetchCryptoCompareIA(sym) {
   try {
+    const _ccH = process.env.CRYPTOCOMPARE_KEY ? { 'authorization': 'Apikey ' + process.env.CRYPTOCOMPARE_KEY } : {};
     const [tickerR, histR] = await Promise.all([
-      fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=' + sym + '&tsyms=USD', { signal: AbortSignal.timeout(5000) }),
-      fetch('https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + sym + '&tsym=USD&limit=16', { signal: AbortSignal.timeout(5000) })
+      fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=' + sym + '&tsyms=USD', { signal: AbortSignal.timeout(5000), headers: _ccH }),
+      fetch('https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + sym + '&tsym=USD&limit=16', { signal: AbortSignal.timeout(5000), headers: _ccH })
     ]);
+    _ccIncrement(2);
     const ticker = await tickerR.json();
     const hist = await histR.json();
     const t = ticker?.RAW?.[sym]?.USD;
@@ -869,7 +963,7 @@ app.post('/api/ia-signals', (req, res) => {
 // ═══ HEALTH CHECK SYSTEM — alertas con ID, persistencia, reporte diario ═══
 const _health = {};
 const HEALTH_COOLDOWN = 15 * 60 * 1000;
-const PREFIXES = { evolution: 'WA', supabase: 'DB', binance: 'BN', cryptocompare: 'CC', cache: 'CA', ia_stale: 'IA', system: 'SYS' };
+const PREFIXES = { evolution: 'WA', supabase: 'DB', binance: 'BN', cryptocompare: 'CC', kraken: 'KR', cache: 'CA', ia_stale: 'IA', system: 'SYS' };
 
 async function getNextAlertId(type) {
   const prefix = PREFIXES[type] || 'SYS';
