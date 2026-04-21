@@ -1,81 +1,29 @@
-# PENDING REVIEW — 3 cambios en server.js (backend Railway)
-
-Nativa y PWA NO se tocan.
+# PENDING REVIEW — 4 cambios: CC key + contador + Kraken + fallback nativa/PWA
 
 ---
 
-## CAMBIO 1 — API key CryptoCompare
+## CAMBIO 1 — API key CryptoCompare (server.js)
 
-**Dónde:** 2 lugares en server.js
+Header `authorization: Apikey CRYPTOCOMPARE_KEY` agregado en:
+- `fetchCryptoPriceBatch()` fetch a pricemulti
+- `_fetchCryptoCompareIA()` ambos fetch (pricemultifull + histoday)
 
-**fetchCryptoPriceBatch() ~L134:**
-Agrega header `authorization: Apikey CRYPTOCOMPARE_KEY` al fetch de pricemulti.
-Si la env var no existe, no envía header (compatible con anonymous).
+Si env var no existe → no envía header (compatible anónimo).
 
-**_fetchCryptoCompareIA() ~L543-544:**
-Agrega mismo header a los 2 fetch (pricemultifull + histoday).
+## CAMBIO 2 — Contador calls CC + alertas (server.js)
 
-Variable de entorno `CRYPTOCOMPARE_KEY` ya cargada en Railway por Fernando.
+Variables globales: `_ccCallsMonth`, `_ccAlerted80k`, `_ccAlerted95k`, `CC_LIMIT=100000`
 
----
+- `_ccLoadCounter()`: al iniciar → lee de Supabase `system_config` key `cc_monthly_calls`
+- `_ccIncrement(n)`: incrementa, cada 50 persiste en Supabase, alertas a 80k y 95k
+- `_ccPersist()`: upsert en `system_config`
+- Cron `0 3 1 * *`: reset mensual (00:00 AR)
 
-## CAMBIO 2 — Contador de calls CC + alertas de límite
+Incrementos:
+- `fetchCryptoPriceBatch()` éxito CC → `_ccIncrement(1)`
+- `_fetchCryptoCompareIA()` → `_ccIncrement(2)` (2 calls por activo)
 
-**Variables globales nuevas:**
-```js
-let _ccCallsMonth = 0;
-let _ccAlerted80k = false;
-let _ccAlerted95k = false;
-const CC_LIMIT = 100000;
-```
-
-**Persistencia:** Tabla `system_config` en Supabase (key: `cc_monthly_calls`).
-- Al iniciar servidor → lee de Supabase (`_ccLoadCounter`)
-- Cada 50 incrementos → persiste en Supabase (`_ccPersist`)
-- Si el mes cambió desde última persistencia → reset a 0
-
-**Incremento:**
-- `fetchCryptoPriceBatch()` al éxito de CC → `_ccIncrement(1)`
-- `_fetchCryptoCompareIA()` al hacer los 2 fetch → `_ccIncrement(2)`
-
-**Alertas:**
-- 80.000 calls → `notifyAdmin('⚠️ CryptoCompare al 80%', ...)`
-- 95.000 calls → `notifyAdmin('🔴 CRITICO — CryptoCompare al 95%', ...)`
-- Cada alerta se envía una sola vez por mes (flags)
-
-**Reset mensual:** Cron `0 3 1 * *` (1ro del mes 00:00 AR) → reset counter + flags
-
----
-
-## CAMBIO 3 — Kraken como fallback entre CryptoCompare y CoinGecko
-
-**Cadena final:** Binance → CryptoCompare → **Kraken (NUEVO)** → CoinGecko → Cache
-
-**Inserción:** Bloque nuevo entre CC y CoinGecko en `fetchCryptoPriceBatch()`.
-
-**Endpoint:** `https://api.kraken.com/0/public/Ticker?pair=...`
-- Gratuito, sin API key, sin cuenta
-
-**Mapeo de tickers AUREX → Kraken:**
-```
-BTC → XXBTZUSD
-ETH → XETHZUSD
-XRP → XXRPZUSD
-LTC → XLTCZUSD
-DOGE → XDGUSD
-Resto → SIMBOLOUSD (formato estándar)
-```
-
-**4 activos sin cobertura Kraken:** FTM, MKR, ROSE, THETA
-- Se saltean Kraken (array `KRAKEN_SKIP`) → caen a CoinGecko
-
-**Health:** `PREFIXES` expandido con `kraken: 'KR'`
-
----
-
-## TABLA system_config (Supabase)
-
-Necesita existir la tabla (o crearla si no existe):
+Requiere tabla:
 ```sql
 CREATE TABLE IF NOT EXISTS system_config (
   key TEXT PRIMARY KEY,
@@ -84,10 +32,68 @@ CREATE TABLE IF NOT EXISTS system_config (
 );
 ```
 
+## CAMBIO 3 — Kraken fallback (server.js)
+
+Insertado entre CryptoCompare y CoinGecko en `fetchCryptoPriceBatch()`.
+
+Cadena final: Binance → CryptoCompare → **Kraken** → CoinGecko → Cache
+
+Endpoint: `api.kraken.com/0/public/Ticker` — gratuito, sin key.
+
+Mapeo tickers: BTC→XXBTZUSD, ETH→XETHZUSD, XRP→XXRPZUSD, LTC→XLTCZUSD, DOGE→XDGUSD. Resto: SIMBOLOUSD.
+
+4 activos sin Kraken (FTM, MKR, ROSE, THETA) → saltan a CoinGecko.
+
+PREFIXES expandido: `kraken: 'KR'`.
+
+## CAMBIO 4 — Endpoint `/api/crypto-prices` + fallback nativa y PWA
+
+### Backend (server.js)
+Nuevo endpoint `GET /api/crypto-prices`:
+- Expone `cryptoCache` (ya mantenido por `fetchCryptoPriceBatch`)
+- Respuesta: `{ ok, source, count, prices: { BTC: {price, source, ts}, ... } }`
+- Sin lógica nueva — solo expone lo que ya existe en memoria
+
+### PWA (aurex-features.js)
+En el catch de fetchBinance para tab Cripto (~L394):
+- Si Binance falla → fetch a `/api/crypto-prices`
+- Si responde → usa esos precios y los guarda en `_pcPrices`
+- Si también falla → pantalla sin precios (igual que antes, pero ahora tiene 1 fallback)
+
+### Nativa — PortfolioScreen.js
+Después del try/catch de `fetchBinancePrices()` (~L122):
+- Detecta crypto sin precio (`missing`)
+- Si hay missing → fetch a `/api/crypto-prices`
+- Llena `allPrices` con lo que devuelve
+
+### Nativa — MercadosScreen.js
+En el catch de fetchBinance (~L359):
+- Fetch a `/api/crypto-prices`
+- Llena `setPrices` con los precios del backend
+
+### Nativa — IAScreen.js
+En el catch de loadPrices (~L147):
+- Fetch a `/api/crypto-prices`
+- Llena `setPrices` con los precios del backend
+
 ---
 
-## Verificación
+## ARCHIVOS MODIFICADOS
+
+| Archivo | Repo | Cambios |
+|---------|------|---------|
+| server.js | aurex-backend | Cambios 1, 2, 3, 4 (endpoint) |
+| aurex-features.js | aurex-app (PWA) | Cambio 4 (fallback en catch) |
+| PortfolioScreen.js | AurexApp (nativa) | Cambio 4 (fallback) |
+| MercadosScreen.js | AurexApp (nativa) | Cambio 4 (fallback) |
+| IAScreen.js | AurexApp (nativa) | Cambio 4 (fallback) |
+
+## VERIFICACIÓN
 - `node -c server.js` → OK
-- Los 3 cambios son solo en server.js
-- No toca nativa ni PWA
-- No afecta Apple Review
+- `node -c aurex-features.js` → OK
+- Nativa: no tiene syntax check local pero cambios son mínimos y pattern idéntico
+
+## IMPACTO APPLE
+- Los cambios en nativa son SOLO en catches vacíos → agregan fetch de fallback
+- No cambian UI, no cambian funcionalidad visible
+- Si Apple ya revisó/aprobó, estos cambios no afectan (son mejora de resiliencia)
