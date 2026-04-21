@@ -1,7 +1,7 @@
 # 🚨 AUREX — Sistema de Monitoreo y Alertas Admin
 
 > **Documento vivo.** Se actualiza cada vez que agregamos, cambiamos o removemos alertas.
-> Última actualización: **2026-04-15** — v1.0 (Evolution API live + health check Evolution/Supabase)
+> Última actualización: **2026-04-21** — v2.0 (Kraken fallback + CC counter + /api/crypto-prices)
 
 ---
 
@@ -52,174 +52,145 @@
 | **Método** | WhatsApp vía Evolution API self-hosted |
 | **Variable de env backend** | `ADMIN_WHATSAPP=5491167891320` |
 
-**Cambiar destinatario**: `railway variables --service aurex-app --set "ADMIN_WHATSAPP=XXXXXXXXXX"`
-
 ---
 
 ## ⏰ Cuándo se ejecuta
 
-- **Cron expression**: `*/5 * * * *` (cada 5 minutos, 24/7)
-- **No para**: mientras el backend AUREX y Evolution estén vivos
-- **Timezone**: los timestamps de las alertas están en `America/Argentina/Buenos_Aires`
+- **healthCheck**: `*/5 * * * *` (cada 5 minutos, 24/7)
+- **refreshCryptoCache**: `*/2 * * * *` (cada 2 minutos)
+- **checkAlertas**: `*/30 * * * * *` (cada 30 segundos)
+- **calcularSenalesIA**: `*/5 * * * *` (cada 5 minutos)
+- **dailyHealthReport**: `0 11 * * *` (08:00 AR)
+- **monthlyHealthReport**: último día hábil del mes
+- **CC counter reset**: `0 3 1 * *` (día 1 cada mes, 00:00 AR)
 
 ---
 
-## 🚨 Alertas activas (v1.0)
+## 🚨 Alertas de precios crypto
 
-### 1. Evolution WhatsApp DOWN / RECUPERADO
+| Código | Servicio | Qué detecta | Acción |
+|--------|----------|-------------|--------|
+| BN-XXX | Binance | Sin precio de crypto | Mitiga via CC/Kraken/CoinGecko |
+| CC-XXX | CryptoCompare | CryptoCompare falla | Escala a Kraken |
+| KR-XXX | Kraken | Kraken falla | Escala a CoinGecko |
+| CA-XXX | Cache | Todas las fuentes fallan, usando cache stale | Alerta crítica |
 
-| Aspecto | Detalle |
-|---------|---------|
-| **Qué detecta** | Sesión WhatsApp de AUREX desconectada (iPhone apagado, deslogueado, banneado, etc.) |
-| **Cómo detecta** | `GET /instance/connectionState/aurex` de Evolution. Si `state != "open"` → down |
-| **Mensaje down** | `🚨 Evolution WhatsApp DOWN` + detalles |
-| **Mensaje recover** | `🚨 Evolution WhatsApp RECUPERADO` + timestamp |
-| **Limitación** ⚠️ | **Si Evolution está caído, NO puede mandar esta alerta por WhatsApp** (dependencia circular). Queda solo en logs de Railway. |
+**BN-002 activa** desde 18/04/2026 — Binance bloqueado en Railway, mitigada por CryptoCompare.
 
-### 2. Supabase DOWN / RECUPERADO
-
-| Aspecto | Detalle |
-|---------|---------|
-| **Qué detecta** | Base de datos Supabase inaccesible o tirando error |
-| **Cómo detecta** | Query a `supabase.from('usuarios').select('id').limit(1)`. Si error → down |
-| **Mensaje down** | `🚨 Supabase DOWN` + mensaje de error |
-| **Mensaje recover** | `🚨 Supabase RECUPERADO` |
+**Cooldown:** 15 minutos entre alertas del mismo tipo (`HEALTH_ALERT_COOLDOWN_MS = 900000`).
 
 ---
 
-## 🔕 Anti-spam (cooldown)
+## 📊 Alertas de límite CryptoCompare
 
-- **15 minutos** entre alertas repetidas del mismo problema
-- Si algo se cae y sigue caído por 1 hora → recibís solo 1 alerta (no 12)
-- A los 15 min, si persiste, recibís otra alerta de recordatorio
-- La alerta de **recuperación** se manda siempre que haya cruzado el cooldown
+| Umbral | % | Acción | Flag |
+|--------|---|--------|------|
+| 80.000 calls | 80% | WhatsApp: "⚠️ CryptoCompare al 80%" | `_ccAlerted80k` |
+| 95.000 calls | 95% | WhatsApp: "🔴 CRITICO — CryptoCompare al 95%" | `_ccAlerted95k` |
 
-Variable en código: `HEALTH_ALERT_COOLDOWN_MS = 15 * 60 * 1000`
+- **Límite:** 100.000 calls/mes (plan gratuito con API key)
+- **Contador:** Variable `_ccCallsMonth`, persistida en Supabase `system_config`
+- **Persistencia:** Cada 50 incrementos (no cada call)
+- **Reset:** Día 1 cada mes 00:00 AR via cron `0 3 1 * *`
+- **Función:** `_ccIncrement(n)` — incrementa + persiste + chequea umbrales
+- **Disparo:** Una sola vez por umbral por mes (flags se resetean con el cron)
+
+---
+
+## 🚨 Alertas de servicios
+
+### Evolution WhatsApp DOWN / RECUPERADO
+
+| Aspecto | Detalle |
+|---------|---------|
+| **Qué detecta** | Sesión WhatsApp desconectada |
+| **Cómo** | `GET /instance/connectionState/aurex`, si `state != "open"` → down |
+| **Limitación** | Si Evolution está caído, NO puede mandar esta alerta por WhatsApp |
+
+### Supabase DOWN / RECUPERADO
+
+| Aspecto | Detalle |
+|---------|---------|
+| **Qué detecta** | Base de datos inaccesible |
+| **Cómo** | Query `supabase.from('usuarios').select('id').limit(1)`, si error → down |
+
+---
+
+## 📋 Reportes automáticos ADM
+
+### Reporte diario (08:00 AR)
+
+**Cron:** `0 11 * * *` (11:00 UTC = 08:00 AR)
+
+**Estructura del mensaje:**
+```
+📊 AUREX Daily Health Report
+━━━━━━━━━━━━━━━━━━
+
+🔌 CONEXIONES ACTUALES:
+✅ Railway Backend
+✅ Evolution API (state: open)
+✅ Supabase
+🟡 Binance → Fallback CryptoCompare OK
+✅ Alpha Vantage
+
+📊 CryptoCompare este mes: X / 100,000 calls (X%)
+
+📋 INCIDENTES ÚLTIMAS 24H:
+✅ No incidents in last 24h.
+
+━━━━━━━━━━━━━━━━━━
+aurex.live
+```
+
+**Persistencia:** Tabla `daily_reports` en Supabase
+- Campos: reported_at, resolved_count, active_count, total_count, report_text, events_snapshot
+
+### Reporte mensual (último día hábil)
+
+**Estructura:** Resumen por service type + top 10 incidentes + uptime/downtime
+
+**Service types:** evolution, supabase, binance, cryptocompare, kraken, cache, ia_stale
+
+**Persistencia:** Tabla `monthly_reports` en Supabase
+- Campos: reported_at, month_label, report_text, total_incidents, resolved_count, active_count, services, events_snapshot
+
+---
+
+## 🔗 Endpoints del sistema
+
+| Endpoint | Método | Qué hace |
+|----------|--------|----------|
+| `/api/crypto-prices` | GET | Precios crypto del cache (fallback PWA/Nativa) |
+| `/api/health/status` | GET | Estado completo: source, flags, events, reports |
+| `/api/health/test-report` | POST | Fuerza reporte diario |
+| `/api/health/test-monthly` | POST | Fuerza reporte mensual |
+| `/api/whatsapp/status` | GET | Estado conexión Evolution |
+| `/api/whatsapp/send` | POST | Envío WhatsApp manual |
+| `/api/test-admin-alert` | POST | Test alerta admin |
 
 ---
 
 ## 🧪 Cómo probar manualmente
 
-### Test 1 — Envío genérico
+### Test 1 — Crypto prices endpoint
 ```bash
-curl -X POST https://aurex-app-production.up.railway.app/api/whatsapp/send \
-  -H "Content-Type: application/json" \
-  -d '{
-    "numero": "5491167891320",
-    "mensaje": "Test manual de envío WhatsApp"
-  }'
+curl https://aurex-app-production.up.railway.app/api/crypto-prices
+```
+Respuesta esperada: `{"ok":true,"source":"cryptocompare","count":53,"prices":{...}}`
+
+### Test 2 — Health status
+```bash
+curl https://aurex-app-production.up.railway.app/api/health/status
 ```
 
-### Test 2 — Alerta admin (dispara notifyAdmin)
+### Test 3 — Forzar reporte diario
 ```bash
-curl -X POST https://aurex-app-production.up.railway.app/api/test-admin-alert \
-  -H "Content-Type: application/json" \
-  -d '{
-    "subject": "Test de alerta admin",
-    "body": "Este es el canal de alertas crítico"
-  }'
+curl -X POST https://aurex-app-production.up.railway.app/api/health/test-report
 ```
 
-### Test 3 — Estado de la conexión WhatsApp
+### Test 4 — Estado WhatsApp
 ```bash
 curl https://aurex-app-production.up.railway.app/api/whatsapp/status
 ```
-Respuesta esperada: `{"instance": {"state": "open"}}`
-
----
-
-## 🔧 Endpoints del sistema
-
-| Método | Ruta | Uso |
-|--------|------|-----|
-| `POST` | `/api/whatsapp/send` | Envío genérico de WhatsApp (`{numero, mensaje}`) |
-| `GET` | `/api/whatsapp/status` | Estado de la sesión Evolution |
-| `POST` | `/api/test-admin-alert` | Disparar manualmente una alerta admin |
-
----
-
-## 🛠️ Cómo modificar / agregar alertas
-
-### Archivo: `server.js`
-
-**Función clave**: `notifyAdmin(subject, body)` — ya existe.
-
-**Ejemplo de alerta nueva** (pegar dentro de `healthCheck()` o en otro cron):
-```javascript
-if (algoMalo) {
-  await notifyAdmin('Categoría de falla', 'Descripción detallada del problema');
-}
-```
-
-**Para anti-spam**, usar el patrón de `_health` state + `lastAlertAt` timestamp.
-
----
-
-## 📋 Monitoreos AÚN NO implementados (pendientes E2-E4)
-
-Estos vienen del **cronograma AUREX** como temas estructurales post-aprobación de Apple Build 9:
-
-### E2 — Alertas WhatsApp robustas (nivel full)
-- [ ] Monitoreo de % de activos fallando por categoría
-  - Si más del 10% de activos crypto no tienen precio → alerta
-  - Si más del 10% de acciones USA fallan → alerta
-  - Si más del 10% de futuros/commodities fallan → alerta
-- [ ] Resumen diario a las 8:00 AM con estado general del sistema
-
-### E3 — Monitoreo variables motor IA
-- [ ] Alerta si cualquier variable del motor IA no actualiza en >15 min:
-  - VIX, BTC Sentimiento, F&G, macro FED, geopolítica, etc.
-- [ ] Alerta si la ponderación tira valores absurdos (ej: F&G en 12 hoy)
-
-### E4 — Alerta errores de estructura
-- [ ] Alertas cuando la app iOS tiene errores de render en pantallas clave
-- [ ] Captura de errores JS en frontend → backend → WhatsApp admin
-- [ ] Requiere: endpoint `/api/report-error` desde app + hook en `ErrorBoundary` React Native
-
-### Otros pendientes v2+
-- [ ] Monitoreo de APIs externas (Yahoo, Binance, Alpha Vantage, CoinGecko)
-  - Si Yahoo Finance devuelve 429/500 por >5 min → alerta
-- [ ] Canal backup si WhatsApp cae
-  - Opción A: alerta por Telegram al bot existente
-  - Opción B: alerta por email a `app.aurex@gmail.com`
-  - Opción C: SMS vía Twilio directo a personal
-
----
-
-## 📊 Logs
-
-### Ver logs del health check en tiempo real
-```bash
-cd ~/Desktop/aurex-backend
-railway logs --service aurex-app --deployment | grep HEALTH
-```
-
-### Ver últimas alertas enviadas (en logs de Evolution)
-```bash
-railway logs --service evo-v1 --deployment | tail -50
-```
-
----
-
-## 🔒 Consideraciones de seguridad
-
-- **API Key Evolution** (`EVOLUTION_API_KEY`): **NUNCA commitear**. Solo en Railway env vars.
-- **Token de instancia** (`aurex-instance-token-2026`): guardado en Evolution internamente, no requiere rotación.
-- **Fallback Twilio**: si Evolution falla para una alerta específica, intenta mandar por Twilio automáticamente. Costos: ~$0.015/msg solo si se usa.
-
----
-
-## 📅 Historial de cambios de este documento
-
-| Fecha | Versión | Cambio |
-|-------|---------|--------|
-| 2026-04-15 | 1.0 | Documento inicial. Monitoreo Evolution + Supabase activo. |
-
----
-
-## 🧭 Próxima actualización
-
-Post-aprobación Apple Build 9 → implementar E2/E3/E4 y actualizar este doc con:
-- Nuevas alertas agregadas
-- Nuevos endpoints
-- Nuevos escenarios de falla cubiertos
+Respuesta esperada: `{"instance":{"state":"open"}}`

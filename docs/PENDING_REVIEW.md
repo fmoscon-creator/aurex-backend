@@ -1,50 +1,37 @@
-# PENDING REVIEW — Fix cryptoCache vacío en /api/crypto-prices
-
-**Archivo**: server.js (backend)
+# PENDING REVIEW — PUNTO 1 + PUNTO 2 (server.js + 3 docs)
 
 ---
 
-## Problema
-`/api/crypto-prices` devuelve `count:0` porque `cryptoCache` solo se llena dentro de `checkAlertas()`, que solo corre si hay alertas de usuario activas en Supabase. Sin alertas → cache vacío → el fallback de nativa y PWA no sirve.
+## PUNTO 1A — CC counter en reporte diario (server.js)
 
-## Fix — función `refreshCryptoCache()` + cron
-
-**Ubicación**: después de `cron.schedule('*/30 * * * * *', checkAlertas);` (~L349)
-
-**Código exacto agregado:**
-```js
-// Mantener cryptoCache siempre lleno (para /api/crypto-prices fallback)
-async function refreshCryptoCache() {
-  const cryptoSyms = IA_ACTIVOS.filter(a => a.t === 'Cripto' || a.t === 'Stable').map(a => a.s);
-  if (cryptoSyms.length > 0) await fetchCryptoPriceBatch(cryptoSyms);
-}
-cron.schedule('*/2 * * * *', refreshCryptoCache); // cada 2 min
-setTimeout(refreshCryptoCache, 5000); // al iniciar
+Línea agregada entre bloque CONEXIONES y bloque INCIDENTES en dailyHealthReport():
+```
+msg += '📊 CryptoCompare este mes: ' + _ccCallsMonth.toLocaleString() + ' / ' + CC_LIMIT.toLocaleString() + ' calls (' + Math.round(_ccCallsMonth/CC_LIMIT*100) + '%)\n\n';
 ```
 
-**Cómo obtiene los 53 símbolos:**
-- `IA_ACTIVOS` = `require('./activos.json')` ya cargado en L508 del server.js
-- Filtra `a.t === 'Cripto' || a.t === 'Stable'` = 53 activos
-- Extrae `a.s` (ticker: BTC, ETH, SOL, USDT, etc.)
+## PUNTO 1B — Kraken en reporte mensual (server.js)
 
-**Qué hace `fetchCryptoPriceBatch(cryptoSyms)`:**
-- Ejecuta la cadena completa: Binance → CryptoCompare → Kraken → CoinGecko → Cache
-- Cada paso exitoso escribe en `cryptoCache[sym]` (L170, L189, bloque Kraken)
-- Resultado: `cryptoCache` se llena con precios de los 53 crypto/stable
+- `serviceTypes` array: agregado `'kraken'`
+- `serviceLabels` objeto: agregado `kraken: 'Kraken'`
 
-**Cuándo corre:**
-- Al iniciar el servidor: `setTimeout(refreshCryptoCache, 5000)` — 5 seg después del boot
-- Cada 2 minutos: `cron.schedule('*/2 * * * *', refreshCryptoCache)`
+## PUNTO 2A — docs/MANUAL-ESTRUCTURA.md (NUEVO)
 
-**Impacto en calls CryptoCompare:**
-- Si Binance responde → 0 calls a CC (Binance cubre todo)
-- Si Binance falla (como ahora) → 1 call batch a CC cada 2 min = 720/día = 21.600/mes adicionales
-- Total estimado con alertas: 86.400 + 21.600 = 108.000/mes → supera 100k
-- Con API key registrada el límite puede ser mayor. Monitorear con el contador del Cambio 2.
+Documento completo: repos, funciones server.js con líneas, tablas Supabase, env vars Railway, fallback PWA y Nativa, safety points.
+
+## PUNTO 2B — docs/MANUAL-CONEXIONES.md (NUEVO)
+
+Documento completo: 6 fuentes de datos, cadena fallback backend/PWA/nativa, endpoint /api/crypto-prices, estado actual, consumo estimado CC.
+
+## PUNTO 2C — docs/MONITORING.md (ACTUALIZADO v1.0 → v2.0)
+
+Agregado: alertas crypto (BN/CC/KR/CA), alertas límite CC, reportes diario/mensual con estructura, endpoints del sistema, tests manuales.
+
+## PUNTO 3 — Verificaciones backend (ejecutadas)
+
+- `/api/crypto-prices` → ok:true, count:53, source:cryptocompare ✅
+- `/api/health/status` → lastCryptoSource:cryptocompare, BN-002 active, 5 daily reports ✅
 
 ---
 
 ## Verificación
 - `node -c server.js` → OK
-- No toca nativa ni PWA
-- Usa `fetchCryptoPriceBatch` que ya existe — no agrega lógica nueva
