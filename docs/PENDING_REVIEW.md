@@ -1,37 +1,51 @@
-# PENDING REVIEW — PUNTO 1 + PUNTO 2 (server.js + 3 docs)
+# PENDING REVIEW — Fix calcularPulse() fallback BTC/ETH
+
+**Archivo**: server.js, función `calcularPulse()` L859-878
 
 ---
 
-## PUNTO 1A — CC counter en reporte diario (server.js)
+## Problema
+`calcularPulse()` llama Binance directo para BTC y ETH. Binance falla en Railway → btcPct=0, ethPct=0, btc90dPos=null. El Pulse se calcula incompleto AHORA MISMO en producción.
 
-Línea agregada entre bloque CONEXIONES y bloque INCIDENTES en dailyHealthReport():
+## Fix
+En el catch de Binance (L878), en vez de dejar btcPct=0:
+- Llama a CryptoCompare `pricemultifull` que devuelve `CHANGEPCT24HOUR`
+- Usa la misma API key y el mismo `_ccIncrement(1)`
+- Si CC también falla → ahí sí btcPct=0 (doble catch)
+
+**ANTES:**
+```js
+} catch(e) { raw.btcPct = 0; raw.ethPct = 0; }
 ```
-msg += '📊 CryptoCompare este mes: ' + _ccCallsMonth.toLocaleString() + ' / ' + CC_LIMIT.toLocaleString() + ' calls (' + Math.round(_ccCallsMonth/CC_LIMIT*100) + '%)\n\n';
+
+**DESPUÉS:**
+```js
+} catch(e) {
+  try {
+    const _ccH = process.env.CRYPTOCOMPARE_KEY ? { 'authorization': 'Apikey ' + process.env.CRYPTOCOMPARE_KEY } : {};
+    const ccR = await fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH&tsyms=USD', { signal: AbortSignal.timeout(5000), headers: _ccH });
+    const ccD = await ccR.json();
+    _ccIncrement(1);
+    raw.btcPct = ccD?.RAW?.BTC?.USD?.CHANGEPCT24HOUR || 0;
+    raw.ethPct = ccD?.RAW?.ETH?.USD?.CHANGEPCT24HOUR || 0;
+  } catch(e2) { raw.btcPct = 0; raw.ethPct = 0; }
+  raw.btc90dPos = null; raw.btcMom30 = null;
+}
 ```
 
-## PUNTO 1B — Kraken en reporte mensual (server.js)
+También agregué `AbortSignal.timeout(5000)` a los 3 fetch de Binance en la misma función (no tenían timeout).
 
-- `serviceTypes` array: agregado `'kraken'`
-- `serviceLabels` objeto: agregado `kraken: 'Kraken'`
+## Lo que NO recupera el fallback
+- `btc90dPos` (posición en rango 90 días) → requiere klines históricos que CC no da en esta llamada → queda null
+- `btcMom30` (momentum 30 días) → ídem → queda null
 
-## PUNTO 2A — docs/MANUAL-ESTRUCTURA.md (NUEVO)
+Estos 2 campos son complementarios del Pulse, no críticos. El Pulse funciona sin ellos.
 
-Documento completo: repos, funciones server.js con líneas, tablas Supabase, env vars Railway, fallback PWA y Nativa, safety points.
-
-## PUNTO 2B — docs/MANUAL-CONEXIONES.md (NUEVO)
-
-Documento completo: 6 fuentes de datos, cadena fallback backend/PWA/nativa, endpoint /api/crypto-prices, estado actual, consumo estimado CC.
-
-## PUNTO 2C — docs/MONITORING.md (ACTUALIZADO v1.0 → v2.0)
-
-Agregado: alertas crypto (BN/CC/KR/CA), alertas límite CC, reportes diario/mensual con estructura, endpoints del sistema, tests manuales.
-
-## PUNTO 3 — Verificaciones backend (ejecutadas)
-
-- `/api/crypto-prices` → ok:true, count:53, source:cryptocompare ✅
-- `/api/health/status` → lastCryptoSource:cryptocompare, BN-002 active, 5 daily reports ✅
+## Impacto en calls CC
++1 call cada 5 min (cron calcularPulse) = +288/día = +8.640/mes adicionales.
 
 ---
 
 ## Verificación
 - `node -c server.js` → OK
+- Solo toca server.js — no toca nativa ni PWA
