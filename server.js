@@ -1269,6 +1269,7 @@ async function dailyHealthReport() {
   // ═══ ARMAR MENSAJE COMPLETO ═══
   let msg = '📊 AUREX Daily Health Report\n━━━━━━━━━━━━━━━━━━\n\n';
   msg += '🔌 CONEXIONES ACTUALES:\n' + conns + '\n';
+  msg += '📊 CryptoCompare este mes: ' + _ccCallsMonth.toLocaleString() + ' / ' + CC_LIMIT.toLocaleString() + ' calls (' + Math.round(_ccCallsMonth/CC_LIMIT*100) + '%)\n\n';
   msg += '📋 INCIDENTES ÚLTIMAS 24H:\n' + incidents + '\n';
   if (total > 0) msg += 'Total: ' + resolved.length + ' resolved, ' + active.length + ' active\n';
   msg += '━━━━━━━━━━━━━━━━━━\naurex.live';
@@ -1332,7 +1333,7 @@ async function _buildAndSendMonthlyReport() {
     : monthStart;
   const totalSeconds = Math.round((now - periodStart) / 1000);
 
-  const serviceTypes = ['binance', 'cryptocompare', 'cache', 'evolution', 'supabase', 'ia_stale'];
+  const serviceTypes = ['binance', 'cryptocompare', 'kraken', 'cache', 'evolution', 'supabase', 'ia_stale'];
   const services = {};
 
   serviceTypes.forEach(function(type) {
@@ -1388,6 +1389,7 @@ async function _buildAndSendMonthlyReport() {
     supabase: 'Supabase',
     binance: 'Binance',
     cryptocompare: 'CryptoCompare',
+    kraken: 'Kraken',
     cache: 'Price Sources',
     ia_stale: 'IA Signals'
   };
