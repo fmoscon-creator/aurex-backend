@@ -859,23 +859,34 @@ function _calcPulseScore(raw, cat) {
 async function calcularPulse() {
   try {
     const raw = {};
-    // 1. Binance: BTC, ETH (idéntico a PWA _fetchPulseRaw)
+    // 1. BTC, ETH: Binance primero, fallback a cryptoCache (CC/Kraken/CoinGecko)
     try {
       const [btcR, ethR] = await Promise.all([
-        fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r=>r.json()),
-        fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT').then(r=>r.json()),
+        fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {signal: AbortSignal.timeout(5000)}).then(r=>r.json()),
+        fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT', {signal: AbortSignal.timeout(5000)}).then(r=>r.json()),
       ]);
       raw.btcPct = parseFloat(btcR.priceChangePercent) || 0;
       raw.ethPct = parseFloat(ethR.priceChangePercent) || 0;
       // BTC 90-day range position
       try {
-        const klines = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=90').then(r=>r.json());
+        const klines = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=90', {signal: AbortSignal.timeout(5000)}).then(r=>r.json());
         const cls = klines.map(k => parseFloat(k[4]));
         const hi90 = Math.max(...cls), lo90 = Math.min(...cls), cur = cls[cls.length-1];
         raw.btc90dPos = hi90>lo90 ? ((cur-lo90)/(hi90-lo90))*100 : 50;
         raw.btcMom30 = cls.length>=30 ? ((cur-cls[cls.length-30])/cls[cls.length-30])*100 : raw.btcPct;
       } catch(e) { raw.btc90dPos = null; raw.btcMom30 = null; }
-    } catch(e) { raw.btcPct = 0; raw.ethPct = 0; }
+    } catch(e) {
+      // Fallback: CryptoCompare pricemultifull (tiene CHANGEPCT24HOUR)
+      try {
+        const _ccH = process.env.CRYPTOCOMPARE_KEY ? { 'authorization': 'Apikey ' + process.env.CRYPTOCOMPARE_KEY } : {};
+        const ccR = await fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH&tsyms=USD', { signal: AbortSignal.timeout(5000), headers: _ccH });
+        const ccD = await ccR.json();
+        _ccIncrement(1);
+        raw.btcPct = ccD?.RAW?.BTC?.USD?.CHANGEPCT24HOUR || 0;
+        raw.ethPct = ccD?.RAW?.ETH?.USD?.CHANGEPCT24HOUR || 0;
+      } catch(e2) { raw.btcPct = 0; raw.ethPct = 0; }
+      raw.btc90dPos = null; raw.btcMom30 = null;
+    }
 
     // 2. Yahoo via nuestro propio proxy (idéntico a PWA)
     const yahooSyms = ['^VIX','^GSPC','ES=F','NQ=F','YM=F','RTY=F','GC=F','SI=F','CL=F','HG=F'];
