@@ -1,5 +1,5 @@
 # MANUAL DE CONEXIONES — AUREX
-v2.0 — 21 abril 2026
+v2.1 — 21 abril 2026
 
 ---
 
@@ -51,16 +51,31 @@ assets.js URL fija → CoinCap → círculo con iniciales
 assets.js URL fija → FMP → Clearbit (30 dominios) → círculo con iniciales
 ```
 
-## CADENA PWA
+## CADENA PWA (commit 4fb7421)
 
-### Precios crypto
+### Precios crypto (5 catches)
 ```
-Binance directo (browser) → /api/crypto-prices (backend)
+Binance directo (browser) → /api/crypto-prices (backend: CC→Kraken→CoinGecko→Cache)
 ```
 
-### Precios stocks/ETFs/etc
+### Precios stocks/ETFs/etc (5 catches)
 ```
-Yahoo via Railway proxy → sin fallback
+Yahoo via Railway proxy → Yahoo directo desde browser (sin proxy)
+```
+
+### Señales IA
+```
+Backend /api/ia-signals → 3 reintentos → localStorage aurex_ia_pwa_cache → sin señales
+```
+
+### Portfolio datos
+```
+Supabase directo → localStorage aurex_port_items_cache → vacío
+```
+
+### Watchlist datos
+```
+Supabase directo → localStorage aurex_wl_pwa_cache → vacío
 ```
 
 ---
@@ -137,7 +152,7 @@ Yahoo via Railway proxy → sin fallback
 - URL: `https://aurex-app-production.up.railway.app/api/crypto-prices`
 - Respuesta: `{ ok: true, source: "cryptocompare", count: 53, prices: {...} }`
 - Actualización: cada 2 min via `refreshCryptoCache`
-- Sirve a: PWA (catch Binance) + Nativa (catch Binance en 3 screens)
+- Sirve a: PWA (5 catches crypto) + Nativa (catch Binance en 3 screens)
 
 ---
 
@@ -169,6 +184,16 @@ Yahoo via Railway proxy → sin fallback
 
 ---
 
+## LOCALSTORAGE CACHE (PWA commit 4fb7421)
+
+| Key | Dato | Escribe | Lee (fallback) |
+|-----|------|---------|----------------|
+| aurex_ia_pwa_cache | { signals, ts } | generarSenalesIA éxito | _iaLoadFromCache tras 3 fallos |
+| aurex_wl_pwa_cache | { lists, items } | _wlSyncFromSupabase éxito | _wlSyncFromSupabase fallo |
+| aurex_port_items_cache | [ portfolio items ] | (ya existía) | _fetchPortfolio fallo |
+
+---
+
 ## ESTADO ACTUAL (21/04/2026)
 
 | Servicio | Backend Railway | Nativa (celular) | PWA (browser) |
@@ -177,9 +202,10 @@ Yahoo via Railway proxy → sin fallback
 | CryptoCompare | ✅ Activa (con key) | — | — |
 | Kraken | ✅ Disponible | — | — |
 | CoinGecko | ✅ Disponible | — | — |
-| Yahoo | ✅ Funciona | ✅ Directo + proxy | ✅ Via proxy |
+| Yahoo | ✅ Funciona | ✅ Directo + proxy | ✅ Directo + proxy |
 | Alpha Vantage | ✅ Funciona | — | — |
 | Evolution WA | ✅ Connected | — | — |
 | Supabase | ✅ Online | — | — |
-| /api/crypto-prices | ✅ count:53 | ✅ Fallback | ✅ Fallback |
+| /api/crypto-prices | ✅ count:53 | ✅ Fallback | ✅ Fallback (5 catches) |
 | AsyncStorage cache | — | ✅ 7 keys | — |
+| localStorage cache | — | — | ✅ 3 keys |

@@ -1,7 +1,7 @@
 # 🚨 AUREX — Sistema de Monitoreo y Alertas Admin
 
 > **Documento vivo.** Se actualiza cada vez que agregamos, cambiamos o removemos alertas.
-> Última actualización: **2026-04-21** — v2.1 (Build 15 + AsyncStorage cache + Clearbit logos) (Kraken fallback + CC counter + /api/crypto-prices)
+> Última actualización: **2026-04-21** — v2.2 (PWA 17 fallbacks + localStorage cache) (Build 15 + AsyncStorage cache + Clearbit logos) (Kraken fallback + CC counter + /api/crypto-prices)
 
 ---
 

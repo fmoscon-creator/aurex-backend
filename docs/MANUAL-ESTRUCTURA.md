@@ -1,5 +1,5 @@
 # MANUAL DE ESTRUCTURA — AUREX
-v2.0 — 21 abril 2026
+v2.1 — 21 abril 2026
 
 ---
 
@@ -8,7 +8,7 @@ v2.0 — 21 abril 2026
 | Repo | URL | Branch | Safety Point | Deploy |
 |------|-----|--------|-------------|--------|
 | aurex-backend | github.com/fmoscon-creator/aurex-backend | main | `c27217d` | Railway auto-deploy |
-| aurex-app (PWA) | github.com/fmoscon-creator/aurex-app | main | `e314c13` | GitHub Pages auto |
+| aurex-app (PWA) | github.com/fmoscon-creator/aurex-app | main | `4fb7421` | GitHub Pages auto |
 | AurexApp (Nativa) | github.com/fmoscon-creator/AurexApp | dev | `1359dbd` | Xcode → TestFlight |
 
 **Builds Nativa:**
@@ -106,9 +106,23 @@ v2.0 — 21 abril 2026
 
 ---
 
-## PWA — FALLBACK (commit e314c13)
+## PWA — FALLBACKS IMPLEMENTADOS (commit 4fb7421)
 
-Catch de fetchBinance → fetch `/api/crypto-prices` → actualiza DOM + `_pcPrices`
+| # | Qué protege | Fallback | Catches |
+|---|-------------|----------|---------|
+| G1 | Precios crypto (5 catches) | Backend `/api/crypto-prices` | Mercados individual, Watchlist precio, Watchlist histórico, Watchlist comparador, Portfolio batch |
+| G2 | Precios stocks (5 catches) | Yahoo directo `query1.finance.yahoo.com` | Mercados principal, Watchlist precio, Watchlist histórico, Watchlist comparador, Portfolio batch |
+| G3 | Señales IA | localStorage `aurex_ia_pwa_cache` + `_iaLoadFromCache()` | Éxito → setItem, 3 reintentos fallidos → getItem |
+| G4 | Portfolio datos | localStorage `aurex_port_items_cache` | Catch Supabase → lee cache antes de mostrar vacío |
+| G4 | Watchlist datos | localStorage `aurex_wl_pwa_cache` | Sync éxito → setItem, Sync fallo → getItem |
+
+### Keys localStorage PWA (3 total)
+
+| Key | Qué guarda | Escribe | Lee (fallback) |
+|-----|-----------|---------|----------------|
+| aurex_ia_pwa_cache | { signals, ts } | generarSenalesIA éxito | _iaLoadFromCache tras 3 fallos |
+| aurex_wl_pwa_cache | { lists, items } | _wlSyncFromSupabase éxito | _wlSyncFromSupabase fallo |
+| aurex_port_items_cache | [ portfolio items ] | (ya existía) | _fetchPortfolio fallo |
 
 ---
 
@@ -118,13 +132,19 @@ Catch de fetchBinance → fetch `/api/crypto-prices` → actualiza DOM + `_pcPri
 Binance directo (celular) → si falla → Backend `/api/crypto-prices` (CC→Kraken→CoinGecko→Cache)
 
 ### Precios crypto (PWA)
-Binance directo (browser) → si falla → Backend `/api/crypto-prices`
+Binance directo (browser) → si falla → Backend `/api/crypto-prices` (CC→Kraken→CoinGecko→Cache)
 
 ### Precios stocks/ETFs/bonos/etc (nativa)
 Yahoo via Railway proxy → si falla → Yahoo directo desde celular → si falla → sin precio
 
+### Precios stocks/ETFs/bonos/etc (PWA)
+Yahoo via Railway proxy → si falla → Yahoo directo desde browser → si falla → sin precio
+
 ### Señales IA (nativa)
 Backend `/api/ia-signals` → si falla → AsyncStorage cache → si falla → cálculo local
+
+### Señales IA (PWA)
+Backend `/api/ia-signals` → si falla (3 reintentos) → localStorage cache → si falla → sin señales
 
 ### Pulse (nativa)
 Backend `/api/pulse` → si falla → AsyncStorage cache → si falla → cálculo local
@@ -132,8 +152,14 @@ Backend `/api/pulse` → si falla → AsyncStorage cache → si falla → cálcu
 ### Portfolio datos (nativa)
 Backend `/api/portfolio` → si falla → AsyncStorage cache → si falla → vacío
 
+### Portfolio datos (PWA)
+Supabase directo → si falla → localStorage cache → si falla → vacío
+
 ### Watchlist datos (nativa)
 Backend `/api/watchlists` → si falla → AsyncStorage cache → si falla → vacío
+
+### Watchlist datos (PWA)
+Supabase directo → si falla → localStorage cache → si falla → vacío
 
 ### Logos crypto (nativa)
 assets.js URL → CoinCap → si falla → círculo con iniciales
