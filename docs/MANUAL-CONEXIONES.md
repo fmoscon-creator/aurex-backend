@@ -1,137 +1,185 @@
 # MANUAL DE CONEXIONES — AUREX
-v1.0 — 21 abril 2026
+v2.0 — 21 abril 2026
 
 ---
 
 ## CADENA DE FALLBACK BACKEND (fetchCryptoPriceBatch)
 
 ```
-Binance (L160-175) → CryptoCompare (L177-197) → Kraken (L199-230) → CoinGecko (L232-250) → Cache stale (L252-267)
+Binance → CryptoCompare (con API key) → Kraken → CoinGecko → Cache stale 30min
 ```
 
-Cada paso tiene timeout de 5 segundos. Si un paso responde OK → return inmediato, no prueba el siguiente.
+## CADENA NATIVA (Build 15)
+
+### Precios crypto
+```
+Binance directo (celular) → /api/crypto-prices (backend: CC→Kraken→CoinGecko→Cache)
+```
+
+### Precios stocks/ETFs/bonos/commodities/metales/divisas/mat.primas (297 activos)
+```
+Yahoo via Railway proxy → Yahoo directo desde celular (sin proxy)
+```
+
+### Señales IA
+```
+Backend /api/ia-signals → AsyncStorage cache local → cálculo local
+```
+
+### Pulse
+```
+Backend /api/pulse → AsyncStorage cache local → cálculo local
+```
+
+### Portfolio datos
+```
+Backend /api/portfolio → AsyncStorage cache local
+```
+
+### Watchlist datos
+```
+Backend /api/watchlists → AsyncStorage cache local
+```
+
+### Logos crypto
+```
+assets.js URL fija → CoinCap → círculo con iniciales
+```
+
+### Logos acciones/ETFs
+```
+assets.js URL fija → FMP → Clearbit (30 dominios) → círculo con iniciales
+```
+
+## CADENA PWA
+
+### Precios crypto
+```
+Binance directo (browser) → /api/crypto-prices (backend)
+```
+
+### Precios stocks/ETFs/etc
+```
+Yahoo via Railway proxy → sin fallback
+```
 
 ---
 
 ## FUENTES DE DATOS
 
 ### Fuente 1 — Binance
-- **URL:** `https://api.binance.com/api/v3/ticker/price`
-- **API key:** NO requiere
-- **Estado:** FALLA en Railway desde 18/04/2026 (bloqueo IP). Alerta BN-002 activa.
-- **Escribe en:** `cryptoCache[sym]` L170
-- **Funciona desde:** browser del usuario (PWA y Nativa)
+- URL: `api.binance.com/api/v3/ticker/price`
+- API key: NO
+- Estado: FALLA en Railway desde 18/04/2026. Funciona desde celular/browser.
+- Escribe en: `cryptoCache[sym]`
 
 ### Fuente 2 — CryptoCompare
-- **URL:** `https://min-api.cryptocompare.com/data/pricemulti`
-- **API key:** Sí, via header `authorization: Apikey ${CRYPTOCOMPARE_KEY}`. Env var en Railway configurada 21/04/2026.
-- **Límite:** 100.000 calls/mes (plan gratuito con key)
-- **Contador:** Persistido en Supabase `system_config` key `cc_monthly_calls`
-- **Alertas límite:** 80k (80%) y 95k (95%) por WhatsApp, una vez por mes
-- **Reset:** Día 1 cada mes 00:00 AR (cron `0 3 1 * *`)
-- **Escribe en:** `cryptoCache[sym]` L189
-- **Estado:** ACTIVA como fuente primaria desde 18/04/2026
+- URL: `min-api.cryptocompare.com/data/pricemulti`
+- API key: Sí, header `authorization: Apikey ${CRYPTOCOMPARE_KEY}`
+- Límite: 100k calls/mes con key
+- Contador: Supabase `system_config`, alertas 80k/95k
+- Estado: ACTIVA como primaria desde 18/04/2026
 
 ### Fuente 3 — Kraken
-- **URL:** `https://api.kraken.com/0/public/Ticker`
-- **API key:** NO requiere
-- **Mapeo tickers:**
-  - BTC → XXBTZUSD
-  - ETH → XETHZUSD
-  - XRP → XXRPZUSD
-  - LTC → XLTCZUSD
-  - DOGE → XDGUSD
-  - Resto → SIMBOLOUSD
-- **Sin cobertura (4):** FTM, MKR, ROSE, THETA → saltan a CoinGecko
-- **Escribe en:** `cryptoCache[sym]` directamente
-- **Estado:** Fallback 2, activa solo si CC falla
+- URL: `api.kraken.com/0/public/Ticker`
+- API key: NO
+- Mapeo: BTC→XXBTZUSD, ETH→XETHZUSD, XRP→XXRPZUSD, LTC→XLTCZUSD, DOGE→XDGUSD
+- Sin cobertura: FTM, MKR, ROSE, THETA → saltan a CoinGecko
 
 ### Fuente 4 — CoinGecko
-- **URL:** `https://api.coingecko.com/api/v3/simple/price`
-- **API key:** NO requiere
-- **Límite:** ~10.000 calls/mes (plan gratuito)
-- **Mapeo:** Usa `COINGECKO_IDS` (L85-102 server.js)
-- **Estado:** Fallback 3, activa solo si CC y Kraken fallan
+- URL: `api.coingecko.com/api/v3/simple/price`
+- API key: NO
+- Límite: ~10k calls/mes
 
 ### Fuente 5 — Yahoo Finance
-- **URL:** `https://query1.finance.yahoo.com/v8/finance/chart/`
-- **Proxy:** Via Railway `GET /api/yahoo?symbol=X`
-- **API key:** NO requiere
-- **Uso:** Stocks, ETFs, Bonos, Commodities, Metales, Divisas, Materias Primas + Motor IA todos los activos
+- URL: `query1.finance.yahoo.com/v8/finance/chart/`
+- Proxy: Railway `GET /api/yahoo`
+- Directo: desde celular/browser (fallback Build 15)
+- API key: NO
 
 ### Fuente 6 — Alpha Vantage
-- **URL:** `https://www.alphavantage.co/query`
-- **API key:** Sí, env var `ALPHA_KEY` en Railway
-- **Límite:** 25 calls/min
-- **Uso:** Precios acciones en `checkAlertas` (backend)
+- URL: `alphavantage.co/query`
+- API key: Sí (`ALPHA_KEY`)
+- Límite: 25 calls/min
 
-### Cache de emergencia
-- **TTL:** 30 minutos (`CRYPTO_CACHE_EMERGENCY_TTL = 1800000`)
-- **Cuándo:** Solo si las 4 fuentes anteriores fallan
-- **Marca:** `source: 'cache', stale: true`
+### Cache emergencia
+- TTL: 30 min
+- Solo si todas las fuentes fallan
 
 ---
 
-## CADENA PWA
+## LOGOS
 
-```
-Binance directo (browser del usuario)
-  ↓ si falla (catch)
-fetch /api/crypto-prices (Railway backend)
-  ↓ responde con datos de CC/Kraken/CoinGecko/Cache
-Actualiza DOM + window._pcPrices
-```
+### Crypto/Stable
+| Prioridad | Fuente | URL |
+|-----------|--------|-----|
+| 1 | assets.js | URLs CoinGecko images (estáticas) |
+| 2 | CoinCap | `assets.coincap.io/assets/icons/` |
+| 3 | Círculo | Iniciales + color |
 
-Archivo: aurex-features.js, commit e314c13
+### Acciones/ETFs
+| Prioridad | Fuente | URL |
+|-----------|--------|-----|
+| 1 | assets.js | URLs FMP/Clearbit (estáticas) |
+| 2 | FMP | `financialmodelingprep.com/image-stock/` |
+| 3 | Clearbit | `logo.clearbit.com/` (30 dominios mapeados) |
+| 4 | Círculo | Iniciales + color |
 
-## CADENA NATIVA
-
-```
-Binance directo (celular del usuario)
-  ↓ si falla (catch)
-fetch /api/crypto-prices (Railway backend)
-  ↓ responde con datos de CC/Kraken/CoinGecko/Cache
-setPrices() con los precios del backend
-```
-
-Archivos (commit 7874f0f, branch dev):
-- IAScreen.js L136-159
-- MercadosScreen.js L359-370
-- PortfolioScreen.js L125-133 (solo pide missing)
+### Commodities/Futuros/Bonos/Divisas
+| Prioridad | Fuente |
+|-----------|--------|
+| 1 | Círculo con símbolo y color específico (AssetLogo.js SYMBOL_COLORS) |
 
 ---
 
 ## ENDPOINT `/api/crypto-prices`
 
-- **URL:** `https://aurex-app-production.up.railway.app/api/crypto-prices`
-- **Método:** GET
-- **Respuesta:** `{ ok: true, source: "cryptocompare", count: 53, prices: { BTC: { price: 75870, source: "cryptocompare", ts: 1713... }, ... } }`
-- **Actualización:** Cada 2 min via `refreshCryptoCache` (cron `*/2 * * * *`) + al boot (5s)
-- **Sirve a:** PWA y Nativa como fallback cuando Binance falla desde el dispositivo
+- URL: `https://aurex-app-production.up.railway.app/api/crypto-prices`
+- Respuesta: `{ ok: true, source: "cryptocompare", count: 53, prices: {...} }`
+- Actualización: cada 2 min via `refreshCryptoCache`
+- Sirve a: PWA (catch Binance) + Nativa (catch Binance en 3 screens)
+
+---
+
+## ASYNCSTORAGE CACHE (Nativa Build 15)
+
+| Key | Dato | Escribe | Lee (fallback) |
+|-----|------|---------|----------------|
+| aurex_ia_cache | signals + prices + ts | IAScreen éxito | IAScreen fallo |
+| aurex_pulse_cache | pulse data + ts | MercadosScreen éxito | MercadosScreen fallo |
+| aurex_ia_signals_map | { simbolo: signal } | MercadosScreen éxito | MercadosScreen fallo |
+| aurex_wl_ia_cache | { simbolo: signal } | WatchlistScreen éxito | WatchlistScreen fallo |
+| aurex_port_ia_cache | { simbolo: signal } | PortfolioScreen éxito | PortfolioScreen fallo |
+| aurex_port_data | [ portfolio items ] | PortfolioScreen éxito | PortfolioScreen fallo |
+| aurex_wl_data | { lists, items } | WatchlistScreen éxito | WatchlistScreen fallo |
+
+---
+
+## CONSUMO ESTIMADO CRYPTOCOMPARE (Binance caído en Railway)
+
+| Origen | Frecuencia | Calls/mes |
+|--------|-----------|-----------|
+| refreshCryptoCache | cada 2 min | 21.600 |
+| checkAlertas | cada 30 seg | 86.400 |
+| calcularPulse fallback | cada 5 min | 8.640 |
+| Motor IA fallback | variable | ~5.000-15.000 |
+| **Total estimado** | — | **~121.000-131.000** |
+
+⚠️ Supera 100k/mes. Monitorear con contador + alertas 80k/95k.
 
 ---
 
 ## ESTADO ACTUAL (21/04/2026)
 
-| Fuente | Backend Railway | PWA (browser) | Nativa (celular) |
-|--------|----------------|---------------|-----------------|
+| Servicio | Backend Railway | Nativa (celular) | PWA (browser) |
+|----------|----------------|-----------------|---------------|
 | Binance | ❌ Bloqueado | ✅ Funciona | ✅ Funciona |
 | CryptoCompare | ✅ Activa (con key) | — | — |
 | Kraken | ✅ Disponible | — | — |
 | CoinGecko | ✅ Disponible | — | — |
-| Yahoo | ✅ Funciona | ✅ Via proxy | ✅ Via proxy |
+| Yahoo | ✅ Funciona | ✅ Directo + proxy | ✅ Via proxy |
 | Alpha Vantage | ✅ Funciona | — | — |
-| /api/crypto-prices | ✅ count:53 | ✅ Fallback | ✅ Fallback (build 14) |
-
----
-
-## CONSUMO ESTIMADO CRYPTOCOMPARE (Binance caído)
-
-| Origen | Frecuencia | Calls/día | Calls/mes |
-|--------|-----------|-----------|-----------|
-| refreshCryptoCache | cada 2 min | 720 | 21.600 |
-| checkAlertas (si hay alertas) | cada 30 seg | 2.880 | 86.400 |
-| Motor IA (fallback Yahoo) | variable | ~50-500 | ~1.500-15.000 |
-| **Total estimado** | — | ~3.650-4.100 | **~109.500-123.000** |
-
-⚠️ Puede superar el límite de 100k/mes. Monitorear con el contador + alertas.
+| Evolution WA | ✅ Connected | — | — |
+| Supabase | ✅ Online | — | — |
+| /api/crypto-prices | ✅ count:53 | ✅ Fallback | ✅ Fallback |
+| AsyncStorage cache | — | ✅ 7 keys | — |

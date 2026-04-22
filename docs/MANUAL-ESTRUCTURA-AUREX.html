@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>MANUAL DE ESTRUCTURA — AUREX</title>
+  <title>MANUAL DE ESTRUCTURA — AUREX v2.0</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -173,10 +173,10 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">MANUAL DE ESTRUCTURA — AUREX</h1>
+<h1 class="title">MANUAL DE ESTRUCTURA — AUREX v2.0</h1>
 </header>
 <h1 id="manual-de-estructura-aurex">MANUAL DE ESTRUCTURA — AUREX</h1>
-<p>v1.0 — 21 abril 2026</p>
+<p>v2.0 — 21 abril 2026</p>
 <hr />
 <h2 id="repositorios">REPOSITORIOS</h2>
 <table>
@@ -201,7 +201,7 @@
 <td>aurex-backend</td>
 <td>github.com/fmoscon-creator/aurex-backend</td>
 <td>main</td>
-<td><code>03a6892</code></td>
+<td><code>c27217d</code></td>
 <td>Railway auto-deploy</td>
 </tr>
 <tr>
@@ -215,28 +215,134 @@
 <td>AurexApp (Nativa)</td>
 <td>github.com/fmoscon-creator/AurexApp</td>
 <td>dev</td>
-<td><code>7874f0f</code></td>
+<td><code>1359dbd</code></td>
 <td>Xcode → TestFlight</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Build Nativa:</strong> Build 12 en TestFlight (10/04/2026, NO
-incluye fallback). Build 14 pendiente con fallback.</p>
+<p><strong>Builds Nativa:</strong> - Build 9: en App Store Review
+(enviada 9/abril, pendiente) - Build 14: en TestFlight (fallback crypto
+<code>/api/crypto-prices</code>) - Build 15: en proceso (todos los
+fallbacks + cache AsyncStorage + Clearbit logos)</p>
 <hr />
-<h2 id="backend-server.js-1477-líneas">BACKEND — server.js (1477+
+<h2 id="nativa-fallbacks-implementados-build-15">NATIVA — FALLBACKS
+IMPLEMENTADOS (Build 15)</h2>
+<table>
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 29%" />
+<col style="width: 22%" />
+<col style="width: 18%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Qué protege</th>
+<th>Fallback</th>
+<th>Commit</th>
+<th>Archivos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Precios crypto (53 activos)</td>
+<td>Backend <code>/api/crypto-prices</code></td>
+<td><code>7874f0f</code></td>
+<td>IAScreen, MercadosScreen, PortfolioScreen</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Precios stocks/ETFs/bonos/commodities/metales/divisas (297
+activos)</td>
+<td>Yahoo directo desde celular</td>
+<td><code>a4c2675</code></td>
+<td>MercadosScreen (2), WatchlistScreen (2), PortfolioScreen (2)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Señales IA + Pulse</td>
+<td>AsyncStorage cache</td>
+<td><code>b4cb34e</code></td>
+<td>IAScreen, MercadosScreen (Pulse + IA signals)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Portfolio + Watchlist datos</td>
+<td>AsyncStorage cache</td>
+<td><code>30952f2</code></td>
+<td>PortfolioScreen, WatchlistScreen</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Logos acciones/ETFs</td>
+<td>Clearbit (30 dominios)</td>
+<td><code>a1d1100</code></td>
+<td>AssetLogo.js</td>
+</tr>
+</tbody>
+</table>
+<h3 id="keys-asyncstorage-7-total">Keys AsyncStorage (7 total)</h3>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Qué guarda</th>
+<th>Screen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>aurex_ia_cache</td>
+<td>{ signals, prices, ts }</td>
+<td>IAScreen</td>
+</tr>
+<tr>
+<td>aurex_pulse_cache</td>
+<td>{ data, ts }</td>
+<td>MercadosScreen</td>
+</tr>
+<tr>
+<td>aurex_ia_signals_map</td>
+<td>{ simbolo: signal }</td>
+<td>MercadosScreen</td>
+</tr>
+<tr>
+<td>aurex_wl_ia_cache</td>
+<td>{ simbolo: signal }</td>
+<td>WatchlistScreen</td>
+</tr>
+<tr>
+<td>aurex_port_ia_cache</td>
+<td>{ simbolo: signal }</td>
+<td>PortfolioScreen</td>
+</tr>
+<tr>
+<td>aurex_port_data</td>
+<td>[ portfolio items ]</td>
+<td>PortfolioScreen</td>
+</tr>
+<tr>
+<td>aurex_wl_data</td>
+<td>{ lists, items }</td>
+<td>WatchlistScreen</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="backend-server.js-1490-líneas">BACKEND — server.js (~1490
 líneas)</h2>
 <h3 id="funciones-principales">Funciones principales</h3>
 <table>
 <colgroup>
-<col style="width: 23%" />
-<col style="width: 34%" />
-<col style="width: 15%" />
-<col style="width: 26%" />
+<col style="width: 36%" />
+<col style="width: 24%" />
+<col style="width: 40%" />
 </colgroup>
 <thead>
 <tr>
 <th>Función</th>
-<th>Línea aprox</th>
 <th>Cron</th>
 <th>Qué hace</th>
 </tr>
@@ -244,95 +350,58 @@ líneas)</h2>
 <tbody>
 <tr>
 <td><code>fetchCryptoPriceBatch(symbols)</code></td>
-<td>L153</td>
 <td>—</td>
-<td>Cadena: Binance→CC→Kraken→CoinGecko→Cache. Escribe en
-<code>cryptoCache</code></td>
+<td>Cadena: Binance→CC→Kraken→CoinGecko→Cache</td>
 </tr>
 <tr>
 <td><code>refreshCryptoCache()</code></td>
-<td>L351-357</td>
 <td><code>*/2 * * * *</code> + boot 5s</td>
-<td>Llama fetchCryptoPriceBatch con 53 crypto/stable</td>
+<td>Llena cryptoCache con 53 crypto/stable</td>
 </tr>
 <tr>
 <td><code>checkAlertas()</code></td>
-<td>L305</td>
 <td><code>*/30 * * * * *</code></td>
-<td>Chequea alertas de usuario, usa fetchCryptoPriceBatch para
-crypto</td>
+<td>Alertas de usuario, usa fetchCryptoPriceBatch</td>
 </tr>
 <tr>
 <td><code>calcularSenalesIA()</code></td>
-<td>~L700</td>
 <td><code>*/5 * * * *</code></td>
-<td>Motor IA 350 activos. Yahoo → CC fallback para crypto</td>
+<td>Motor IA 350 activos. Yahoo → CC fallback</td>
 </tr>
 <tr>
 <td><code>calcularPulse()</code></td>
-<td>~L810</td>
 <td><code>*/5 * * * *</code></td>
-<td>AUREX Pulse. Binance (BTC/ETH) + Yahoo (resto)</td>
+<td>Pulse. Binance → CC fallback para BTC/ETH</td>
 </tr>
 <tr>
 <td><code>healthCheck()</code></td>
-<td>~L680</td>
 <td><code>*/5 * * * *</code></td>
 <td>Monitorea Evolution, Supabase, Binance</td>
 </tr>
 <tr>
 <td><code>dailyHealthReport()</code></td>
-<td>~L1200</td>
 <td><code>0 11 * * *</code> (08:00 AR)</td>
-<td>Reporte diario WhatsApp + Supabase</td>
+<td>Reporte + CC counter</td>
 </tr>
 <tr>
 <td><code>monthlyHealthReport()</code></td>
-<td>~L1292</td>
 <td>Último día hábil</td>
-<td>Reporte mensual</td>
-</tr>
-<tr>
-<td><code>_buildAndSendMonthlyReport()</code></td>
-<td>~L1330</td>
-<td>—</td>
-<td>Construye y envía el mensual</td>
+<td>Reporte mensual (incluye Kraken)</td>
 </tr>
 <tr>
 <td><code>restoreHealthState()</code></td>
-<td>~L900</td>
 <td>boot</td>
-<td>Restaura flags de health desde Supabase</td>
+<td>Restaura flags health</td>
 </tr>
 <tr>
 <td><code>_ccLoadCounter()</code></td>
-<td>L112</td>
 <td>boot 3s</td>
 <td>Lee contador CC de Supabase</td>
 </tr>
 <tr>
 <td><code>_ccIncrement(n)</code></td>
-<td>L129</td>
 <td>—</td>
-<td>Incrementa contador, persiste cada 50, alertas 80k/95k</td>
-</tr>
-<tr>
-<td><code>_fetchCryptoCompareIA(sym)</code></td>
-<td>~L595</td>
-<td>—</td>
-<td>Fallback CC para motor IA (2 calls: precio + historial)</td>
-</tr>
-<tr>
-<td><code>_fetchYahooIA(sym)</code></td>
-<td>~L615</td>
-<td>—</td>
-<td>Yahoo para motor IA</td>
-</tr>
-<tr>
-<td><code>_fetchBinanceIA(sym)</code></td>
-<td>~L580</td>
-<td>—</td>
-<td>Binance para motor IA</td>
+<td>Incrementa + persiste + alertas 80k/95k</td>
 </tr>
 </tbody>
 </table>
@@ -342,17 +411,13 @@ crypto</td>
 <li>URL:
 <code>GET https://aurex-app-production.up.railway.app/api/crypto-prices</code></li>
 <li>Respuesta:
-<code>{ ok: true, source: "cryptocompare", count: 53, prices: { BTC: {price, source, ts}, ... } }</code></li>
-<li>Se llena via <code>refreshCryptoCache</code> cada 2 min</li>
-<li>Sirve como fallback para PWA y Nativa cuando Binance falla</li>
+<code>{ ok: true, source: "cryptocompare", count: 53, prices: {...} }</code></li>
+<li>Actualización: cada 2 min via refreshCryptoCache</li>
+<li>Sirve como fallback para PWA y Nativa</li>
 </ul>
 <hr />
 <h2 id="tablas-supabase">TABLAS SUPABASE</h2>
 <table>
-<colgroup>
-<col style="width: 58%" />
-<col style="width: 41%" />
-</colgroup>
 <thead>
 <tr>
 <th>Tabla</th>
@@ -370,19 +435,19 @@ crypto</td>
 </tr>
 <tr>
 <td>health_events</td>
-<td>Incidentes de salud (BN-001, BN-002, etc.)</td>
+<td>Incidentes de salud</td>
 </tr>
 <tr>
 <td>daily_reports</td>
-<td>Reportes diarios persistidos</td>
+<td>Reportes diarios</td>
 </tr>
 <tr>
 <td>monthly_reports</td>
-<td>Reportes mensuales persistidos</td>
+<td>Reportes mensuales</td>
 </tr>
 <tr>
 <td>system_config</td>
-<td>Configuración sistema (cc_monthly_calls) — creada 21/04/2026</td>
+<td>cc_monthly_calls (creada 21/04/2026)</td>
 </tr>
 <tr>
 <td>usuarios</td>
@@ -398,7 +463,7 @@ crypto</td>
 </tr>
 <tr>
 <td>watchlist_items</td>
-<td>Items dentro de watchlists</td>
+<td>Items de watchlists</td>
 </tr>
 </tbody>
 </table>
@@ -414,126 +479,91 @@ crypto</td>
 <tbody>
 <tr>
 <td>CRYPTOCOMPARE_KEY</td>
-<td>API key CryptoCompare (configurada 21/04/2026)</td>
+<td>API key CryptoCompare (21/04/2026)</td>
 </tr>
 <tr>
 <td>ADMIN_WHATSAPP</td>
-<td>Número admin para alertas WhatsApp</td>
+<td>Número admin alertas</td>
 </tr>
 <tr>
 <td>EVOLUTION_API_URL</td>
-<td>URL de Evolution API</td>
+<td>URL Evolution API</td>
 </tr>
 <tr>
 <td>EVOLUTION_API_KEY</td>
-<td>Key de Evolution API</td>
+<td>Key Evolution</td>
 </tr>
 <tr>
 <td>EVOLUTION_INSTANCE</td>
-<td>Nombre instancia Evolution (default: aurex)</td>
+<td>Instancia (aurex)</td>
 </tr>
 <tr>
 <td>SUPABASE_URL</td>
-<td>URL de Supabase</td>
+<td>URL Supabase</td>
 </tr>
 <tr>
 <td>SUPABASE_SERVICE_KEY</td>
-<td>Service key de Supabase</td>
+<td>Service key</td>
 </tr>
 <tr>
 <td>TELEGRAM_BOT_TOKEN</td>
-<td>Token bot Telegram</td>
+<td>Bot Telegram</td>
 </tr>
 <tr>
 <td>TWILIO_ACCOUNT_SID</td>
-<td>SID cuenta Twilio</td>
+<td>Twilio SID</td>
 </tr>
 <tr>
 <td>TWILIO_AUTH_TOKEN</td>
-<td>Token Twilio</td>
+<td>Twilio token</td>
 </tr>
 <tr>
 <td>TWILIO_WHATSAPP_FROM</td>
-<td>Número WhatsApp Twilio</td>
+<td>WhatsApp Twilio</td>
 </tr>
 <tr>
 <td>ALPHA_KEY</td>
-<td>API key Alpha Vantage</td>
+<td>Alpha Vantage key</td>
 </tr>
 <tr>
 <td>ANTHROPIC_API_KEY</td>
-<td>API key Claude (análisis alertas)</td>
+<td>Claude (análisis alertas)</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="fallback-pwa-aurex-features.js-commit-e314c13">FALLBACK PWA
-(aurex-features.js, commit e314c13)</h2>
-<p>En el catch vacío de fetchBinance (~L394): - Fetch a
-<code>/api/crypto-prices</code> - Actualiza DOM <code>p-{sym}</code> y
-<code>c-{sym}</code> con <code>_fmt</code> - Persiste en
-<code>window._pcPrices[sym]</code></p>
-<h2 id="fallback-nativa-commit-7874f0f-branch-dev">FALLBACK NATIVA
-(commit 7874f0f, branch dev)</h2>
-<table>
-<colgroup>
-<col style="width: 32%" />
-<col style="width: 36%" />
-<col style="width: 32%" />
-</colgroup>
-<thead>
-<tr>
-<th>Screen</th>
-<th>Archivo</th>
-<th>Lógica</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>IAScreen</td>
-<td>L136-159</td>
-<td>catch → fetch <code>/api/crypto-prices</code> →
-<code>setPrices(d.prices)</code></td>
-</tr>
-<tr>
-<td>MercadosScreen</td>
-<td>L359-370</td>
-<td>catch → fetch <code>/api/crypto-prices</code> →
-<code>setPrices</code></td>
-</tr>
-<tr>
-<td>PortfolioScreen</td>
-<td>L125-133</td>
-<td>Detecta <code>missing</code>, solo pide backend si hay faltantes,
-llena <code>allPrices[s]</code>, catch con log</td>
-</tr>
-</tbody>
-</table>
+<h2 id="pwa-fallback-commit-e314c13">PWA — FALLBACK (commit
+e314c13)</h2>
+<p>Catch de fetchBinance → fetch <code>/api/crypto-prices</code> →
+actualiza DOM + <code>_pcPrices</code></p>
 <hr />
-<h2 id="safety-points">SAFETY POINTS</h2>
-<table>
-<thead>
-<tr>
-<th>Fecha</th>
-<th>PWA</th>
-<th>Nativa</th>
-<th>Backend</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>21/04/2026</td>
-<td><code>e314c13</code> (main)</td>
-<td><code>7874f0f</code> (dev)</td>
-<td><code>03a6892</code> (main)</td>
-</tr>
-<tr>
-<td>15/04/2026</td>
-<td><code>5505c41</code> (main)</td>
-<td><code>72ac92b</code> (dev)</td>
-<td>—</td>
-</tr>
-</tbody>
-</table>
+<h2 id="cadenas-completas-por-dato">CADENAS COMPLETAS POR DATO</h2>
+<h3 id="precios-crypto-nativa">Precios crypto (nativa)</h3>
+<p>Binance directo (celular) → si falla → Backend
+<code>/api/crypto-prices</code> (CC→Kraken→CoinGecko→Cache)</p>
+<h3 id="precios-crypto-pwa">Precios crypto (PWA)</h3>
+<p>Binance directo (browser) → si falla → Backend
+<code>/api/crypto-prices</code></p>
+<h3 id="precios-stocksetfsbonosetc-nativa">Precios stocks/ETFs/bonos/etc
+(nativa)</h3>
+<p>Yahoo via Railway proxy → si falla → Yahoo directo desde celular → si
+falla → sin precio</p>
+<h3 id="señales-ia-nativa">Señales IA (nativa)</h3>
+<p>Backend <code>/api/ia-signals</code> → si falla → AsyncStorage cache
+→ si falla → cálculo local</p>
+<h3 id="pulse-nativa">Pulse (nativa)</h3>
+<p>Backend <code>/api/pulse</code> → si falla → AsyncStorage cache → si
+falla → cálculo local</p>
+<h3 id="portfolio-datos-nativa">Portfolio datos (nativa)</h3>
+<p>Backend <code>/api/portfolio</code> → si falla → AsyncStorage cache →
+si falla → vacío</p>
+<h3 id="watchlist-datos-nativa">Watchlist datos (nativa)</h3>
+<p>Backend <code>/api/watchlists</code> → si falla → AsyncStorage cache
+→ si falla → vacío</p>
+<h3 id="logos-crypto-nativa">Logos crypto (nativa)</h3>
+<p>assets.js URL → CoinCap → si falla → círculo con iniciales</p>
+<h3 id="logos-acciones-nativa">Logos acciones (nativa)</h3>
+<p>assets.js URL → FMP → si falla → Clearbit (30 dominios) → si falla →
+círculo con iniciales</p>
 </body>
 </html>

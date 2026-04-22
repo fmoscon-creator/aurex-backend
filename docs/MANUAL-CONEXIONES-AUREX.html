@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>MANUAL DE CONEXIONES — AUREX</title>
+  <title>MANUAL DE CONEXIONES — AUREX v2.0</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -173,155 +173,296 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">MANUAL DE CONEXIONES — AUREX</h1>
+<h1 class="title">MANUAL DE CONEXIONES — AUREX v2.0</h1>
 </header>
 <h1 id="manual-de-conexiones-aurex">MANUAL DE CONEXIONES — AUREX</h1>
-<p>v1.0 — 21 abril 2026</p>
+<p>v2.0 — 21 abril 2026</p>
 <hr />
 <h2 id="cadena-de-fallback-backend-fetchcryptopricebatch">CADENA DE
 FALLBACK BACKEND (fetchCryptoPriceBatch)</h2>
-<pre><code>Binance (L160-175) → CryptoCompare (L177-197) → Kraken (L199-230) → CoinGecko (L232-250) → Cache stale (L252-267)</code></pre>
-<p>Cada paso tiene timeout de 5 segundos. Si un paso responde OK →
-return inmediato, no prueba el siguiente.</p>
+<pre><code>Binance → CryptoCompare (con API key) → Kraken → CoinGecko → Cache stale 30min</code></pre>
+<h2 id="cadena-nativa-build-15">CADENA NATIVA (Build 15)</h2>
+<h3 id="precios-crypto">Precios crypto</h3>
+<pre><code>Binance directo (celular) → /api/crypto-prices (backend: CC→Kraken→CoinGecko→Cache)</code></pre>
+<h3
+id="precios-stocksetfsbonoscommoditiesmetalesdivisasmat.primas-297-activos">Precios
+stocks/ETFs/bonos/commodities/metales/divisas/mat.primas (297
+activos)</h3>
+<pre><code>Yahoo via Railway proxy → Yahoo directo desde celular (sin proxy)</code></pre>
+<h3 id="señales-ia">Señales IA</h3>
+<pre><code>Backend /api/ia-signals → AsyncStorage cache local → cálculo local</code></pre>
+<h3 id="pulse">Pulse</h3>
+<pre><code>Backend /api/pulse → AsyncStorage cache local → cálculo local</code></pre>
+<h3 id="portfolio-datos">Portfolio datos</h3>
+<pre><code>Backend /api/portfolio → AsyncStorage cache local</code></pre>
+<h3 id="watchlist-datos">Watchlist datos</h3>
+<pre><code>Backend /api/watchlists → AsyncStorage cache local</code></pre>
+<h3 id="logos-crypto">Logos crypto</h3>
+<pre><code>assets.js URL fija → CoinCap → círculo con iniciales</code></pre>
+<h3 id="logos-accionesetfs">Logos acciones/ETFs</h3>
+<pre><code>assets.js URL fija → FMP → Clearbit (30 dominios) → círculo con iniciales</code></pre>
+<h2 id="cadena-pwa">CADENA PWA</h2>
+<h3 id="precios-crypto-1">Precios crypto</h3>
+<pre><code>Binance directo (browser) → /api/crypto-prices (backend)</code></pre>
+<h3 id="precios-stocksetfsetc">Precios stocks/ETFs/etc</h3>
+<pre><code>Yahoo via Railway proxy → sin fallback</code></pre>
 <hr />
 <h2 id="fuentes-de-datos">FUENTES DE DATOS</h2>
 <h3 id="fuente-1-binance">Fuente 1 — Binance</h3>
 <ul>
-<li><strong>URL:</strong>
-<code>https://api.binance.com/api/v3/ticker/price</code></li>
-<li><strong>API key:</strong> NO requiere</li>
-<li><strong>Estado:</strong> FALLA en Railway desde 18/04/2026 (bloqueo
-IP). Alerta BN-002 activa.</li>
-<li><strong>Escribe en:</strong> <code>cryptoCache[sym]</code> L170</li>
-<li><strong>Funciona desde:</strong> browser del usuario (PWA y
-Nativa)</li>
+<li>URL: <code>api.binance.com/api/v3/ticker/price</code></li>
+<li>API key: NO</li>
+<li>Estado: FALLA en Railway desde 18/04/2026. Funciona desde
+celular/browser.</li>
+<li>Escribe en: <code>cryptoCache[sym]</code></li>
 </ul>
 <h3 id="fuente-2-cryptocompare">Fuente 2 — CryptoCompare</h3>
 <ul>
-<li><strong>URL:</strong>
-<code>https://min-api.cryptocompare.com/data/pricemulti</code></li>
-<li><strong>API key:</strong> Sí, via header
-<code>authorization: Apikey ${CRYPTOCOMPARE_KEY}</code>. Env var en
-Railway configurada 21/04/2026.</li>
-<li><strong>Límite:</strong> 100.000 calls/mes (plan gratuito con
-key)</li>
-<li><strong>Contador:</strong> Persistido en Supabase
-<code>system_config</code> key <code>cc_monthly_calls</code></li>
-<li><strong>Alertas límite:</strong> 80k (80%) y 95k (95%) por WhatsApp,
-una vez por mes</li>
-<li><strong>Reset:</strong> Día 1 cada mes 00:00 AR (cron
-<code>0 3 1 * *</code>)</li>
-<li><strong>Escribe en:</strong> <code>cryptoCache[sym]</code> L189</li>
-<li><strong>Estado:</strong> ACTIVA como fuente primaria desde
-18/04/2026</li>
+<li>URL: <code>min-api.cryptocompare.com/data/pricemulti</code></li>
+<li>API key: Sí, header
+<code>authorization: Apikey ${CRYPTOCOMPARE_KEY}</code></li>
+<li>Límite: 100k calls/mes con key</li>
+<li>Contador: Supabase <code>system_config</code>, alertas 80k/95k</li>
+<li>Estado: ACTIVA como primaria desde 18/04/2026</li>
 </ul>
 <h3 id="fuente-3-kraken">Fuente 3 — Kraken</h3>
 <ul>
-<li><strong>URL:</strong>
-<code>https://api.kraken.com/0/public/Ticker</code></li>
-<li><strong>API key:</strong> NO requiere</li>
-<li><strong>Mapeo tickers:</strong>
-<ul>
-<li>BTC → XXBTZUSD</li>
-<li>ETH → XETHZUSD</li>
-<li>XRP → XXRPZUSD</li>
-<li>LTC → XLTCZUSD</li>
-<li>DOGE → XDGUSD</li>
-<li>Resto → SIMBOLOUSD</li>
-</ul></li>
-<li><strong>Sin cobertura (4):</strong> FTM, MKR, ROSE, THETA → saltan a
-CoinGecko</li>
-<li><strong>Escribe en:</strong> <code>cryptoCache[sym]</code>
-directamente</li>
-<li><strong>Estado:</strong> Fallback 2, activa solo si CC falla</li>
+<li>URL: <code>api.kraken.com/0/public/Ticker</code></li>
+<li>API key: NO</li>
+<li>Mapeo: BTC→XXBTZUSD, ETH→XETHZUSD, XRP→XXRPZUSD, LTC→XLTCZUSD,
+DOGE→XDGUSD</li>
+<li>Sin cobertura: FTM, MKR, ROSE, THETA → saltan a CoinGecko</li>
 </ul>
 <h3 id="fuente-4-coingecko">Fuente 4 — CoinGecko</h3>
 <ul>
-<li><strong>URL:</strong>
-<code>https://api.coingecko.com/api/v3/simple/price</code></li>
-<li><strong>API key:</strong> NO requiere</li>
-<li><strong>Límite:</strong> ~10.000 calls/mes (plan gratuito)</li>
-<li><strong>Mapeo:</strong> Usa <code>COINGECKO_IDS</code> (L85-102
-server.js)</li>
-<li><strong>Estado:</strong> Fallback 3, activa solo si CC y Kraken
-fallan</li>
+<li>URL: <code>api.coingecko.com/api/v3/simple/price</code></li>
+<li>API key: NO</li>
+<li>Límite: ~10k calls/mes</li>
 </ul>
 <h3 id="fuente-5-yahoo-finance">Fuente 5 — Yahoo Finance</h3>
 <ul>
-<li><strong>URL:</strong>
-<code>https://query1.finance.yahoo.com/v8/finance/chart/</code></li>
-<li><strong>Proxy:</strong> Via Railway
-<code>GET /api/yahoo?symbol=X</code></li>
-<li><strong>API key:</strong> NO requiere</li>
-<li><strong>Uso:</strong> Stocks, ETFs, Bonos, Commodities, Metales,
-Divisas, Materias Primas + Motor IA todos los activos</li>
+<li>URL: <code>query1.finance.yahoo.com/v8/finance/chart/</code></li>
+<li>Proxy: Railway <code>GET /api/yahoo</code></li>
+<li>Directo: desde celular/browser (fallback Build 15)</li>
+<li>API key: NO</li>
 </ul>
 <h3 id="fuente-6-alpha-vantage">Fuente 6 — Alpha Vantage</h3>
 <ul>
-<li><strong>URL:</strong>
-<code>https://www.alphavantage.co/query</code></li>
-<li><strong>API key:</strong> Sí, env var <code>ALPHA_KEY</code> en
-Railway</li>
-<li><strong>Límite:</strong> 25 calls/min</li>
-<li><strong>Uso:</strong> Precios acciones en <code>checkAlertas</code>
-(backend)</li>
+<li>URL: <code>alphavantage.co/query</code></li>
+<li>API key: Sí (<code>ALPHA_KEY</code>)</li>
+<li>Límite: 25 calls/min</li>
 </ul>
-<h3 id="cache-de-emergencia">Cache de emergencia</h3>
+<h3 id="cache-emergencia">Cache emergencia</h3>
 <ul>
-<li><strong>TTL:</strong> 30 minutos
-(<code>CRYPTO_CACHE_EMERGENCY_TTL = 1800000</code>)</li>
-<li><strong>Cuándo:</strong> Solo si las 4 fuentes anteriores
-fallan</li>
-<li><strong>Marca:</strong>
-<code>source: 'cache', stale: true</code></li>
+<li>TTL: 30 min</li>
+<li>Solo si todas las fuentes fallan</li>
 </ul>
 <hr />
-<h2 id="cadena-pwa">CADENA PWA</h2>
-<pre><code>Binance directo (browser del usuario)
-  ↓ si falla (catch)
-fetch /api/crypto-prices (Railway backend)
-  ↓ responde con datos de CC/Kraken/CoinGecko/Cache
-Actualiza DOM + window._pcPrices</code></pre>
-<p>Archivo: aurex-features.js, commit e314c13</p>
-<h2 id="cadena-nativa">CADENA NATIVA</h2>
-<pre><code>Binance directo (celular del usuario)
-  ↓ si falla (catch)
-fetch /api/crypto-prices (Railway backend)
-  ↓ responde con datos de CC/Kraken/CoinGecko/Cache
-setPrices() con los precios del backend</code></pre>
-<p>Archivos (commit 7874f0f, branch dev): - IAScreen.js L136-159 -
-MercadosScreen.js L359-370 - PortfolioScreen.js L125-133 (solo pide
-missing)</p>
+<h2 id="logos">LOGOS</h2>
+<h3 id="cryptostable">Crypto/Stable</h3>
+<table>
+<thead>
+<tr>
+<th>Prioridad</th>
+<th>Fuente</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>assets.js</td>
+<td>URLs CoinGecko images (estáticas)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>CoinCap</td>
+<td><code>assets.coincap.io/assets/icons/</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Círculo</td>
+<td>Iniciales + color</td>
+</tr>
+</tbody>
+</table>
+<h3 id="accionesetfs">Acciones/ETFs</h3>
+<table>
+<thead>
+<tr>
+<th>Prioridad</th>
+<th>Fuente</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>assets.js</td>
+<td>URLs FMP/Clearbit (estáticas)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>FMP</td>
+<td><code>financialmodelingprep.com/image-stock/</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Clearbit</td>
+<td><code>logo.clearbit.com/</code> (30 dominios mapeados)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Círculo</td>
+<td>Iniciales + color</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="commoditiesfuturosbonosdivisas">Commodities/Futuros/Bonos/Divisas</h3>
+<table>
+<colgroup>
+<col style="width: 57%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr>
+<th>Prioridad</th>
+<th>Fuente</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Círculo con símbolo y color específico (AssetLogo.js
+SYMBOL_COLORS)</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 id="endpoint-apicrypto-prices">ENDPOINT
 <code>/api/crypto-prices</code></h2>
 <ul>
-<li><strong>URL:</strong>
+<li>URL:
 <code>https://aurex-app-production.up.railway.app/api/crypto-prices</code></li>
-<li><strong>Método:</strong> GET</li>
-<li><strong>Respuesta:</strong>
-<code>{ ok: true, source: "cryptocompare", count: 53, prices: { BTC: { price: 75870, source: "cryptocompare", ts: 1713... }, ... } }</code></li>
-<li><strong>Actualización:</strong> Cada 2 min via
-<code>refreshCryptoCache</code> (cron <code>*/2 * * * *</code>) + al
-boot (5s)</li>
-<li><strong>Sirve a:</strong> PWA y Nativa como fallback cuando Binance
-falla desde el dispositivo</li>
+<li>Respuesta:
+<code>{ ok: true, source: "cryptocompare", count: 53, prices: {...} }</code></li>
+<li>Actualización: cada 2 min via <code>refreshCryptoCache</code></li>
+<li>Sirve a: PWA (catch Binance) + Nativa (catch Binance en 3
+screens)</li>
 </ul>
 <hr />
-<h2 id="estado-actual-21042026">ESTADO ACTUAL (21/04/2026)</h2>
+<h2 id="asyncstorage-cache-nativa-build-15">ASYNCSTORAGE CACHE (Nativa
+Build 15)</h2>
 <table>
 <colgroup>
-<col style="width: 14%" />
-<col style="width: 28%" />
-<col style="width: 26%" />
-<col style="width: 30%" />
+<col style="width: 13%" />
+<col style="width: 16%" />
+<col style="width: 25%" />
+<col style="width: 44%" />
 </colgroup>
 <thead>
 <tr>
-<th>Fuente</th>
+<th>Key</th>
+<th>Dato</th>
+<th>Escribe</th>
+<th>Lee (fallback)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>aurex_ia_cache</td>
+<td>signals + prices + ts</td>
+<td>IAScreen éxito</td>
+<td>IAScreen fallo</td>
+</tr>
+<tr>
+<td>aurex_pulse_cache</td>
+<td>pulse data + ts</td>
+<td>MercadosScreen éxito</td>
+<td>MercadosScreen fallo</td>
+</tr>
+<tr>
+<td>aurex_ia_signals_map</td>
+<td>{ simbolo: signal }</td>
+<td>MercadosScreen éxito</td>
+<td>MercadosScreen fallo</td>
+</tr>
+<tr>
+<td>aurex_wl_ia_cache</td>
+<td>{ simbolo: signal }</td>
+<td>WatchlistScreen éxito</td>
+<td>WatchlistScreen fallo</td>
+</tr>
+<tr>
+<td>aurex_port_ia_cache</td>
+<td>{ simbolo: signal }</td>
+<td>PortfolioScreen éxito</td>
+<td>PortfolioScreen fallo</td>
+</tr>
+<tr>
+<td>aurex_port_data</td>
+<td>[ portfolio items ]</td>
+<td>PortfolioScreen éxito</td>
+<td>PortfolioScreen fallo</td>
+</tr>
+<tr>
+<td>aurex_wl_data</td>
+<td>{ lists, items }</td>
+<td>WatchlistScreen éxito</td>
+<td>WatchlistScreen fallo</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="consumo-estimado-cryptocompare-binance-caído-en-railway">CONSUMO
+ESTIMADO CRYPTOCOMPARE (Binance caído en Railway)</h2>
+<table>
+<thead>
+<tr>
+<th>Origen</th>
+<th>Frecuencia</th>
+<th>Calls/mes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>refreshCryptoCache</td>
+<td>cada 2 min</td>
+<td>21.600</td>
+</tr>
+<tr>
+<td>checkAlertas</td>
+<td>cada 30 seg</td>
+<td>86.400</td>
+</tr>
+<tr>
+<td>calcularPulse fallback</td>
+<td>cada 5 min</td>
+<td>8.640</td>
+</tr>
+<tr>
+<td>Motor IA fallback</td>
+<td>variable</td>
+<td>~5.000-15.000</td>
+</tr>
+<tr>
+<td><strong>Total estimado</strong></td>
+<td>—</td>
+<td><strong>~121.000-131.000</strong></td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Supera 100k/mes. Monitorear con contador + alertas 80k/95k.</p>
+<hr />
+<h2 id="estado-actual-21042026">ESTADO ACTUAL (21/04/2026)</h2>
+<table>
+<thead>
+<tr>
+<th>Servicio</th>
 <th>Backend Railway</th>
-<th>PWA (browser)</th>
 <th>Nativa (celular)</th>
+<th>PWA (browser)</th>
 </tr>
 </thead>
 <tbody>
@@ -352,7 +493,7 @@ falla desde el dispositivo</li>
 <tr>
 <td>Yahoo</td>
 <td>✅ Funciona</td>
-<td>✅ Via proxy</td>
+<td>✅ Directo + proxy</td>
 <td>✅ Via proxy</td>
 </tr>
 <tr>
@@ -362,53 +503,30 @@ falla desde el dispositivo</li>
 <td>—</td>
 </tr>
 <tr>
+<td>Evolution WA</td>
+<td>✅ Connected</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Supabase</td>
+<td>✅ Online</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
 <td>/api/crypto-prices</td>
 <td>✅ count:53</td>
 <td>✅ Fallback</td>
-<td>✅ Fallback (build 14)</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="consumo-estimado-cryptocompare-binance-caído">CONSUMO ESTIMADO
-CRYPTOCOMPARE (Binance caído)</h2>
-<table>
-<thead>
-<tr>
-<th>Origen</th>
-<th>Frecuencia</th>
-<th>Calls/día</th>
-<th>Calls/mes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>refreshCryptoCache</td>
-<td>cada 2 min</td>
-<td>720</td>
-<td>21.600</td>
+<td>✅ Fallback</td>
 </tr>
 <tr>
-<td>checkAlertas (si hay alertas)</td>
-<td>cada 30 seg</td>
-<td>2.880</td>
-<td>86.400</td>
-</tr>
-<tr>
-<td>Motor IA (fallback Yahoo)</td>
-<td>variable</td>
-<td>~50-500</td>
-<td>~1.500-15.000</td>
-</tr>
-<tr>
-<td><strong>Total estimado</strong></td>
+<td>AsyncStorage cache</td>
 <td>—</td>
-<td>~3.650-4.100</td>
-<td><strong>~109.500-123.000</strong></td>
+<td>✅ 7 keys</td>
+<td>—</td>
 </tr>
 </tbody>
 </table>
-<p>⚠️ Puede superar el límite de 100k/mes. Monitorear con el contador +
-alertas.</p>
 </body>
 </html>

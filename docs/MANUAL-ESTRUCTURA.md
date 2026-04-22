@@ -1,5 +1,5 @@
 # MANUAL DE ESTRUCTURA — AUREX
-v1.0 — 21 abril 2026
+v2.0 — 21 abril 2026
 
 ---
 
@@ -7,42 +7,65 @@ v1.0 — 21 abril 2026
 
 | Repo | URL | Branch | Safety Point | Deploy |
 |------|-----|--------|-------------|--------|
-| aurex-backend | github.com/fmoscon-creator/aurex-backend | main | `03a6892` | Railway auto-deploy |
+| aurex-backend | github.com/fmoscon-creator/aurex-backend | main | `c27217d` | Railway auto-deploy |
 | aurex-app (PWA) | github.com/fmoscon-creator/aurex-app | main | `e314c13` | GitHub Pages auto |
-| AurexApp (Nativa) | github.com/fmoscon-creator/AurexApp | dev | `7874f0f` | Xcode → TestFlight |
+| AurexApp (Nativa) | github.com/fmoscon-creator/AurexApp | dev | `1359dbd` | Xcode → TestFlight |
 
-**Build Nativa:** Build 12 en TestFlight (10/04/2026, NO incluye fallback). Build 14 pendiente con fallback.
+**Builds Nativa:**
+- Build 9: en App Store Review (enviada 9/abril, pendiente)
+- Build 14: en TestFlight (fallback crypto `/api/crypto-prices`)
+- Build 15: en proceso (todos los fallbacks + cache AsyncStorage + Clearbit logos)
 
 ---
 
-## BACKEND — server.js (1477+ líneas)
+## NATIVA — FALLBACKS IMPLEMENTADOS (Build 15)
+
+| # | Qué protege | Fallback | Commit | Archivos |
+|---|-------------|----------|--------|----------|
+| 1 | Precios crypto (53 activos) | Backend `/api/crypto-prices` | `7874f0f` | IAScreen, MercadosScreen, PortfolioScreen |
+| 2 | Precios stocks/ETFs/bonos/commodities/metales/divisas (297 activos) | Yahoo directo desde celular | `a4c2675` | MercadosScreen (2), WatchlistScreen (2), PortfolioScreen (2) |
+| 3 | Señales IA + Pulse | AsyncStorage cache | `b4cb34e` | IAScreen, MercadosScreen (Pulse + IA signals) |
+| 4 | Portfolio + Watchlist datos | AsyncStorage cache | `30952f2` | PortfolioScreen, WatchlistScreen |
+| 5 | Logos acciones/ETFs | Clearbit (30 dominios) | `a1d1100` | AssetLogo.js |
+
+### Keys AsyncStorage (7 total)
+
+| Key | Qué guarda | Screen |
+|-----|-----------|--------|
+| aurex_ia_cache | { signals, prices, ts } | IAScreen |
+| aurex_pulse_cache | { data, ts } | MercadosScreen |
+| aurex_ia_signals_map | { simbolo: signal } | MercadosScreen |
+| aurex_wl_ia_cache | { simbolo: signal } | WatchlistScreen |
+| aurex_port_ia_cache | { simbolo: signal } | PortfolioScreen |
+| aurex_port_data | [ portfolio items ] | PortfolioScreen |
+| aurex_wl_data | { lists, items } | WatchlistScreen |
+
+---
+
+## BACKEND — server.js (~1490 líneas)
 
 ### Funciones principales
 
-| Función | Línea aprox | Cron | Qué hace |
-|---------|-------------|------|----------|
-| `fetchCryptoPriceBatch(symbols)` | L153 | — | Cadena: Binance→CC→Kraken→CoinGecko→Cache. Escribe en `cryptoCache` |
-| `refreshCryptoCache()` | L351-357 | `*/2 * * * *` + boot 5s | Llama fetchCryptoPriceBatch con 53 crypto/stable |
-| `checkAlertas()` | L305 | `*/30 * * * * *` | Chequea alertas de usuario, usa fetchCryptoPriceBatch para crypto |
-| `calcularSenalesIA()` | ~L700 | `*/5 * * * *` | Motor IA 350 activos. Yahoo → CC fallback para crypto |
-| `calcularPulse()` | ~L810 | `*/5 * * * *` | AUREX Pulse. Binance (BTC/ETH) + Yahoo (resto) |
-| `healthCheck()` | ~L680 | `*/5 * * * *` | Monitorea Evolution, Supabase, Binance |
-| `dailyHealthReport()` | ~L1200 | `0 11 * * *` (08:00 AR) | Reporte diario WhatsApp + Supabase |
-| `monthlyHealthReport()` | ~L1292 | Último día hábil | Reporte mensual |
-| `_buildAndSendMonthlyReport()` | ~L1330 | — | Construye y envía el mensual |
-| `restoreHealthState()` | ~L900 | boot | Restaura flags de health desde Supabase |
-| `_ccLoadCounter()` | L112 | boot 3s | Lee contador CC de Supabase |
-| `_ccIncrement(n)` | L129 | — | Incrementa contador, persiste cada 50, alertas 80k/95k |
-| `_fetchCryptoCompareIA(sym)` | ~L595 | — | Fallback CC para motor IA (2 calls: precio + historial) |
-| `_fetchYahooIA(sym)` | ~L615 | — | Yahoo para motor IA |
-| `_fetchBinanceIA(sym)` | ~L580 | — | Binance para motor IA |
+| Función | Cron | Qué hace |
+|---------|------|----------|
+| `fetchCryptoPriceBatch(symbols)` | — | Cadena: Binance→CC→Kraken→CoinGecko→Cache |
+| `refreshCryptoCache()` | `*/2 * * * *` + boot 5s | Llena cryptoCache con 53 crypto/stable |
+| `checkAlertas()` | `*/30 * * * * *` | Alertas de usuario, usa fetchCryptoPriceBatch |
+| `calcularSenalesIA()` | `*/5 * * * *` | Motor IA 350 activos. Yahoo → CC fallback |
+| `calcularPulse()` | `*/5 * * * *` | Pulse. Binance → CC fallback para BTC/ETH |
+| `healthCheck()` | `*/5 * * * *` | Monitorea Evolution, Supabase, Binance |
+| `dailyHealthReport()` | `0 11 * * *` (08:00 AR) | Reporte + CC counter |
+| `monthlyHealthReport()` | Último día hábil | Reporte mensual (incluye Kraken) |
+| `restoreHealthState()` | boot | Restaura flags health |
+| `_ccLoadCounter()` | boot 3s | Lee contador CC de Supabase |
+| `_ccIncrement(n)` | — | Incrementa + persiste + alertas 80k/95k |
 
 ### Endpoint `/api/crypto-prices`
 
 - URL: `GET https://aurex-app-production.up.railway.app/api/crypto-prices`
-- Respuesta: `{ ok: true, source: "cryptocompare", count: 53, prices: { BTC: {price, source, ts}, ... } }`
-- Se llena via `refreshCryptoCache` cada 2 min
-- Sirve como fallback para PWA y Nativa cuando Binance falla
+- Respuesta: `{ ok: true, source: "cryptocompare", count: 53, prices: {...} }`
+- Actualización: cada 2 min via refreshCryptoCache
+- Sirve como fallback para PWA y Nativa
 
 ---
 
@@ -52,14 +75,14 @@ v1.0 — 21 abril 2026
 |-------|-----|
 | alertas | Alertas de precio de usuario |
 | alertas_historial | Historial de alertas disparadas |
-| health_events | Incidentes de salud (BN-001, BN-002, etc.) |
-| daily_reports | Reportes diarios persistidos |
-| monthly_reports | Reportes mensuales persistidos |
-| system_config | Configuración sistema (cc_monthly_calls) — creada 21/04/2026 |
+| health_events | Incidentes de salud |
+| daily_reports | Reportes diarios |
+| monthly_reports | Reportes mensuales |
+| system_config | cc_monthly_calls (creada 21/04/2026) |
 | usuarios | Datos de usuarios |
 | portfolio | Portfolio de usuarios |
 | watchlists | Listas watchlist |
-| watchlist_items | Items dentro de watchlists |
+| watchlist_items | Items de watchlists |
 
 ---
 
@@ -67,42 +90,53 @@ v1.0 — 21 abril 2026
 
 | Variable | Uso |
 |----------|-----|
-| CRYPTOCOMPARE_KEY | API key CryptoCompare (configurada 21/04/2026) |
-| ADMIN_WHATSAPP | Número admin para alertas WhatsApp |
-| EVOLUTION_API_URL | URL de Evolution API |
-| EVOLUTION_API_KEY | Key de Evolution API |
-| EVOLUTION_INSTANCE | Nombre instancia Evolution (default: aurex) |
-| SUPABASE_URL | URL de Supabase |
-| SUPABASE_SERVICE_KEY | Service key de Supabase |
-| TELEGRAM_BOT_TOKEN | Token bot Telegram |
-| TWILIO_ACCOUNT_SID | SID cuenta Twilio |
-| TWILIO_AUTH_TOKEN | Token Twilio |
-| TWILIO_WHATSAPP_FROM | Número WhatsApp Twilio |
-| ALPHA_KEY | API key Alpha Vantage |
-| ANTHROPIC_API_KEY | API key Claude (análisis alertas) |
+| CRYPTOCOMPARE_KEY | API key CryptoCompare (21/04/2026) |
+| ADMIN_WHATSAPP | Número admin alertas |
+| EVOLUTION_API_URL | URL Evolution API |
+| EVOLUTION_API_KEY | Key Evolution |
+| EVOLUTION_INSTANCE | Instancia (aurex) |
+| SUPABASE_URL | URL Supabase |
+| SUPABASE_SERVICE_KEY | Service key |
+| TELEGRAM_BOT_TOKEN | Bot Telegram |
+| TWILIO_ACCOUNT_SID | Twilio SID |
+| TWILIO_AUTH_TOKEN | Twilio token |
+| TWILIO_WHATSAPP_FROM | WhatsApp Twilio |
+| ALPHA_KEY | Alpha Vantage key |
+| ANTHROPIC_API_KEY | Claude (análisis alertas) |
 
 ---
 
-## FALLBACK PWA (aurex-features.js, commit e314c13)
+## PWA — FALLBACK (commit e314c13)
 
-En el catch vacío de fetchBinance (~L394):
-- Fetch a `/api/crypto-prices`
-- Actualiza DOM `p-{sym}` y `c-{sym}` con `_fmt`
-- Persiste en `window._pcPrices[sym]`
-
-## FALLBACK NATIVA (commit 7874f0f, branch dev)
-
-| Screen | Archivo | Lógica |
-|--------|---------|--------|
-| IAScreen | L136-159 | catch → fetch `/api/crypto-prices` → `setPrices(d.prices)` |
-| MercadosScreen | L359-370 | catch → fetch `/api/crypto-prices` → `setPrices` |
-| PortfolioScreen | L125-133 | Detecta `missing`, solo pide backend si hay faltantes, llena `allPrices[s]`, catch con log |
+Catch de fetchBinance → fetch `/api/crypto-prices` → actualiza DOM + `_pcPrices`
 
 ---
 
-## SAFETY POINTS
+## CADENAS COMPLETAS POR DATO
 
-| Fecha | PWA | Nativa | Backend |
-|-------|-----|--------|---------|
-| 21/04/2026 | `e314c13` (main) | `7874f0f` (dev) | `03a6892` (main) |
-| 15/04/2026 | `5505c41` (main) | `72ac92b` (dev) | — |
+### Precios crypto (nativa)
+Binance directo (celular) → si falla → Backend `/api/crypto-prices` (CC→Kraken→CoinGecko→Cache)
+
+### Precios crypto (PWA)
+Binance directo (browser) → si falla → Backend `/api/crypto-prices`
+
+### Precios stocks/ETFs/bonos/etc (nativa)
+Yahoo via Railway proxy → si falla → Yahoo directo desde celular → si falla → sin precio
+
+### Señales IA (nativa)
+Backend `/api/ia-signals` → si falla → AsyncStorage cache → si falla → cálculo local
+
+### Pulse (nativa)
+Backend `/api/pulse` → si falla → AsyncStorage cache → si falla → cálculo local
+
+### Portfolio datos (nativa)
+Backend `/api/portfolio` → si falla → AsyncStorage cache → si falla → vacío
+
+### Watchlist datos (nativa)
+Backend `/api/watchlists` → si falla → AsyncStorage cache → si falla → vacío
+
+### Logos crypto (nativa)
+assets.js URL → CoinCap → si falla → círculo con iniciales
+
+### Logos acciones (nativa)
+assets.js URL → FMP → si falla → Clearbit (30 dominios) → si falla → círculo con iniciales
