@@ -1645,7 +1645,7 @@ async function buildDailyStatus(format) {
     t += '\n💱 Crypto source: ' + crypto.lastCryptoSource + '\n\n';
     t += '📌 Pendientes actualizados:\nhttps://github.com/fmoscon-creator/aurex-app/blob/main/CONTEXTO.md\n\n';
     t += '🚀 Arrancar chat con contexto:\nhttps://raw.githubusercontent.com/fmoscon-creator/aurex-app/main/INICIO_AUREX.md\n\n';
-    t += '🔑 RESEARCH_API_KEY (pegar a Escritorio en chats nuevos como header X-API-Key):\n' + (process.env.RESEARCH_API_KEY || 'no seteada') + '\n\n';
+    t += '🔑 RESEARCH_API_KEY (pegar a Escritorio en chats nuevos como header X-API-Key):\n<code>' + (process.env.RESEARCH_API_KEY || 'no seteada') + '</code>\n\n';
     t += 'aurex.live';
     return { content: t, generatedAt };
   }
@@ -1691,7 +1691,7 @@ async function dailyProjectStatusReport() {
       console.error('[DAILY_STATUS] ADMIN_TELEGRAM_CHAT_ID no seteada');
       return;
     }
-    await bot.sendMessage(chatId, result.content);
+    await bot.sendMessage(chatId, result.content, { parse_mode: 'HTML' });
   } catch (e) {
     console.error('[DAILY_STATUS] Error en dailyProjectStatusReport:', e.message);
     try {
