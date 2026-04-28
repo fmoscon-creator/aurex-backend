@@ -1479,11 +1479,241 @@ async function restoreHealthState() {
   }
 }
 
+// ============================================================
+// DAILY_STATUS — endpoint, cron 20:00 AR, envio Telegram
+// CACHE EN MEMORIA — se reinicia con cada redeploy de Railway.
+// Tras redeploy los SHAs tardan hasta 15 min en actualizarse.
+// ============================================================
+
+const _shaCache = {};
+const SHA_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutos
+
+async function fetchLatestSha(repoFullName) {
+  const cached = _shaCache[repoFullName];
+  if (cached && Date.now() - cached.cachedAt < SHA_CACHE_TTL_MS) {
+    return Object.assign({}, cached, { fromCache: true });
+  }
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(function(){ ctrl.abort(); }, 5000);
+    const r = await fetch('https://api.github.com/repos/' + repoFullName + '/commits/main', { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!r.ok) throw new Error('GitHub API ' + r.status);
+    const d = await r.json();
+    const result = {
+      sha: (d.sha || '').substring(0, 7),
+      message: ((d.commit && d.commit.message) || '').split('\n')[0],
+      date: d.commit && d.commit.author && d.commit.author.date,
+      cachedAt: Date.now(),
+      stale: false,
+      fromCache: false
+    };
+    _shaCache[repoFullName] = result;
+    return result;
+  } catch (e) {
+    if (cached) {
+      return Object.assign({}, cached, { stale: true, fromCache: true, error: e.message });
+    }
+    return { sha: 'no-disponible', message: 'no se pudo obtener', error: e.message, stale: true, cachedAt: Date.now() };
+  }
+}
+
+function formatTimeSince(submitDateStr, approvalDateStr) {
+  if (!submitDateStr) return 'sin fecha de submit';
+  if (approvalDateStr) {
+    const d = new Date(approvalDateStr);
+    return 'APROBADO el ' + d.toLocaleDateString('es-AR', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      timeZone: 'America/Argentina/Buenos_Aires'
+    });
+  }
+  const submit = new Date(submitDateStr);
+  const now = new Date();
+  const diffMs = now - submit;
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  return days + 'd ' + hours + 'h esperando aprobacion';
+}
+
+function buildStoresSection() {
+  return {
+    apple: {
+      name: 'AUREX AI',
+      build: process.env.APPLE_BUILD_NUMBER || '?',
+      timeSince: formatTimeSince(process.env.APPLE_SUBMIT_DATE, process.env.APPLE_APPROVAL_DATE),
+      submit: process.env.APPLE_SUBMIT_DATE
+    },
+    google: {
+      name: 'AUREX',
+      build: process.env.GOOGLE_BUILD_NUMBER || '?',
+      timeSince: formatTimeSince(process.env.GOOGLE_SUBMIT_DATE, process.env.GOOGLE_APPROVAL_DATE),
+      submit: process.env.GOOGLE_SUBMIT_DATE
+    },
+    source: 'env vars Railway'
+  };
+}
+
+async function buildReposSection() {
+  const r = await Promise.all([
+    fetchLatestSha('fmoscon-creator/aurex-app'),
+    fetchLatestSha('fmoscon-creator/aurex-backend')
+  ]);
+  const pwa = r[0], backend = r[1];
+  function srcLabel(x) {
+    if (x.fromCache) {
+      const ageMin = Math.floor((Date.now() - x.cachedAt) / 60000);
+      return 'GitHub API (cache, edad ~' + ageMin + ' min)' + (x.stale ? ' STALE' : '');
+    }
+    return 'GitHub API en vivo';
+  }
+  return {
+    pwa: { sha: pwa.sha, message: pwa.message, stale: pwa.stale, source: srcLabel(pwa) },
+    backend: { sha: backend.sha, message: backend.message, stale: backend.stale, source: srcLabel(backend) },
+    nativa: {
+      sha: process.env.AUREXAPP_LATEST_SHA || 'no-seteada',
+      message: process.env.AUREXAPP_LATEST_SHA_DESC || '',
+      source: 'env var AUREXAPP_LATEST_SHA (manual)'
+    }
+  };
+}
+
+async function buildIncidentsSection() {
+  try {
+    const q = await supabase
+      .from('health_events')
+      .select('alert_id, type, status, triggered_at, mitigated_at, mitigation_source')
+      .eq('status', 'active')
+      .order('triggered_at');
+    if (q.error) throw q.error;
+    return {
+      activos: (q.data || []).map(function(e) {
+        return {
+          id: e.alert_id,
+          type: e.type,
+          triggered: e.triggered_at,
+          mitigated: !!e.mitigated_at,
+          mitigation_source: e.mitigation_source || null
+        };
+      }),
+      source: 'Supabase health_events',
+      ok: true
+    };
+  } catch (e) {
+    return { activos: [], source: 'Supabase health_events', ok: false, error: 'Temporalmente no disponible' };
+  }
+}
+
+function buildCryptoSection() {
+  return {
+    lastCryptoSource: global._lastCryptoSource || 'unknown',
+    source: 'global._lastCryptoSource (memoria del proceso)'
+  };
+}
+
+function buildPendingSection() {
+  return {
+    nota: 'Para pendientes actualizados ver: https://github.com/fmoscon-creator/aurex-app/blob/main/CONTEXTO.md',
+    source: 'link al CONTEXTO.md'
+  };
+}
+
+async function buildDailyStatus(format) {
+  format = format || 'full';
+  const stores = buildStoresSection();
+  const r = await Promise.all([buildReposSection(), buildIncidentsSection()]);
+  const repos = r[0], incidents = r[1];
+  const crypto = buildCryptoSection();
+  const pending = buildPendingSection();
+  const generatedAt = new Date().toISOString();
+
+  if (format === 'telegram') {
+    let t = '';
+    t += '📋 AUREX Daily Status\n';
+    t += new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) + '\n';
+    t += '━━━━━━━━━━━━━━━━━━\n\n';
+    t += '🍎 APPLE: ' + stores.apple.name + ' Build ' + stores.apple.build + '\n   ' + stores.apple.timeSince + '\n\n';
+    t += '🤖 GOOGLE: ' + stores.google.name + ' Build ' + stores.google.build + '\n   ' + stores.google.timeSince + '\n\n';
+    t += '📦 REPOS\n';
+    t += '   PWA: ' + repos.pwa.sha + (repos.pwa.stale ? ' (stale)' : '') + '\n';
+    t += '   Nativa: ' + repos.nativa.sha + '\n';
+    t += '   Backend: ' + repos.backend.sha + (repos.backend.stale ? ' (stale)' : '') + '\n\n';
+    t += '⚠️ INCIDENTES ACTIVOS\n';
+    if (incidents.ok) {
+      if (incidents.activos.length === 0) t += '   ✅ Ninguno\n';
+      else for (const a of incidents.activos) t += '   ' + a.id + ' ' + a.type + (a.mitigated ? ' (MITIGATED via ' + a.mitigation_source + ')' : '') + '\n';
+    } else t += '   ' + incidents.error + '\n';
+    t += '\n💱 Crypto source: ' + crypto.lastCryptoSource + '\n\n';
+    t += '📌 Pendientes: ver CONTEXTO.md en GitHub\n';
+    t += 'aurex.live';
+    return { content: t, generatedAt };
+  }
+
+  let t = '# AUREX DAILY STATUS\n';
+  t += 'Generated at: ' + generatedAt + '\n\n';
+  t += '## STORES\n';
+  t += '- Apple: ' + stores.apple.name + ' Build ' + stores.apple.build + ' — ' + stores.apple.timeSince + '\n';
+  t += '- Google: ' + stores.google.name + ' Build ' + stores.google.build + ' — ' + stores.google.timeSince + '\n';
+  t += '- Source: ' + stores.source + '\n\n';
+  t += '## REPOS\n';
+  t += '- PWA aurex-app: ' + repos.pwa.sha + ' — ' + repos.pwa.message + '\n  Source: ' + repos.pwa.source + '\n';
+  t += '- Nativa AurexApp: ' + repos.nativa.sha + ' — ' + repos.nativa.message + '\n  Source: ' + repos.nativa.source + '\n';
+  t += '- Backend aurex-backend: ' + repos.backend.sha + ' — ' + repos.backend.message + '\n  Source: ' + repos.backend.source + '\n\n';
+  t += '## INCIDENTES ACTIVOS\n';
+  if (incidents.ok) {
+    if (incidents.activos.length === 0) t += '- Ninguno\n';
+    else for (const a of incidents.activos) t += '- ' + a.id + ' | type: ' + a.type + ' | triggered: ' + a.triggered + (a.mitigated ? ' | MITIGATED via ' + a.mitigation_source : '') + '\n';
+  } else t += '- ' + incidents.error + '\n';
+  t += 'Source: ' + incidents.source + '\n\n';
+  t += '## CRYPTO\n- lastCryptoSource: ' + crypto.lastCryptoSource + '\n- Source: ' + crypto.source + '\n\n';
+  t += '## PENDIENTES\n- ' + pending.nota + '\n- Source: ' + pending.source + '\n\n';
+  t += 'aurex.live';
+  return { content: t, generatedAt };
+}
+
+app.get('/api/daily-status', async (req, res) => {
+  try {
+    const format = req.query.format === 'telegram' ? 'telegram' : 'full';
+    const result = await buildDailyStatus(format);
+    res.set('Content-Type', 'text/plain; charset=utf-8');
+    res.send(result.content + '\n\n[generated_at: ' + result.generatedAt + ']');
+  } catch (e) {
+    res.status(200).send('AUREX DAILY STATUS — error al generar: ' + e.message + '\n[generated_at: ' + new Date().toISOString() + ']');
+  }
+});
+
+async function dailyProjectStatusReport() {
+  try {
+    const result = await buildDailyStatus('telegram');
+    const chatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+    if (!chatId) {
+      console.error('[DAILY_STATUS] ADMIN_TELEGRAM_CHAT_ID no seteada');
+      return;
+    }
+    await bot.sendMessage(chatId, result.content);
+  } catch (e) {
+    console.error('[DAILY_STATUS] Error en dailyProjectStatusReport:', e.message);
+    try {
+      const chatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+      if (chatId) await bot.sendMessage(chatId, '⚠️ DAILY_STATUS reporte 20:00 fallo: ' + e.message);
+    } catch (e2) { /* silencioso si todo falla */ }
+  }
+}
+
+app.post('/api/daily-status/test', async (req, res) => {
+  try {
+    await dailyProjectStatusReport();
+    res.json({ ok: true, message: 'Reporte enviado a Telegram' });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 restoreHealthState().then(() => {
   cron.schedule('*/5 * * * *', healthCheck);
   cron.schedule('0 11 * * *', dailyHealthReport); // 11:00 UTC = 08:00 Argentina
   cron.schedule('0 21 28-31 * *', monthlyHealthReport); // 21:00 UTC = 18:00 AR
-  console.log('[HEALTH] Cron: check 5min + daily report 08:00 AR');
+  cron.schedule('0 23 * * *', dailyProjectStatusReport); // 23:00 UTC = 20:00 AR
+  console.log('[HEALTH] Cron: check 5min + daily report 08:00 AR + project status 20:00 AR');
 });
 
 const PORT = process.env.PORT || 3000;
