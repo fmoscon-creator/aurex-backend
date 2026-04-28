@@ -1643,8 +1643,6 @@ async function buildDailyStatus(format) {
       else for (const a of incidents.activos) t += '   ' + a.id + ' ' + a.type + (a.mitigated ? ' (MITIGATED via ' + a.mitigation_source + ')' : '') + '\n';
     } else t += '   ' + incidents.error + '\n';
     t += '\n💱 Crypto source: ' + crypto.lastCryptoSource + '\n\n';
-    t += '📌 Pendientes actualizados:\nhttps://github.com/fmoscon-creator/aurex-app/blob/main/CONTEXTO.md\n\n';
-    t += '🚀 Arrancar chat con contexto:\nhttps://raw.githubusercontent.com/fmoscon-creator/aurex-app/main/INICIO_AUREX.md\n\n';
     t += 'https://aurex.live';
     return { content: t, generatedAt };
   }
@@ -1690,9 +1688,21 @@ async function dailyProjectStatusReport() {
       console.error('[DAILY_STATUS] ADMIN_TELEGRAM_CHAT_ID no seteada');
       return;
     }
+    // Mensaje 1: reporte principal (status, repos, incidentes, crypto)
     await bot.sendMessage(chatId, result.content, { parse_mode: 'HTML' });
-    // Segundo mensaje aislado con la API key dentro de <pre> para que
-    // Telegram muestre el botón "tap to copy" de la key sola.
+    // Mensaje 2: link CONTEXTO.md aislado para tap-to-copy
+    await bot.sendMessage(
+      chatId,
+      '📌 Pendientes actualizados (tocá para copiar):\n<pre>https://github.com/fmoscon-creator/aurex-app/blob/main/CONTEXTO.md</pre>',
+      { parse_mode: 'HTML' }
+    );
+    // Mensaje 3: link INICIO_AUREX.md aislado para tap-to-copy
+    await bot.sendMessage(
+      chatId,
+      '🚀 Arrancar chat con contexto (tocá para copiar):\n<pre>https://raw.githubusercontent.com/fmoscon-creator/aurex-app/main/INICIO_AUREX.md</pre>',
+      { parse_mode: 'HTML' }
+    );
+    // Mensaje 4: API key aislada para tap-to-copy
     const apiKey = process.env.RESEARCH_API_KEY;
     if (apiKey) {
       await bot.sendMessage(
