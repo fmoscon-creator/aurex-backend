@@ -1643,7 +1643,7 @@ async function buildDailyStatus(format) {
       else for (const a of incidents.activos) t += '   ' + a.id + ' ' + a.type + (a.mitigated ? ' (MITIGATED via ' + a.mitigation_source + ')' : '') + '\n';
     } else t += '   ' + incidents.error + '\n';
     t += '\n💱 Crypto source: ' + crypto.lastCryptoSource + '\n\n';
-    t += '📌 Pendientes: ver CONTEXTO.md en GitHub\n';
+    t += '📌 Pendientes actualizados:\nhttps://github.com/fmoscon-creator/aurex-app/blob/main/CONTEXTO.md\n\n';
     t += 'aurex.live';
     return { content: t, generatedAt };
   }
