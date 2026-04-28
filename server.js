@@ -1645,8 +1645,7 @@ async function buildDailyStatus(format) {
     t += '\n💱 Crypto source: ' + crypto.lastCryptoSource + '\n\n';
     t += '📌 Pendientes actualizados:\nhttps://github.com/fmoscon-creator/aurex-app/blob/main/CONTEXTO.md\n\n';
     t += '🚀 Arrancar chat con contexto:\nhttps://raw.githubusercontent.com/fmoscon-creator/aurex-app/main/INICIO_AUREX.md\n\n';
-    t += '🔑 RESEARCH_API_KEY (pegar a Escritorio en chats nuevos como header X-API-Key):\n<pre>' + (process.env.RESEARCH_API_KEY || 'no seteada') + '</pre>\n\n';
-    t += 'aurex.live';
+    t += 'https://aurex.live';
     return { content: t, generatedAt };
   }
 
@@ -1692,6 +1691,16 @@ async function dailyProjectStatusReport() {
       return;
     }
     await bot.sendMessage(chatId, result.content, { parse_mode: 'HTML' });
+    // Segundo mensaje aislado con la API key dentro de <pre> para que
+    // Telegram muestre el botón "tap to copy" de la key sola.
+    const apiKey = process.env.RESEARCH_API_KEY;
+    if (apiKey) {
+      await bot.sendMessage(
+        chatId,
+        '🔑 RESEARCH_API_KEY (tocá para copiar, pegar como header X-API-Key en chats nuevos de Escritorio):\n<pre>' + apiKey + '</pre>',
+        { parse_mode: 'HTML' }
+      );
+    }
   } catch (e) {
     console.error('[DAILY_STATUS] Error en dailyProjectStatusReport:', e.message);
     try {
