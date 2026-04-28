@@ -1709,6 +1709,142 @@ app.post('/api/daily-status/test', async (req, res) => {
   }
 });
 
+// ============================================================
+// ENDPOINT: POST /api/research/analysis
+// Recibe análisis estratégico de Escritorio y lo commitea
+// directamente al archivo RESEARCH_MKT.md en aurex-app via GitHub API.
+// Usa fetch (node-fetch v2 ya disponible) y Buffer nativo.
+// CERO dependencias nuevas.
+// ============================================================
+
+const RESEARCH_REPO_OWNER = 'fmoscon-creator';
+const RESEARCH_REPO_NAME = 'aurex-app';
+const RESEARCH_FILE_PATH = 'RESEARCH_MKT.md';
+const RESEARCH_BRANCH = 'main';
+
+function _replaceCompetitorAnalysis(content, competitor, analysis) {
+  const sections = content.split(/\n---\n/);
+  let found = false;
+
+  const updated = sections.map(function(section) {
+    const headerMatch = section.match(/^##\s+\d+\.\s+(.+?)\s*\n/m);
+    if (!headerMatch) return section;
+
+    const sectionName = headerMatch[1].trim().toLowerCase();
+    const target = competitor.trim().toLowerCase();
+    if (!sectionName.includes(target) && !target.includes(sectionName)) return section;
+
+    const subheaderRegex = /###\s+An[áa]lisis\s+estrat[ée]gico\s*\(Escritorio\)\s*\n/i;
+    const subMatch = section.match(subheaderRegex);
+    if (!subMatch) return section;
+
+    const subEnd = subMatch.index + subMatch[0].length;
+    found = true;
+    return section.substring(0, subEnd) + '\n' + analysis.trim() + '\n';
+  });
+
+  if (!found) {
+    throw new Error('No se encontró la sección del competidor "' + competitor + '" en RESEARCH_MKT.md (verificar que Code haya documentado al competidor primero)');
+  }
+
+  return updated.join('\n---\n');
+}
+
+async function _commitAnalysisToRepo(competitor, analysis) {
+  const pat = process.env.GITHUB_PAT_RESEARCH;
+  if (!pat) throw new Error('GITHUB_PAT_RESEARCH no seteado en Railway');
+
+  const apiBase = 'https://api.github.com/repos/' + RESEARCH_REPO_OWNER + '/' + RESEARCH_REPO_NAME + '/contents/' + RESEARCH_FILE_PATH;
+  const headers = {
+    'Authorization': 'token ' + pat,
+    'Accept': 'application/vnd.github+json',
+    'Content-Type': 'application/json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+
+  async function attempt() {
+    const getRes = await fetch(apiBase + '?ref=' + RESEARCH_BRANCH, { headers: headers });
+    if (getRes.status === 404) throw new Error('FILE_NOT_FOUND: RESEARCH_MKT.md no existe en el repo');
+    if (!getRes.ok) throw new Error('GitHub GET error ' + getRes.status);
+
+    const getData = await getRes.json();
+    const currentSha = getData.sha;
+    const currentContent = Buffer.from(getData.content, 'base64').toString('utf-8');
+
+    const newContent = _replaceCompetitorAnalysis(currentContent, competitor, analysis);
+    const newContentB64 = Buffer.from(newContent, 'utf-8').toString('base64');
+    const commitMessage = 'docs(research): análisis estratégico de ' + competitor + ' (Escritorio via API)';
+
+    const putRes = await fetch(apiBase, {
+      method: 'PUT',
+      headers: headers,
+      body: JSON.stringify({
+        message: commitMessage,
+        content: newContentB64,
+        sha: currentSha,
+        branch: RESEARCH_BRANCH
+      })
+    });
+
+    return putRes;
+  }
+
+  let putRes = await attempt();
+  if (putRes.status === 422) {
+    putRes = await attempt();
+  }
+
+  if (!putRes.ok) {
+    const errBody = await putRes.text();
+    throw new Error('GitHub PUT error ' + putRes.status + ': ' + errBody.substring(0, 200));
+  }
+
+  const putData = await putRes.json();
+  return {
+    sha: putData.commit.sha,
+    url: putData.commit.html_url,
+    message: putData.commit.message
+  };
+}
+
+app.post('/api/research/analysis', async function(req, res) {
+  try {
+    const apiKey = req.headers['x-api-key'] || req.headers['X-API-Key'];
+    if (!apiKey || apiKey !== process.env.RESEARCH_API_KEY) {
+      return res.status(401).json({ ok: false, error: 'API key inválida o ausente' });
+    }
+
+    const competitor = req.body && req.body.competitor;
+    const analysis = req.body && req.body.analysis;
+
+    if (!competitor || typeof competitor !== 'string' || competitor.trim().length < 3) {
+      return res.status(400).json({ ok: false, error: 'Campo "competitor" requerido (string >= 3 caracteres)' });
+    }
+    if (!analysis || typeof analysis !== 'string' || analysis.trim().length < 50) {
+      return res.status(400).json({ ok: false, error: 'Campo "analysis" requerido (string >= 50 caracteres)' });
+    }
+
+    const commit = await _commitAnalysisToRepo(competitor.trim(), analysis.trim());
+
+    return res.json({
+      ok: true,
+      sha: commit.sha.substring(0, 7),
+      sha_full: commit.sha,
+      url: commit.url,
+      competitor: competitor.trim(),
+      commit_message: commit.message
+    });
+
+  } catch (e) {
+    const msg = e.message || String(e);
+    if (msg.indexOf('FILE_NOT_FOUND') === 0) return res.status(404).json({ ok: false, error: msg });
+    if (msg.indexOf('No se encontró la sección') !== -1) return res.status(404).json({ ok: false, error: msg });
+    if (msg.indexOf('GITHUB_PAT_RESEARCH no seteado') !== -1) return res.status(500).json({ ok: false, error: 'Configuración del backend incompleta (falta env var)' });
+    console.error('[RESEARCH_ANALYSIS] Error:', msg);
+    return res.status(500).json({ ok: false, error: 'Error interno: ' + msg.substring(0, 200) });
+  }
+});
+
 restoreHealthState().then(() => {
   cron.schedule('*/5 * * * *', healthCheck);
   cron.schedule('0 11 * * *', dailyHealthReport); // 11:00 UTC = 08:00 Argentina
