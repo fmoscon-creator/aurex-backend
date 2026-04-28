@@ -1644,6 +1644,7 @@ async function buildDailyStatus(format) {
     } else t += '   ' + incidents.error + '\n';
     t += '\n💱 Crypto source: ' + crypto.lastCryptoSource + '\n\n';
     t += '📌 Pendientes actualizados:\nhttps://github.com/fmoscon-creator/aurex-app/blob/main/CONTEXTO.md\n\n';
+    t += '🚀 Arrancar chat con contexto:\nhttps://raw.githubusercontent.com/fmoscon-creator/aurex-app/main/INICIO_AUREX.md\n\n';
     t += 'aurex.live';
     return { content: t, generatedAt };
   }
