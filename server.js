@@ -1628,8 +1628,8 @@ async function buildDailyStatus(format) {
 
   if (format === 'telegram') {
     let t = '';
-    t += '📋 AUREX Daily Status\n';
-    t += new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) + '\n';
+    t += '📋 AUREX Daily Status — Reporte 20:00 hs AR\n';
+    t += new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) + '\n';
     t += '━━━━━━━━━━━━━━━━━━\n\n';
     t += '🍎 APPLE — ' + stores.apple.name + '\n';
     t += '• Build: ' + stores.apple.build + '\n';
