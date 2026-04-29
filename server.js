@@ -501,7 +501,9 @@ app.get('/api/whatsapp/connect-qr', async (req, res) => {
     const provided = req.headers['x-secret'] || req.query.secret;
     if (provided !== expected) return res.status(403).json({ error: 'forbidden' });
     if (!EVOLUTION_URL) return res.status(500).json({ error: 'Evolution no configurado' });
-    const r = await fetch(EVOLUTION_URL + '/instance/connect/' + EVOLUTION_INSTANCE, { headers: { 'apikey': EVOLUTION_KEY } });
+    const number = (req.query.number || '').replace(/[^0-9]/g, '');
+    const evoUrl = EVOLUTION_URL + '/instance/connect/' + EVOLUTION_INSTANCE + (number ? '?number=' + number : '');
+    const r = await fetch(evoUrl, { headers: { 'apikey': EVOLUTION_KEY } });
     const d = await r.json();
     res.json(d);
   } catch(e) { res.status(500).json({ error: e.message }); }
