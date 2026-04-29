@@ -1314,6 +1314,10 @@ async function dailyHealthReport() {
   } catch(e) { console.error('[HEALTH REPORT] Persist failed:', e.message); }
 
   try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, msg); } catch(e) { console.error('[HEALTH REPORT]', e.message); }
+  try {
+    const tgChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+    if (tgChatId) await bot.sendMessage(tgChatId, msg);
+  } catch(e) { console.error('[HEALTH REPORT TG]', e.message); }
   console.log('[HEALTH] Daily report sent + persisted');
 }
 
@@ -1644,7 +1648,7 @@ async function buildDailyStatus(format) {
 
   if (format === 'telegram') {
     let t = '';
-    t += '📋 AUREX Daily Status — Reporte 20:00 hs AR\n';
+    t += '📋 AUREX Daily Status — Reporte 9:00 hs AR\n';
     t += new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) + '\n';
     t += '━━━━━━━━━━━━━━━━━━\n\n';
     t += '🍎 APPLE — ' + stores.apple.name + '\n';
@@ -1751,7 +1755,7 @@ async function dailyProjectStatusReport() {
     console.error('[DAILY_STATUS] Error en dailyProjectStatusReport:', e.message);
     try {
       const chatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
-      if (chatId) await bot.sendMessage(chatId, '⚠️ DAILY_STATUS reporte 20:00 fallo: ' + e.message);
+      if (chatId) await bot.sendMessage(chatId, '⚠️ DAILY_STATUS reporte 9:00 fallo: ' + e.message);
     } catch (e2) { /* silencioso si todo falla */ }
   }
 }
@@ -1905,7 +1909,7 @@ restoreHealthState().then(() => {
   cron.schedule('*/5 * * * *', healthCheck);
   cron.schedule('0 11 * * *', dailyHealthReport); // 11:00 UTC = 08:00 Argentina
   cron.schedule('0 21 28-31 * *', monthlyHealthReport); // 21:00 UTC = 18:00 AR
-  cron.schedule('0 23 * * *', dailyProjectStatusReport); // 23:00 UTC = 20:00 AR
+  cron.schedule('0 12 * * *', dailyProjectStatusReport); // 12:00 UTC = 9:00 AR
   console.log('[HEALTH] Cron: check 5min + daily report 08:00 AR + project status 20:00 AR');
 });
 
