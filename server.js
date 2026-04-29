@@ -493,6 +493,20 @@ app.get('/api/whatsapp/status', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// Generar QR de vinculación Evolution — requiere secret en header X-Secret o query ?secret=...
+app.get('/api/whatsapp/connect-qr', async (req, res) => {
+  try {
+    const expected = process.env.WHATSAPP_CONNECT_SECRET;
+    if (!expected) return res.status(503).json({ error: 'connect-qr no configurado (falta WHATSAPP_CONNECT_SECRET en Railway)' });
+    const provided = req.headers['x-secret'] || req.query.secret;
+    if (provided !== expected) return res.status(403).json({ error: 'forbidden' });
+    if (!EVOLUTION_URL) return res.status(500).json({ error: 'Evolution no configurado' });
+    const r = await fetch(EVOLUTION_URL + '/instance/connect/' + EVOLUTION_INSTANCE, { headers: { 'apikey': EVOLUTION_KEY } });
+    const d = await r.json();
+    res.json(d);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // Crypto prices — expone cryptoCache para fallback de nativa y PWA cuando Binance falla
 app.get('/api/crypto-prices', (req, res) => {
   const result = {};
