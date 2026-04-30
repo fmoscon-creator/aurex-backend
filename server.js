@@ -1721,49 +1721,45 @@ app.get('/api/daily-status', async (req, res) => {
 });
 
 async function dailyProjectStatusReport() {
+  const apiKey = process.env.RESEARCH_API_KEY;
+  const linkContexto = 'https://github.com/fmoscon-creator/aurex-app/blob/main/CONTEXTO.md';
+  const linkInicio = 'https://raw.githubusercontent.com/fmoscon-creator/aurex-app/main/INICIO_AUREX.md';
+  let result;
   try {
-    const result = await buildDailyStatus('telegram');
-    const chatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
-    if (!chatId) {
-      console.error('[DAILY_STATUS] ADMIN_TELEGRAM_CHAT_ID no seteada');
-      return;
-    }
-    // Mensaje 1: reporte principal (status, repos, incidentes, crypto)
-    await bot.sendMessage(chatId, result.content, { parse_mode: 'HTML' });
-    // Mensaje 2: link CONTEXTO.md aislado para tap-to-copy
-    await bot.sendMessage(
-      chatId,
-      '📌 Pendientes actualizados (tocá para copiar):\n<pre>https://github.com/fmoscon-creator/aurex-app/blob/main/CONTEXTO.md</pre>',
-      { parse_mode: 'HTML' }
-    );
-    // Mensaje 3: link INICIO_AUREX.md aislado para tap-to-copy
-    await bot.sendMessage(
-      chatId,
-      '🚀 Arrancar chat con contexto (tocá para copiar):\n<pre>https://raw.githubusercontent.com/fmoscon-creator/aurex-app/main/INICIO_AUREX.md</pre>',
-      { parse_mode: 'HTML' }
-    );
-    // Mensaje 4: API key aislada para tap-to-copy
-    const apiKey = process.env.RESEARCH_API_KEY;
-    if (apiKey) {
-      await bot.sendMessage(
-        chatId,
-        '🔑 RESEARCH_API_KEY (tocá para copiar, pegar como header X-API-Key en chats nuevos de Escritorio):\n<pre>' + apiKey + '</pre>',
-        { parse_mode: 'HTML' }
-      );
-    }
+    result = await buildDailyStatus('telegram');
   } catch (e) {
-    console.error('[DAILY_STATUS] Error en dailyProjectStatusReport:', e.message);
+    console.error('[DAILY_STATUS] buildDailyStatus failed:', e.message);
+    try { const chatId = process.env.ADMIN_TELEGRAM_CHAT_ID; if (chatId) await bot.sendMessage(chatId, '⚠️ DAILY_STATUS reporte 9:00 fallo: ' + e.message); } catch (e2) {}
+    try { if (ADMIN_WHATSAPP) await sendWhatsAppEvolution(ADMIN_WHATSAPP, '⚠️ DAILY_STATUS reporte 9:00 fallo: ' + e.message); } catch (e2) {}
+    return;
+  }
+
+  // ─── TELEGRAM ──────────────────────────────────────
+  const chatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+  if (chatId) {
     try {
-      const chatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
-      if (chatId) await bot.sendMessage(chatId, '⚠️ DAILY_STATUS reporte 9:00 fallo: ' + e.message);
-    } catch (e2) { /* silencioso si todo falla */ }
+      await bot.sendMessage(chatId, result.content, { parse_mode: 'HTML' });
+      await bot.sendMessage(chatId, '📌 Pendientes actualizados (tocá para copiar):\n<pre>' + linkContexto + '</pre>', { parse_mode: 'HTML' });
+      await bot.sendMessage(chatId, '🚀 Arrancar chat con contexto (tocá para copiar):\n<pre>' + linkInicio + '</pre>', { parse_mode: 'HTML' });
+      if (apiKey) await bot.sendMessage(chatId, '🔑 RESEARCH_API_KEY (tocá para copiar, pegar como header X-API-Key en chats nuevos de Escritorio):\n<pre>' + apiKey + '</pre>', { parse_mode: 'HTML' });
+    } catch (e) { console.error('[DAILY_STATUS TG]', e.message); }
+  } else {
+    console.error('[DAILY_STATUS] ADMIN_TELEGRAM_CHAT_ID no seteada');
+  }
+
+  // ─── WHATSAPP (espejo Telegram, formato WA) ────────
+  if (ADMIN_WHATSAPP) {
+    try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, result.content); } catch (e) { console.error('[DAILY_STATUS WA m1]', e.message); }
+    try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, '📌 Pendientes actualizados (tocá y mantené el bloque para copiar):\n```\n' + linkContexto + '\n```'); } catch (e) { console.error('[DAILY_STATUS WA m2]', e.message); }
+    try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, '🚀 Arrancar chat con contexto (tocá y mantené el bloque para copiar):\n```\n' + linkInicio + '\n```'); } catch (e) { console.error('[DAILY_STATUS WA m3]', e.message); }
+    if (apiKey) { try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, '🔑 RESEARCH_API_KEY (tocá y mantené el bloque para copiar, pegar como header X-API-Key en chats nuevos de Escritorio):\n```\n' + apiKey + '\n```'); } catch (e) { console.error('[DAILY_STATUS WA m4]', e.message); } }
   }
 }
 
 app.post('/api/daily-status/test', async (req, res) => {
   try {
     await dailyProjectStatusReport();
-    res.json({ ok: true, message: 'Reporte enviado a Telegram' });
+    res.json({ ok: true, message: 'Reporte enviado a Telegram + WhatsApp' });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
