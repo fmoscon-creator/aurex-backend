@@ -247,6 +247,35 @@ function makeRouter(supabase, _iaSignalsCacheRef, _pulseCacheRef) {
     res.json({ count: data.length, items: data });
   });
 
+  // ───────────────────────────────────────────────────────────────────
+  // ACCESO BETA — flag self-service para users que quieren probar features beta
+  // ───────────────────────────────────────────────────────────────────
+
+  // GET /api/v1/beta/status — devuelve si el user tiene beta_access activo
+  router.get('/beta/status', authenticateUserSession, async (req, res) => {
+    res.json({
+      user_id: req.user.id,
+      plan: req.plan,
+      beta_access: req.betaAccess
+    });
+  });
+
+  // POST /api/v1/beta/toggle — activa/desactiva beta_access del user
+  // Body opcional: { enable: true|false } — si no viene, alterna el estado actual
+  router.post('/beta/toggle', authenticateUserSession, async (req, res) => {
+    const desired = req.body && typeof req.body.enable === 'boolean'
+      ? req.body.enable
+      : !req.betaAccess;
+
+    const { error } = await supabase
+      .from('usuarios')
+      .update({ beta_access: desired })
+      .eq('id', req.user.id);
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ user_id: req.user.id, beta_access: desired });
+  });
+
   // GET /api/v1/health — sin auth, para verificar que la API está viva
   router.get('/health', (req, res) => {
     res.json({
