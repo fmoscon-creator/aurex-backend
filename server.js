@@ -857,10 +857,11 @@ function _calcPulseScore(raw, cat) {
     if(raw.clf) add('Petroleo', _oilToScore(raw.clf.pct),  cat==='COMOD'?25:5);
     if(raw.hgf) add('Cobre',    _pctToScore(raw.hgf.pct,2),cat==='COMOD'?20:4);
   }
-  if(cat !== 'CRIPTO') {
-    if(raw.macro) add('Macro_FED', raw.macro.score, 12);
-    if(raw.geo)   add('Geopolitica', raw.geo.score, 4);
-  }
+  // Macro_FED + Geopolitica entran en TODAS las categorias del Pulse incluyendo CRIPTO
+  // (corregido 2-may-2026 — alineacion con Definicion Estrategica AUREX). BTC tiene
+  // correlacion >0.6 con NASDAQ desde 2022 y reacciona fuerte a decisiones FED y geopolitica.
+  if(raw.macro) add('Macro_FED', raw.macro.score, 12);
+  if(raw.geo)   add('Geopolitica', raw.geo.score, 4);
   if(totalW===0) return { value:50, label:'Neutral', vars:scores };
   var v = Math.min(100, Math.max(0, Math.round(weighted/totalW)));
   var label;
