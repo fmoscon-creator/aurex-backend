@@ -995,6 +995,19 @@ app.post('/api/ia-signals', (req, res) => {
   res.json({ ok: true, count: _iaSignalsCache.signals.length });
 });
 
+// ════════════════════════════════════════════════════════════════════
+// AUREX API v1 — endpoints públicos para usuarios PRO/ELITE con API key
+// Requiere migración: migrations/v1_api_keys_elite.sql ejecutada en Supabase.
+// Si la migración aún no se aplicó, los endpoints devuelven 500/401 limpios.
+// ════════════════════════════════════════════════════════════════════
+const apiV1 = require('./api_v1');
+app.use('/api/v1', apiV1.makeRouter(
+  supabase,
+  () => _iaSignalsCache,
+  () => _pulseCache
+));
+console.log('[API v1] Mounted at /api/v1 (keys/generate, keys/list, keys/revoke, signals, pulse, portfolio, health)');
+
 // ═══ HEALTH CHECK SYSTEM — alertas con ID, persistencia, reporte diario ═══
 const _health = {};
 const HEALTH_COOLDOWN = 15 * 60 * 1000;
