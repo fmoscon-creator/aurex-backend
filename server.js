@@ -25,6 +25,13 @@ const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE || 'aurex';
 const ADMIN_WHATSAPP = process.env.ADMIN_WHATSAPP; // número admin en formato 5491167891320
 
 async function sendWhatsAppEvolution(toNumber, text) {
+  // PAUSA DE SEGURIDAD WA-002 (3-may-2026): linea 2563 en watch period WhatsApp Business.
+  // Cualquier envio automatizado puede disparar bloqueo permanente.
+  // Para reactivar: railway variables --set WA_EVOLUTION_PAUSED=false (cuando se confirme que es seguro).
+  if (process.env.WA_EVOLUTION_PAUSED === 'true') {
+    console.log('[WA-002 PAUSE] sendWhatsAppEvolution skipped (WA_EVOLUTION_PAUSED=true). To resume: unset env var.');
+    return { skipped: true, reason: 'WA_EVOLUTION_PAUSED' };
+  }
   if (!EVOLUTION_URL || !EVOLUTION_KEY) throw new Error('Evolution API no configurado');
   const number = (toNumber || '').replace(/[^0-9]/g, '');
   if (!number) throw new Error('Número destino inválido');
@@ -39,6 +46,11 @@ async function sendWhatsAppEvolution(toNumber, text) {
 }
 
 async function sendWhatsAppImage(toNumber, imageBuffer, caption) {
+  // PAUSA DE SEGURIDAD WA-002 (idem sendWhatsAppEvolution).
+  if (process.env.WA_EVOLUTION_PAUSED === 'true') {
+    console.log('[WA-002 PAUSE] sendWhatsAppImage skipped (WA_EVOLUTION_PAUSED=true).');
+    return { skipped: true, reason: 'WA_EVOLUTION_PAUSED' };
+  }
   if (!EVOLUTION_URL || !EVOLUTION_KEY) throw new Error('Evolution API no configurado');
   const number = (toNumber || '').replace(/[^0-9]/g, '');
   if (!number) throw new Error('Número destino inválido');
