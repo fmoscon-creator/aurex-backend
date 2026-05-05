@@ -1,5 +1,89 @@
 # AUREX — MASTER PENDIENTES — 5-MAY-2026
 
+## PLAN BUILD 8 — APROBADO POR FERNANDO + ESCRITORIO 5-may-2026
+
+Test E2E FCM pasado al 5-may: push llegó al device de Fernando. Pipeline FCM end-to-end confirmado funcional. Build 8 cierra el feature gap entre lo prometido en metadata pública y la app real.
+
+### Decisión sobre metadata Apple/Play
+NO tocar metadata. Razones:
+- Build 17 iOS lleva 11 días en review, editar metadata reinicia contador
+- "Alertas push de precio" en metadata es ambiguo, los toggles actuales pueden ser interpretados como cumplimiento por un reviewer
+- Build 8 con la feature de alertas puntuales cierra el gap real
+
+Antes de pedir producción Google: Build 8 debe estar listo.
+
+### Listado de cambios para Build 8
+
+TAB Alertas — banners superiores:
+- A. Banner nuevo "Activar Push" con switch (pide permiso si falta)
+- B. Banner nuevo "Conectar Telegram" (deep-link al bot @Aurexalertas)
+- C. Banner WhatsApp queda como "Próximamente" (ya está así en código)
+
+Sistema de notificaciones — campana en header:
+- D. Reemplazar modal bloqueante (Alert.alert foreground en App.js) por campana 🔔 en header de TODAS las pantallas
+- E. La campana muestra SOLO alertas puntuales del usuario, NO los toggles automáticos (separación clara para no mezclar)
+- F. Tap en campana → pantalla "Mis alertas" con historial
+- G. En historial: marcar leída / borrar / desactivar individuales y masivos
+- H. Badge numérico en campana = cantidad sin leer
+- H2. Foreground push: además de la notificación del sistema operativo, también hace badge en la campana (sumar Escritorio 5-may)
+
+Alertas puntuales por activo (cierre del feature gap principal):
+- I. Watchlist + Portfolio: tap en row → modal detalle → botón nuevo "🔔 Crear alerta de precio" (sumar Escritorio 5-may: accesible desde ambos lugares, mismo modal)
+- J. Mini-form de creación: dirección (arriba/abajo) + tipo (precio $ o %) + valor
+- K. Conversión % → precio absoluto en cliente al crear (sin cambios de schema ni backend)
+
+Bugs/mejoras pendientes:
+- L. Fix label "MI WATCHLIST" en filtro de Alertas — clarificar cuál es
+- M. Re-pensar Fix C barra termómetro (la solución actual no resolvió el overflow en Android)
+
+## PLAN B — REVENUECAT ANDROID BYPASS (STANDBY)
+
+Listo para activar SI ticket 75918 RevenueCat soporte no responde en 48-72hs hábiles, o responde pero no resuelve el problema.
+
+### Resumen
+Reemplazar RevenueCat para Android (solo Android) por react-native-iap que va directo a Google Play Billing. iOS queda con RevenueCat como está (P8 valid).
+
+### Cómo funciona
+Cliente Android:
+- App detecta Platform.OS === 'android' → usa react-native-iap en lugar de Purchases
+- User compra → Google Play Billing procesa → app obtiene receipt
+- App manda receipt al backend AUREX para validar
+
+Backend AUREX:
+- Endpoint nuevo /api/iap/validate-android
+- Recibe receipt → llama a Google Play Developer API → confirma compra real
+- Actualiza usuarios.plan en Supabase con el plan comprado
+
+iOS no se toca.
+
+### Schema Supabase a agregar (cuando se ejecute)
+- usuarios.subscription_status (text)
+- usuarios.subscription_expires_at (timestamptz)
+- usuarios.purchase_token (text)
+
+### Trabajo estimado
+1 día completo:
+- Instalar react-native-iap
+- Refactor SubscriptionScreen con branching Platform.OS
+- Endpoint backend de validación
+- Testing E2E con sandbox Google Play
+
+### Ventajas
+- Producción Google sin esperar soporte RevenueCat
+- Reversible: cuando RC Android se reactive, se deshabilita el bypass con flag
+- iOS sigue funcionando normal
+
+### Desventajas
+- Pierde analytics de RevenueCat solo para Android
+- Schema Supabase requiere columnas nuevas
+- Refactor menor cuando RC se reactive
+
+### Cuándo NO ejecutar
+Si soporte RevenueCat responde y resuelve el problema antes de 72hs. Plan B queda como contingencia.
+
+---
+
+
 ## PRIORIDAD 1 — BACKEND FIREBASE-ADMIN — ✅ RESUELTO 5-may-2026
 
 Estado: COMPLETADO al cierre del 5-may. Pipeline FCM end-to-end integrado en backend Railway.
