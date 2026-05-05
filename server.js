@@ -368,7 +368,30 @@ async function dispararAlerta(alerta, precio) {
       }
     }
   }
-  await supabase.from('alertas_historial').insert({ alerta_id: alerta.id, simbolo: alerta.simbolo, precio_disparado: precio, analisis_ia: analisis, telegram_enviado: !!alerta.telegram_chat_id, whatsapp_enviado: !!alerta.whatsapp_numero, created_at: new Date().toISOString() });
+  let fcmEnviado = false;
+  if (alerta.user_id) {
+    const { data: usr } = await supabase.from('usuarios').select('fcm_token').eq('id', alerta.user_id).single();
+    if (usr?.fcm_token) {
+      const result = await sendPushFCM(
+        usr.fcm_token,
+        emoji + ' ' + alerta.simbolo + ' — $' + fmtP(precio),
+        '🎯 $' + fmtP(alerta.valor_objetivo) + ' alcanzado',
+        { alerta_id: alerta.id, simbolo: alerta.simbolo, precio_disparado: precio, tipo: 'alerta_precio' }
+      );
+      if (result.ok) {
+        fcmEnviado = true;
+      } else {
+        console.error('[FCM]', result.error, '(code:', result.code + ')');
+        // Token inválido → limpiar para que el usuario re-registre en próximo login
+        if (result.code === 'messaging/registration-token-not-registered' ||
+            result.code === 'messaging/invalid-registration-token') {
+          await supabase.from('usuarios').update({ fcm_token: null }).eq('id', alerta.user_id);
+          console.log('[FCM] cleaned invalid token for user', alerta.user_id);
+        }
+      }
+    }
+  }
+  await supabase.from('alertas_historial').insert({ alerta_id: alerta.id, simbolo: alerta.simbolo, precio_disparado: precio, analisis_ia: analisis, telegram_enviado: !!alerta.telegram_chat_id, whatsapp_enviado: !!alerta.whatsapp_numero, fcm_enviado: fcmEnviado, created_at: new Date().toISOString() });
 }
 
 async function checkAlertas() {
