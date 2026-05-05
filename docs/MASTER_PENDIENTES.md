@@ -1,20 +1,85 @@
 # AUREX — MASTER PENDIENTES — 5-MAY-2026
 
-## PRIORIDAD 1 — BACKEND FIREBASE-ADMIN (URGENTE - DESBLOQUEADO)
+## PRIORIDAD 1 — BACKEND FIREBASE-ADMIN — ✅ RESUELTO 5-may-2026
 
-Problema: No existe codigo de envio de push. Pruebas manuales desde Firebase Console con prioridad normal. Sin esto las alertas IA no disparan push a usuarios.
+Estado: COMPLETADO al cierre del 5-may. Pipeline FCM end-to-end integrado en backend Railway.
 
-Falta: npm install firebase-admin, cargar service account JSON como env var en Railway, crear sendPushFCM con android priority high canal aurex_default, integrar en cron de alertas como tercer canal.
+Hecho:
+- npm install firebase-admin v13.8.0 (commit e823d40)
+- Env var FIREBASE_SERVICE_ACCOUNT_B64 cargada en Railway via CLI (base64 del Service Account JSON)
+- ws package agregado para Node 20 + Supabase realtime (commits 455a36e + 6e70d20)
+- Init firebase-admin en server.js (commit 9e899cf)
+- Funcion sendPushFCM creada con Android channel aurex_default + priority high (commit c45131b)
+- Integracion en dispararAlerta + columna fcm_enviado en alertas_historial (commit 713991c)
+- Logs Railway confirmados: "[FCM] firebase-admin initialized OK (project: aurex-app-8d985)"
 
-Service account JSON: ~/Downloads/aurex-app-8d985-firebase-adminsdk-fbsvc-f02d2b2a6c.json
+Bloqueador test E2E con Fernando: fmoscon@gmail.com no tiene fila en tabla usuarios todavia. Se crea cuando Fernando instale Build 7 con Fix A y se loguee. Hasta entonces NO se puede validar end-to-end con su cuenta. Otras cuentas (tmbus1706 = hijo) si tienen fcm_token y se podria validar con ellas.
 
-## PRIORIDAD 2 — BUILD 7 ANDROID (URGENTE)
+Service account JSON original: ~/Downloads/aurex-app-8d985-firebase-adminsdk-fbsvc-f02d2b2a6c.json
 
-- Fix A: Race condition App.js — mover registerForPushNotifications a onAuthStateChange filtrando SIGNED_IN e INITIAL_SESSION
-- Fix B: Error string fijo update-0-rows-or-error reemplazar por error real de Supabase
-- Fix C: Barra termometro de riesgo se sale del limite derecho de la card en Android
-- Fix D: Icono ojo en campo contrasena en pantalla de login (tambien aplica Build 18 iOS)
+## PRIORIDAD 1B — REVENUECAT ↔ PLAY STORE INTEGRATION (BLOQUEADO 5-may-2026)
+
+Problema: RevenueCat sigue mostrando "Credentials need attention" para la integracion AUREX (Play Store) despues de configurar TODO lo verificable correctamente. Sin esto las compras Android no se pueden validar a pesar de que los 4 productos esten cargados en Play Console.
+
+Estado al cierre 5-may:
+
+LADO RevenueCat (correcto):
+- Entitlements pro y elite activos con products correctos
+- Offering aurex_default (current) con 4 packages renombrados simetricamente: pro_monthly, pro_annual, elite_monthly, elite_annual
+- App Store (iOS): P8 key S444Z23FMB.p8 cargada con "Valid credentials"
+- Play Store: SA v2 cargado con JSON correcto (Key ID 673c2094a2)
+
+LADO GCP (correcto):
+- Proyecto: singular-rope-494122-g4 (My Project 47952)
+- Cloud Pub/Sub API: HABILITADA
+- Google Play Android Developer API: HABILITADA
+- SA principal: revenuecat-aurex@singular-rope-494122-g4.iam.gserviceaccount.com (key vieja cf622bf47e + key nueva 673c2094a2 — ambas funcionales)
+- SA v2 nuevo: revenuecat-aurex-v2@singular-rope-494122-g4.iam.gserviceaccount.com con rol Pub/Sub Admin
+
+LADO Play Console (correcto):
+- 4 suscripciones cargadas y activas: PRO Mensual ($9.99), PRO Anual ($89.99), ELITE Mensual ($19.99), ELITE Anual ($179.99)
+- Product IDs identicos a Apple incluyendo elite.monthly2 con sufijo 2
+- Periodos de gracia: 7 dias mensuales, 14 dias anuales
+- Sin trials ni intro offers
+- 174 paises (vs 175 Apple — diferencia normal)
+- SA v2 ACTIVO en Users and permissions con permisos cuenta (View financial data + Manage orders) y permisos app AUREX
+- Play Console version 2026: NO existe seccion "API access" / "Linked GCP projects" en el UI — Google migro ese flow. El link GCP↔Play es automatico cuando el SA esta en Users and permissions con permisos correctos.
+
+PESE A TODO ESO RevenueCat sigue rechazando con "Credentials need attention". No hay mas palancas tecnicas obvias para mover.
+
+Hipotesis activas:
+1. Propagacion server-side de Google (puede tardar mas de 30 min en algunos casos cuando se combinan cambios de IAM + APIs habilitadas + permisos Play). Probabilidad media.
+2. RevenueCat tiene un loop de validacion atascado en error que requiere intervention de soporte. Probabilidad media.
+3. Falta consent/agreement adicional invisible en alguna API. Probabilidad baja.
+
+Plan acordado al cierre:
+1. Esperar 30 minutos completos desde la habilitacion de Google Play Android Developer API
+2. Verificar GCP → APIs & Services → Dashboard → Google Play Android Developer API → si hay banner "Agreement required"
+3. Si pasados 30 min sigue fallando → escalar a soporte RevenueCat con paquete de info tecnica (CODE lo arma)
+
+Lo que NO hacer:
+- NO crear otro SA mas (saturar el proyecto sin razon, el v2 esta correcto)
+- NO borrar y rehacer la app en RevenueCat (ya descartado que sirva)
+- NO tocar mas permisos en Play Console (ya estan exactos como pide RevenueCat)
+- NO tocar GCP (todo correcto)
+
+Doc visible para el equipo: docs/SUSCRIPCIONES.md en repo AurexApp (creado 5-may, NO commiteado todavia hasta resolver Play Store side completamente).
+
+Items independientes pendientes (no bloquean lo anterior):
+- appUserID en Purchases.configure (App.js): hoy se llama sin appUserID → identidades anonimas por device, plan no se hereda al cambiar device. Diff a producir cuando se pida.
+- Webhook RevenueCat → backend AUREX para sincronizar usuarios.plan en Supabase post-compra. Segunda tanda.
+- Localizaciones Apple en otros 7 idiomas (ES/PT/FR/IT/ZH/HI/AR): sin verificar. Play se cargo solo en EN.
+- Cleanup post-resolucion: archivar offering "default" residual + borrar 3 products de Test Store + eliminar SA viejo revenuecat-aurex despues de confirmar que v2 funciona.
+
+## PRIORIDAD 2 — BUILD 7 ANDROID (URGENTE — 1/4 hecho)
+
+- Fix A: Race condition App.js — mover registerForPushNotifications a onAuthStateChange filtrando SIGNED_IN e INITIAL_SESSION → ✅ HECHO 5-may (commit 1fd0370 en branch dev)
+- Fix B: Error string fijo update-0-rows-or-error reemplazar por error real de Supabase → PENDIENTE (plan completo armado por CODE, esperando OK Escritorio)
+- Fix C: Barra termometro de riesgo se sale del limite derecho de la card en Android → PENDIENTE (plan armado: descontar gaps de barW antes de calcular proporciones)
+- Fix D: Icono ojo en campo contrasena en pantalla de login (tambien aplica Build 18 iOS) → PENDIENTE (plan armado: state showPassword + wrapper + 3 estilos)
 - Fix E (ya aplicado en Supabase 5-may): RLS politica INSERT usuarios WITH CHECK auth.uid() = id
+
+Despues de Fix B/C/D commiteados → bump versionCode a 7, compilar AAB con backup en ~/AurexApp/backups/aab/ (NO dentro de build/), subir a Play Console Internal Testing.
 
 ## PRIORIDAD 3 — BUILD 18 iOS (BLOQUEADO)
 
