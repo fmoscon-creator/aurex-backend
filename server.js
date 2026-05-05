@@ -86,6 +86,27 @@ async function sendWhatsAppImage(toNumber, imageBuffer, caption) {
   return d;
 }
 
+async function sendPushFCM(fcmToken, title, body, data = {}) {
+  if (!fcmToken) return { ok: false, error: 'no-token' };
+  // FCM requiere que todos los valores del payload data sean strings
+  const stringData = {};
+  for (const k of Object.keys(data)) stringData[k] = String(data[k]);
+  try {
+    const messageId = await admin.messaging().send({
+      token: fcmToken,
+      notification: { title, body },
+      data: stringData,
+      android: {
+        priority: 'high',
+        notification: { channelId: 'aurex_default', sound: 'default' },
+      },
+    });
+    return { ok: true, messageId };
+  } catch (err) {
+    return { ok: false, error: err.message, code: err.code };
+  }
+}
+
 async function notifyAdmin(subject, body) {
   if (!ADMIN_WHATSAPP) return;
   try {
