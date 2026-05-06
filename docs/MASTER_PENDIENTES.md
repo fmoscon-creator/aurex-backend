@@ -1,4 +1,23 @@
-# AUREX — MASTER PENDIENTES — 5-MAY-2026
+# AUREX — MASTER PENDIENTES — actualizado 6-MAY-2026
+
+## ✅ REVENUECAT — RESUELTO 6-may-2026
+
+Status final: SA v2 (`revenuecat-aurex-v2@singular-rope-494122-g4.iam.gserviceaccount.com`) con "Valid credentials" en RevenueCat. Las 3 APIs (subscriptions, inappproducts, monetization) validadas correctamente.
+
+Lo que pasó:
+- El problema era propagación de Google: cada vez que regenerábamos credentials reseteaba el reloj de validación
+- Soporte RevenueCat (ticket 75918) confirmó: hay que esperar 36+ hs sin tocar nada
+- También confirmaron rol nuevo necesario: **Monitoring Viewer** (además de Pub/Sub Admin)
+
+Pasos ejecutados al 6-may:
+- Rol "Monitoring Viewer" agregado al SA v2 en GCP IAM ✅
+- 4 products de Play Store importados a RevenueCat con entitlements correctos ✅
+- RTDN conectado: topic Play-Store-Notifications creado en GCP + configurado en Play Console → Monetization → Real-time developer notifications ✅
+- Cleanup completo: SA viejo `revenuecat-aurex` eliminado (GCP IAM + Play Console Users), offering "default" residual eliminado, 3 products residuales de Test Store eliminados ✅
+
+Estado RevenueCat dashboard al cierre: AUREX (App Store) iOS + AUREX (Play Store) Android ambos validados. Offering current `aurex_default` con 4 packages simétricos (pro_monthly, pro_annual, elite_monthly, elite_annual). Entitlements `pro` y `elite` con products correctos asociados.
+
+**Plan B RevenueCat → CANCELADO.** No se ejecutó. Queda documentado abajo solo como referencia futura por si vuelve a pasar.
 
 ## PLAN BUILD 8 — APROBADO POR FERNANDO + ESCRITORIO 5-may-2026
 
@@ -35,6 +54,53 @@ Alertas puntuales por activo (cierre del feature gap principal):
 Bugs/mejoras pendientes:
 - L. Fix label "MI WATCHLIST" en filtro de Alertas — clarificar cuál es
 - M. Re-pensar Fix C barra termómetro (la solución actual no resolvió el overflow en Android)
+
+### Decisiones de diseño cerradas al 6-may (mockups validados con Fernando)
+
+UBICACIÓN CAMPANA — confirmado en las 6 TABs:
+- Header derecho de cada TAB, después de los elementos existentes (LIVE / disclaimer / etc.)
+- Badge rojo con número en esquina superior derecha del ícono 🔔 = cantidad de alertas SIN LEER
+- Mockup HTML validado: ~/Downloads/preview-headers-6tabs.html
+
+UBICACIÓN APRETADA EN 2 TABS (a resolver en implementación):
+- Portfolio: header está LLENO (LIVE + 🌐 LanguageButton + ⚖️ disclaimer + ahora 🔔). Probable que haya que sacar 🌐 LanguageButton o moverlo dentro de Perfil
+- Watchlist: botón "+ Nueva lista" tiene texto largo. Probable convertirlo a solo "+" sin texto, o moverlo abajo del header
+
+CARDS DE ALERTAS (mockup ~/Downloads/preview-campana.html):
+- Color rojo del badge OK
+- Formato de cards OK
+- Modo oscuro: fondo cards #1E2632 (más distinto del fondo #0D1117 que el original #161B22 que se confundía)
+- Modo claro: queda como está
+
+CREACIÓN DE ALERTA PUNTUAL:
+- Lugar: Watchlist + Portfolio
+- Acción: tap en row del activo → abre el modal detalle existente → ahí se suma botón nuevo "🔔 Crear alerta de precio"
+- NO long-press como acción primaria (poco descubierto por usuarios)
+- Mini-form: dirección (arriba/abajo) + tipo (precio $ o %) + valor numérico
+- Conversión % → precio absoluto en cliente al crear (sin cambios de schema, sin cambios de backend)
+
+SEPARACIÓN SISTEMA A vs SISTEMA B:
+- Sistema A (15 toggles automáticos: variación, max/min, RSI, IA, pulse, eventos) → SIGUEN dentro de TAB Alertas como hoy
+- Sistema B (alertas puntuales que el user crea manualmente sobre un activo) → SOLO se muestran en la campana del header
+- NO se mezclan visualmente para evitar confusión
+
+PANTALLA "MIS ALERTAS" (al tocar la campana):
+- Lista de alertas Sistema B con cards
+- Cards no leídas: borde dorado izquierdo + fondo levemente distinto + punto dorado a la derecha
+- Cards leídas: más tenues
+- Selección múltiple para marcar varias como leídas o borrar varias (no solo todas)
+- Estado vacío con texto explicativo + CTA "Ir a Watchlist" / "Ir a Portfolio"
+- Toast de confirmación al crear primera alerta: "Alerta creada. La verás aquí 🔔 cuando se dispare"
+
+### Próximos mockups a validar antes de tocar código
+
+1. Modal "Crear alerta de precio" (mini-form que aparece dentro del modal detalle de activo)
+2. Pantalla "Mis alertas" con selección múltiple (checkboxes)
+3. Estado vacío de "Mis alertas"
+4. Banners "Activar Push" + "Conectar Telegram" en TAB Alertas (parte superior, arriba de toggles)
+5. Caso especial Portfolio: con o sin LanguageButton
+
+Orden de prioridad: 1 primero (corazón del feature gap), después 2/3, después 4, después 5.
 
 ## PLAN B — REVENUECAT ANDROID BYPASS (STANDBY)
 
