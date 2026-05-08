@@ -362,8 +362,12 @@ async function dispararAlerta(alerta, precio) {
   const analisis = await generateAnalysis(alerta.simbolo, precio, 'objetivo $' + alerta.valor_objetivo + ' alcanzado');
   const emoji = precio >= (alerta.valor_objetivo || 0) ? '🟢' : '🔴';
   const ts = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
-  if (alerta.telegram_chat_id) {
-    try { await bot.sendMessage(alerta.telegram_chat_id, emoji + ' ALERTA — ' + alerta.simbolo + '\n💰 $' + precio + '  🎯 $' + alerta.valor_objetivo + '\n\n' + analisis + '\n\n⏰ ' + ts, { parse_mode: 'Markdown' }); } catch(e) { console.error('TG:', e.message); }
+  // Build 16 fix: lookup chat_id desde usuarios (single source of truth).
+  // Antes usaba alerta.telegram_chat_id pero ese campo nunca se popula al crear alerta vía POST /api/alertas.
+  const { data: u } = await supabase.from('usuarios').select('telegram_chat_id').eq('id', alerta.user_id).single();
+  const tgChatId = u?.telegram_chat_id;
+  if (tgChatId && !tgChatId.startsWith('pending_')) {
+    try { await bot.sendMessage(tgChatId, emoji + ' ALERTA — ' + alerta.simbolo + '\n💰 $' + precio + '  🎯 $' + alerta.valor_objetivo + '\n\n' + analisis + '\n\n⏰ ' + ts, { parse_mode: 'Markdown' }); } catch(e) { console.error('TG:', e.message); }
   }
   if (alerta.whatsapp_numero) {
     const textBody = emoji + ' ALERTA — ' + alerta.simbolo + '\n💰 $' + precio + '  🎯 $' + alerta.valor_objetivo + '\n\n' + analisis + '\n\n⏰ ' + ts + '\n— Aurex';
@@ -411,7 +415,7 @@ async function dispararAlerta(alerta, precio) {
       }
     }
   }
-  await supabase.from('alertas_historial').insert({ alerta_id: alerta.id, simbolo: alerta.simbolo, precio_disparado: precio, analisis_ia: analisis, telegram_enviado: !!alerta.telegram_chat_id, whatsapp_enviado: !!alerta.whatsapp_numero, fcm_enviado: fcmEnviado, created_at: new Date().toISOString() });
+  await supabase.from('alertas_historial').insert({ alerta_id: alerta.id, simbolo: alerta.simbolo, precio_disparado: precio, analisis_ia: analisis, telegram_enviado: !!tgChatId, whatsapp_enviado: !!alerta.whatsapp_numero, fcm_enviado: fcmEnviado, created_at: new Date().toISOString() });
 }
 
 async function checkAlertas() {
