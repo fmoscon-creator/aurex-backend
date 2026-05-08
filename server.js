@@ -121,10 +121,30 @@ async function notifyAdmin(subject, body) {
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
-  if (msg.text === '/start') {
-    bot.sendMessage(chatId, '🔶 Bienvenido a Aurex Alertas\n\nTu Chat ID es: ' + chatId + '\n\nCopialo en tu perfil de Aurex.', { parse_mode: 'Markdown' });
-  } else if (msg.text === '/estado') {
-    const { data } = await supabase.from('alertas').select('*').eq('telegram_chat_id', String(chatId)).eq('activa', true);
+  const text = msg.text || '';
+
+  if (text.startsWith('/start')) {
+    // Build 16: parsear start_param del deep-link AUREX para vincular cuenta automáticamente.
+    // Frontend manda https://t.me/Aurexalertas_bot?start=<userId-uuid> → Telegram envía "/start <userId>".
+    const parts = text.split(' ');
+    const userId = parts[1] && parts[1].length >= 32 ? parts[1] : null;
+
+    if (userId) {
+      const { error } = await supabase.from('usuarios').update({ telegram_chat_id: String(chatId) }).eq('id', userId);
+      if (error) {
+        bot.sendMessage(chatId, '❌ No pudimos vincular tu cuenta AUREX. Volvé a la app y reintentá.');
+      } else {
+        bot.sendMessage(chatId, '✅ *Tu cuenta AUREX quedó vinculada.*\n\nA partir de ahora vas a recibir aquí las alertas que dispares en la app.', { parse_mode: 'Markdown' });
+      }
+    } else {
+      bot.sendMessage(chatId, '🔶 Bienvenido a Aurex Alertas\n\nVolvé a la app AUREX y activá Telegram desde la pantalla Notificaciones — el bot te va a vincular automáticamente.', { parse_mode: 'Markdown' });
+    }
+  } else if (text === '/estado') {
+    // Build 16: query por usuarios.telegram_chat_id (antes era alertas.telegram_chat_id directo,
+    // pero ese campo se popula desde usuarios cuando se crea la alerta — ahora vamos a la fuente).
+    const { data: u } = await supabase.from('usuarios').select('id').eq('telegram_chat_id', String(chatId)).single();
+    if (!u) { bot.sendMessage(chatId, 'Tu cuenta no está vinculada. Activá Telegram desde la app AUREX.'); return; }
+    const { data } = await supabase.from('alertas').select('*').eq('user_id', u.id).eq('activa', true);
     bot.sendMessage(chatId, data && data.length ? data.map(a => '• ' + a.simbolo + ' $' + a.valor_objetivo).join('\n') : 'No tenés alertas activas.');
   } else {
     bot.sendMessage(chatId, 'Comandos: /start /estado');
