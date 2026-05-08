@@ -25,7 +25,7 @@ const firebaseServiceAccount = JSON.parse(
 admin.initializeApp({ credential: admin.credential.cert(firebaseServiceAccount) });
 console.log('[FCM] firebase-admin initialized OK (project:', firebaseServiceAccount.project_id + ')');
 
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: false });
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const WHATSAPP_FROM = process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+14155238886';
 
