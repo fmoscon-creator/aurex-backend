@@ -345,15 +345,50 @@ async function fetchCryptoPriceBatch(symbols) {
 async function getStockPrice(symbol) {
   const now = Date.now();
   if (priceCache[symbol] && (now - priceCache[symbol].ts) < 60000) return priceCache[symbol].data;
+
+  // Nivel 1 — Yahoo Finance (primaria, sin key, sin límite real)
+  try {
+    const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + symbol + '?interval=1d&range=1d', { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } });
+    if (r.ok) {
+      const json = await r.json();
+      const meta = json?.chart?.result?.[0]?.meta;
+      const price = meta?.regularMarketPrice;
+      const prevClose = meta?.chartPreviousClose || meta?.previousClose;
+      if (price && price > 0) {
+        const changePct = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
+        const data = { symbol, price: parseFloat(price), changePct: parseFloat(changePct.toFixed(4)) };
+        priceCache[symbol] = { ts: now, data };
+        return data;
+      }
+    }
+  } catch(e) { console.error('[STOCK-FETCH yahoo]', symbol, e.message); }
+
+  // Nivel 2 — Finnhub (fallback fuerte, 60 calls/min = 86,400/día)
+  try {
+    const r = await fetch('https://finnhub.io/api/v1/quote?symbol=' + symbol + '&token=' + process.env.FINNHUB_KEY);
+    if (r.ok) {
+      const json = await r.json();
+      if (json && json.c && json.c > 0) {
+        const data = { symbol, price: parseFloat(json.c), changePct: parseFloat((json.dp || 0).toFixed(4)) };
+        priceCache[symbol] = { ts: now, data };
+        return data;
+      }
+    }
+  } catch(e) { console.error('[STOCK-FETCH finnhub]', symbol, e.message); }
+
+  // Nivel 3 — Alpha Vantage (emergencia, 25 calls/día plan free)
   try {
     const r = await fetch('https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=' + symbol + '&apikey=' + ALPHA_KEY);
     const json = await r.json();
     const q = json['Global Quote'];
-    if (!q || !q['05. price']) return null;
+    if (!q || !q['05. price']) {
+      console.error('[STOCK-FETCH alphavantage]', symbol, 'sin GLOBAL_QUOTE — payload keys:', Object.keys(json));
+      return null;
+    }
     const data = { symbol, price: parseFloat(q['05. price']), changePct: parseFloat((q['10. change percent'] || '0').replace('%','')) };
     priceCache[symbol] = { ts: now, data };
     return data;
-  } catch(e) { return null; }
+  } catch(e) { console.error('[STOCK-FETCH alphavantage]', symbol, e.message); return null; }
 }
 
 async function generateAnalysis(simbolo, precio, contexto) {
