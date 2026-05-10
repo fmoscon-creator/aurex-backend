@@ -253,10 +253,14 @@ async function fetchCryptoPriceBatch(symbols) {
           cryptoCache[sym] = result[sym];
         }
       });
-      global._lastCryptoSource = 'cryptocompare';
-      _ccIncrement(1);
-      if (_health.binance) mitigateAlert('binance', 'cryptocompare');
-      return result;
+      if (Object.keys(result).length > 0) {
+        global._lastCryptoSource = 'cryptocompare';
+        _ccIncrement(1);
+        if (_health.binance) mitigateAlert('binance', 'cryptocompare');
+        return result;
+      } else {
+        console.error('[CRYPTO-FETCH cryptocompare] respuesta sin USD para', symbols, '— payload keys:', Object.keys(data));
+      }
     }
   } catch(e) { console.error('[CRYPTO-FETCH cryptocompare]', symbols, e.message); }
 
@@ -309,12 +313,19 @@ async function fetchCryptoPriceBatch(symbols) {
             cryptoCache[sym] = result[sym];
           }
         });
-        global._lastCryptoSource = 'coingecko';
-        if (_health.binance) mitigateAlert('binance', 'coingecko');
-        return result;
+        if (Object.keys(result).length > 0) {
+          global._lastCryptoSource = 'coingecko';
+          if (_health.binance) mitigateAlert('binance', 'coingecko');
+          return result;
+        } else {
+          console.error('[CRYPTO-FETCH coingecko] respuesta sin usd para', symbols, '— payload keys:', Object.keys(data));
+        }
       }
     }
   } catch(e) { console.error('[CRYPTO-FETCH coingecko]', symbols, e.message); }
+
+  // Si llegamos acá, las 4 fuentes en vivo fallaron — log explícito
+  console.error('[CRYPTO-FETCH all-failed] las 4 fuentes vacías para', symbols, '— cayendo a cache emergency');
 
   // 5. Caché (último recurso)
   symbols.forEach(sym => {
