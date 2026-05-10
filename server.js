@@ -236,7 +236,7 @@ async function fetchCryptoPriceBatch(symbols) {
       global._lastCryptoSource = 'binance';
       return result;
     }
-  } catch(e) {}
+  } catch(e) { console.error('[CRYPTO-FETCH binance]', symbols, e.message); }
 
   // 2. CryptoCompare batch (fallback 1 — 100k/mes)
   try {
@@ -258,7 +258,7 @@ async function fetchCryptoPriceBatch(symbols) {
       if (_health.binance) mitigateAlert('binance', 'cryptocompare');
       return result;
     }
-  } catch(e) {}
+  } catch(e) { console.error('[CRYPTO-FETCH cryptocompare]', symbols, e.message); }
 
   // 3. Kraken batch (fallback 2 — gratuito sin key)
   try {
@@ -290,7 +290,7 @@ async function fetchCryptoPriceBatch(symbols) {
         }
       }
     }
-  } catch(e) {}
+  } catch(e) { console.error('[CRYPTO-FETCH kraken]', symbols, e.message); }
 
   // 4. CoinGecko batch (fallback 3 — 10k/mes gratuito) (fallback 2 — 10k/mes)
   try {
@@ -314,7 +314,7 @@ async function fetchCryptoPriceBatch(symbols) {
         return result;
       }
     }
-  } catch(e) {}
+  } catch(e) { console.error('[CRYPTO-FETCH coingecko]', symbols, e.message); }
 
   // 5. Caché (último recurso)
   symbols.forEach(sym => {
@@ -430,7 +430,7 @@ async function checkAlertas() {
     }
     for (const a of alertas) {
       const precio = a.tipo_activo === 'cripto' ? cp[a.simbolo] : (await getStockPrice(a.simbolo))?.price;
-      if (!precio) continue;
+      if (!precio) { console.error('[ALERTAS] precio undefined para', a.simbolo, '— alerta', a.id, '— tipo_activo', a.tipo_activo); continue; }
       const ok = a.direccion === 'arriba' ? precio >= a.valor_objetivo : precio <= a.valor_objetivo;
       if (ok) await dispararAlerta(a, precio);
     }
