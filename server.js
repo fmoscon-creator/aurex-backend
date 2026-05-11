@@ -575,6 +575,38 @@ app.get('/api/debug/sources', async (req, res) => {
     results.coingecko = { status: r.status, ok: r.ok, hasPrice: !!(data.bitcoin?.usd) };
   } catch(e) { results.coingecko = { error: e.message }; }
 
+  // 4.1 Bitstamp (candidato fallback — BTC/USD)
+  try {
+    const r = await fetch('https://www.bitstamp.net/api/v2/ticker/btcusd/', { signal: AbortSignal.timeout(5000) });
+    const data = await r.json();
+    const price = parseFloat(data?.last);
+    results.bitstamp = { status: r.status, ok: r.ok, hasPrice: !!(price > 0), price };
+  } catch(e) { results.bitstamp = { error: e.message }; }
+
+  // 4.2 OKX (candidato fallback — BTC-USDT batch)
+  try {
+    const r = await fetch('https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT', { signal: AbortSignal.timeout(5000) });
+    const data = await r.json();
+    const price = parseFloat(data?.data?.[0]?.last);
+    results.okx = { status: r.status, ok: r.ok, hasPrice: !!(price > 0), price };
+  } catch(e) { results.okx = { error: e.message }; }
+
+  // 4.3 Bitfinex (candidato fallback — BTC/USD)
+  try {
+    const r = await fetch('https://api-pub.bitfinex.com/v2/ticker/tBTCUSD', { signal: AbortSignal.timeout(5000) });
+    const data = await r.json();
+    const price = Array.isArray(data) ? parseFloat(data[6]) : 0;
+    results.bitfinex = { status: r.status, ok: r.ok, hasPrice: !!(price > 0), price };
+  } catch(e) { results.bitfinex = { error: e.message }; }
+
+  // 4.4 Coinbase Exchange API pública (candidato fallback — BTC-USD)
+  try {
+    const r = await fetch('https://api.exchange.coinbase.com/products/BTC-USD/ticker', { signal: AbortSignal.timeout(5000) });
+    const data = await r.json();
+    const price = parseFloat(data?.price);
+    results.coinbase_exchange = { status: r.status, ok: r.ok, hasPrice: !!(price > 0), price };
+  } catch(e) { results.coinbase_exchange = { error: e.message }; }
+
   // 5. Yahoo Finance (stock AAPL)
   try {
     const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/AAPL?interval=1d&range=1d', { headers: { 'User-Agent': 'Mozilla/5.0' } });
