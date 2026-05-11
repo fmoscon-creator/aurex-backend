@@ -647,7 +647,7 @@ async function checkAlertas() {
   try {
     const { data: alertas } = await supabase.from('alertas').select('*').eq('activa', true).eq('disparada', false);
     if (!alertas || !alertas.length) return;
-    const cryptoSyms = [...new Set(alertas.filter(a => a.tipo_activo === 'cripto').map(a => a.simbolo))];
+    const cryptoSyms = [...new Set(alertas.filter(a => a.tipo_activo?.toLowerCase() === 'cripto').map(a => a.simbolo))];
     let cp = {};
     if (cryptoSyms.length) {
       // OPTIMIZACIÓN: usar cryptoCache (que mantiene refreshCryptoCache cada 2 min).
@@ -670,7 +670,7 @@ async function checkAlertas() {
       }
     }
     for (const a of alertas) {
-      const precio = a.tipo_activo === 'cripto' ? cp[a.simbolo] : (await getStockPrice(a.simbolo))?.price;
+      const precio = a.tipo_activo?.toLowerCase() === 'cripto' ? cp[a.simbolo] : (await getStockPrice(a.simbolo))?.price;
       if (!precio) { console.error('[ALERTAS] precio undefined para', a.simbolo, '— alerta', a.id, '— tipo_activo', a.tipo_activo); continue; }
       const ok = a.direccion === 'arriba' ? precio >= a.valor_objetivo : precio <= a.valor_objetivo;
       if (ok) await dispararAlerta(a, precio);
