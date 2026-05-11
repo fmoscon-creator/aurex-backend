@@ -888,6 +888,14 @@ app.post('/api/health/test-report', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// Preview del bloque CONEXIONES en texto plano (no envía Telegram, no persiste)
+app.get('/api/health/preview-conns', async (req, res) => {
+  try {
+    const conns = await buildConnectionsSection();
+    res.type('text/plain').send(conns);
+  } catch(e) { res.status(500).type('text/plain').send('Error: ' + e.message); }
+});
+
 // Test monthly report — fuerza envío manual sin verificar último día hábil
 app.post('/api/health/test-monthly', async function(req, res) {
   try {
@@ -1579,118 +1587,169 @@ async function healthCheck() {
   } else if (_health.ia_stale) { _health.ia_stale = false; await resolveAlert('ia_stale'); }
 }
 
+// ── Helpers para bloque CONEXIONES (B2a) ──
+
+// Batch query: trae el último event por type de health_events (1 query, NO 9)
+async function getAllSourcesTimestamps() {
+  try {
+    const { data, error } = await supabase
+      .from('health_events')
+      .select('type, status, triggered_at, resolved_at, mitigated_at, mitigation_source')
+      .order('triggered_at', { ascending: false });
+    if (error) return {};
+    const map = {};
+    for (const evt of (data || [])) {
+      if (!map[evt.type]) {
+        map[evt.type] = {
+          status: evt.status,
+          triggeredAt: evt.triggered_at,
+          resolvedAt: evt.resolved_at,
+          mitigatedAt: evt.mitigated_at,
+          mitigationSource: evt.mitigation_source
+        };
+      }
+    }
+    return map;
+  } catch (e) { return {}; }
+}
+
+function _fmtDuration(ms) {
+  if (!ms || ms < 0) return '0m';
+  const sec = Math.floor(ms / 1000);
+  const min = Math.floor(sec / 60);
+  const hr = Math.floor(min / 60);
+  const day = Math.floor(hr / 24);
+  if (day > 0) return day + 'd ' + (hr % 24) + 'h';
+  if (hr > 0) return hr + 'h ' + (min % 60) + 'm';
+  return min + 'm';
+}
+
+function _fmtARShort(iso) {
+  if (!iso) return '?';
+  try {
+    return new Date(iso).toLocaleString('es-AR', {
+      day: '2-digit', month: 'short',
+      hour: '2-digit', minute: '2-digit',
+      hour12: false, timeZone: 'America/Argentina/Buenos_Aires'
+    });
+  } catch (e) { return iso; }
+}
+
+// Construye una línea de fuente con emoji + rol + comentario + timestamp opcional
+// liveOk: del probe en vivo (gana sobre health_events para emoji)
+// eventInfo: del health_events (usado solo para timestamp "DOWN Xd" o "OK desde X")
+function _formatSourceLine(name, role, comment, liveOk, eventInfo) {
+  const emoji = liveOk ? '✅' : '🔴';
+  let line = '  ' + emoji + ' ' + name;
+  if (role) line += ' — ' + role;
+  if (comment) line += ' (' + comment + ')';
+  if (!liveOk && eventInfo && eventInfo.status === 'active' && eventInfo.triggeredAt) {
+    const dur = _fmtDuration(Date.now() - new Date(eventInfo.triggeredAt).getTime());
+    line += ' · DOWN ' + dur;
+  } else if (liveOk && eventInfo && eventInfo.status === 'resolved' && eventInfo.resolvedAt) {
+    line += ' · OK desde ' + _fmtARShort(eventInfo.resolvedAt);
+  }
+  return line + '\n';
+}
+
+// Probe todas las fuentes en paralelo (Promise.allSettled — un fallo no bloquea otros)
+async function _probeAllSources() {
+  function safeProbe(fn) { return Promise.resolve().then(fn).catch(function() { return false; }); }
+  const results = await Promise.allSettled([
+    safeProbe(async function() {
+      const r = await fetch(EVOLUTION_URL + '/instance/connectionState/' + EVOLUTION_INSTANCE, { headers: { 'apikey': EVOLUTION_KEY }, signal: AbortSignal.timeout(5000) });
+      const d = await r.json(); return d && d.instance && d.instance.state === 'open';
+    }),
+    safeProbe(async function() {
+      const q = await supabase.from('usuarios').select('id').limit(1);
+      return !q.error;
+    }),
+    safeProbe(async function() {
+      const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', { signal: AbortSignal.timeout(5000) });
+      const d = await r.json(); return !!d.price;
+    }),
+    safeProbe(async function() {
+      const r = await fetch('https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD', { signal: AbortSignal.timeout(5000) });
+      const d = await r.json(); return !!d.USD;
+    }),
+    safeProbe(async function() {
+      const r = await fetch('https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT', { signal: AbortSignal.timeout(5000) });
+      const d = await r.json(); return parseFloat(d && d.data && d.data[0] && d.data[0].last) > 0;
+    }),
+    safeProbe(async function() {
+      const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD', { signal: AbortSignal.timeout(5000) });
+      const d = await r.json(); return parseFloat(d && d.result && d.result.XXBTZUSD && d.result.XXBTZUSD.c && d.result.XXBTZUSD.c[0]) > 0;
+    }),
+    safeProbe(async function() {
+      const cgKey = process.env.COINGECKO_KEY ? '&x_cg_demo_api_key=' + process.env.COINGECKO_KEY : '';
+      const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd' + cgKey, { signal: AbortSignal.timeout(5000) });
+      const d = await r.json(); return !!(d && d.bitcoin && d.bitcoin.usd);
+    }),
+    safeProbe(async function() {
+      const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/AAPL?interval=1d&range=1d', { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) });
+      const d = await r.json(); return !!(d && d.chart && d.chart.result && d.chart.result[0] && d.chart.result[0].meta && d.chart.result[0].meta.regularMarketPrice > 0);
+    }),
+    safeProbe(async function() {
+      const r = await fetch('https://finnhub.io/api/v1/quote?symbol=AAPL&token=' + (process.env.FINNHUB_KEY || ''), { signal: AbortSignal.timeout(5000) });
+      const d = await r.json(); return !!(d && d.c > 0);
+    }),
+    safeProbe(async function() {
+      const r = await fetch('https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL&apikey=' + ALPHA_KEY, { signal: AbortSignal.timeout(5000) });
+      const d = await r.json(); return !!(d['Global Quote'] && d['Global Quote']['05. price']);
+    }),
+  ]);
+  function val(idx) { return results[idx].status === 'fulfilled' && results[idx].value === true; }
+  return {
+    evolution: val(0), supabase: val(1),
+    binance: val(2), cryptocompare: val(3), okx: val(4), kraken: val(5), coingecko: val(6),
+    yahoo: val(7), finnhub: val(8), alphavantage: val(9)
+  };
+}
+
+// Construye el bloque CONEXIONES agrupado por categoría
+async function buildConnectionsSection() {
+  const r = await Promise.all([getAllSourcesTimestamps(), _probeAllSources()]);
+  const ts = r[0], live = r[1];
+  const apnsApproved = !!process.env.APPLE_APPROVAL_DATE;
+  let out = '';
+
+  // 1) Infraestructura
+  out += '🏗 INFRAESTRUCTURA:\n';
+  out += '  ✅ Railway — hosting backend\n';
+  out += _formatSourceLine('Supabase', 'DB principal', null, live.supabase, ts.supabase);
+  out += _formatSourceLine('Evolution API', 'WhatsApp Business', live.evolution ? null : 'pausado WA-002', live.evolution, ts.evolution);
+
+  // 2) Cripto — orden: activas primero, fallidas al final
+  out += '\n💰 CRIPTO (50 cripto + 3 stable):\n';
+  out += _formatSourceLine('OKX', 'fallback 2', global._lastCryptoSource === 'okx' ? 'ACTIVA' : null, live.okx, ts.okx);
+  out += _formatSourceLine('Kraken', 'fallback 3', global._lastCryptoSource === 'kraken' ? 'ACTIVA' : null, live.kraken, ts.kraken);
+  out += _formatSourceLine('CoinGecko', 'fallback 4', 'key Demo, residual', live.coingecko, ts.coingecko);
+  out += _formatSourceLine('Binance', 'primaria', 'geo-block 451, skip 24h', live.binance, ts.binance);
+  out += _formatSourceLine('CryptoCompare', 'fallback 1', 'rate-limit, skip 24h, reset 1-jun', live.cryptocompare, ts.cryptocompare);
+
+  // 3) Stocks / ETF / Bono / Metal / Commod / Forex / Futuro
+  out += '\n📈 STOCKS / ETF / Bono / Metal / Commod / Forex / Futuro (297 activos):\n';
+  out += _formatSourceLine('Yahoo Finance', 'primaria', null, live.yahoo, ts.yahoo);
+  out += _formatSourceLine('Finnhub', 'fallback 1', null, live.finnhub, ts.finnhub);
+  out += _formatSourceLine('Alpha Vantage', 'fallback 2', '25/día plan free', live.alphavantage, ts.alphavantage);
+
+  // 4) Push
+  out += '\n🔔 PUSH:\n';
+  out += '  ✅ Firebase Admin — FCM Android\n';
+  out += apnsApproved
+    ? '  ✅ APNS Apple — iOS (aprobado ' + _fmtARShort(process.env.APPLE_APPROVAL_DATE) + ')\n'
+    : '  🟡 APNS Apple — iOS (Build ' + (process.env.APPLE_BUILD_NUMBER || '?') + ' en review Apple)\n';
+
+  return out;
+}
+
 // Daily report — 08:00 AM Argentina (11:00 UTC)
 async function dailyHealthReport() {
   const now = new Date();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-  // ═══ BLOQUE 1: CONEXIONES ACTUALES ═══
-  let conns = '';
-
-  conns += '✅ Railway Backend\n';
-
-  try {
-    const r = await fetch(EVOLUTION_URL + '/instance/connectionState/' + EVOLUTION_INSTANCE, { headers: { 'apikey': EVOLUTION_KEY } });
-    const d = await r.json();
-    conns += d?.instance?.state === 'open'
-      ? '✅ Evolution API (state: open)\n'
-      : '🔴 Evolution API (' + (d?.instance?.state || 'unknown') + ')\n';
-  } catch(e) {
-    conns += '🔴 Evolution API (Error: ' + e.message + ')\n';
-  }
-
-  try {
-    const { error } = await supabase.from('usuarios').select('id').limit(1);
-    conns += error
-      ? '🔴 Supabase (Error: ' + error.message + ')\n'
-      : '✅ Supabase\n';
-  } catch(e) {
-    conns += '🔴 Supabase (Error: ' + e.message + ')\n';
-  }
-
-  let binanceOk = false;
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
-    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', { signal: ctrl.signal });
-    clearTimeout(t);
-    const d = await r.json();
-    if (d.price) binanceOk = true;
-  } catch(e) {}
-
-  if (binanceOk) {
-    conns += '✅ Binance\n';
-  } else {
-    const src = global._lastCryptoSource || 'unknown';
-    if (src === 'cryptocompare') {
-      conns += '🟡 Binance → Fallback CryptoCompare OK\n';
-    } else if (src === 'coingecko') {
-      conns += '🟡 Binance → Fallback CoinGecko OK\n';
-    } else if (src === 'cache') {
-      conns += '🔴 Binance DOWN (sirviendo cache)\n';
-    } else {
-      conns += '🔴 Binance DOWN\n';
-    }
-  }
-
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
-    const r = await fetch('https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL&apikey=' + ALPHA_KEY, { signal: ctrl.signal });
-    clearTimeout(t);
-    const d = await r.json();
-    conns += d['Global Quote']?.['05. price']
-      ? '✅ Alpha Vantage\n'
-      : '🟡 Alpha Vantage (sin datos)\n';
-  } catch(e) {
-    conns += '🔴 Alpha Vantage (Error)\n';
-  }
-
-  // Yahoo Finance
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
-    const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/AAPL?interval=1d&range=1d', {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-      signal: ctrl.signal
-    });
-    clearTimeout(t);
-    const d = await r.json();
-    const price = d?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    conns += price > 0 ? '✅ Yahoo Finance\n' : '🟡 Yahoo Finance (sin datos)\n';
-  } catch(e) { conns += '🔴 Yahoo Finance (Error)\n'; }
-
-  // Finnhub
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
-    const r = await fetch('https://finnhub.io/api/v1/quote?symbol=AAPL&token=' + (process.env.FINNHUB_KEY || ''), { signal: ctrl.signal });
-    clearTimeout(t);
-    const d = await r.json();
-    conns += d?.c > 0 ? '✅ Finnhub\n' : '🟡 Finnhub (sin datos)\n';
-  } catch(e) { conns += '🔴 Finnhub (Error)\n'; }
-
-  // Kraken
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
-    const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD', { signal: ctrl.signal });
-    clearTimeout(t);
-    const d = await r.json();
-    const price = parseFloat(d?.result?.XXBTZUSD?.c?.[0]);
-    conns += price > 0 ? '✅ Kraken\n' : '🟡 Kraken (sin datos)\n';
-  } catch(e) { conns += '🔴 Kraken (Error)\n'; }
-
-  // OKX
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
-    const r = await fetch('https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT', { signal: ctrl.signal });
-    clearTimeout(t);
-    const d = await r.json();
-    const price = parseFloat(d?.data?.[0]?.last);
-    conns += price > 0 ? '✅ OKX\n' : '🟡 OKX (sin datos)\n';
-  } catch(e) { conns += '🔴 OKX (Error)\n'; }
+  // ═══ BLOQUE 1: CONEXIONES ACTUALES — agrupado por categoría (B2a) ═══
+  const conns = await buildConnectionsSection();
 
   // ═══ BLOQUE 2: INCIDENTES ÚLTIMAS 24H ═══
   const { data: events } = await supabase.from('health_events').select('*').gte('triggered_at', since).order('triggered_at', { ascending: false });
