@@ -283,10 +283,11 @@ async function fetchCryptoPriceBatch(symbols) {
   // 2.5 OKX batch (fallback 2 — gratuito sin key, sin geo-block validado 11-may)
   try {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
+    const t = setTimeout(() => ctrl.abort(), 8000);
     const r = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT', { signal: ctrl.signal });
     clearTimeout(t);
     const data = await r.json();
+    console.log('[CRYPTO-FETCH okx] status:', r.status, 'code:', data?.code, 'data.len:', Array.isArray(data?.data) ? data.data.length : 'N/A');
     if (data?.code === '0' && Array.isArray(data?.data) && data.data.length > 0) {
       // Mapear instId BTC-USDT → BTC
       const okxMap = {};
@@ -613,13 +614,29 @@ app.get('/api/debug/sources', async (req, res) => {
     results.bitstamp = { status: r.status, ok: r.ok, hasPrice: !!(price > 0), price };
   } catch(e) { results.bitstamp = { error: e.message }; }
 
-  // 4.2 OKX (candidato fallback — BTC-USDT batch)
+  // 4.2 OKX (candidato fallback — BTC-USDT singular)
   try {
     const r = await fetch('https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT', { signal: AbortSignal.timeout(5000) });
     const data = await r.json();
     const price = parseFloat(data?.data?.[0]?.last);
     results.okx = { status: r.status, ok: r.ok, hasPrice: !!(price > 0), price };
   } catch(e) { results.okx = { error: e.message }; }
+
+  // 4.2.b OKX batch (lo que usa fetchCryptoPriceBatch) — para validar si funciona el endpoint plural
+  try {
+    const tStart = Date.now();
+    const r = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT', { signal: AbortSignal.timeout(8000) });
+    const elapsed = Date.now() - tStart;
+    const data = await r.json();
+    results.okx_batch = {
+      status: r.status,
+      ok: r.ok,
+      elapsed_ms: elapsed,
+      code: data?.code,
+      data_len: Array.isArray(data?.data) ? data.data.length : null,
+      btc_in_data: Array.isArray(data?.data) ? data.data.some(t => t.instId === 'BTC-USDT') : false
+    };
+  } catch(e) { results.okx_batch = { error: e.message }; }
 
   // 4.3 Bitfinex (candidato fallback — BTC/USD)
   try {
