@@ -318,7 +318,8 @@ async function fetchCryptoPriceBatch(symbols) {
     if (ids) {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 5000);
-      const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd', { signal: ctrl.signal });
+      const cgKey = process.env.COINGECKO_KEY ? '&x_cg_demo_api_key=' + process.env.COINGECKO_KEY : '';
+      const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd' + cgKey, { signal: ctrl.signal });
       clearTimeout(t);
       const data = await r.json();
       if (data && Object.keys(data).length > 0) {
@@ -567,7 +568,8 @@ app.get('/api/debug/sources', async (req, res) => {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 5000);
-    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', { signal: ctrl.signal });
+    const cgKey = process.env.COINGECKO_KEY ? '&x_cg_demo_api_key=' + process.env.COINGECKO_KEY : '';
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd' + cgKey, { signal: ctrl.signal });
     clearTimeout(t);
     const data = await r.json();
     results.coingecko = { status: r.status, ok: r.ok, hasPrice: !!(data.bitcoin?.usd) };
@@ -1375,7 +1377,8 @@ async function healthCheck() {
     } catch(_) {}
     if (src === 'unknown') {
       try {
-        const r3 = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', { signal: AbortSignal.timeout(5000) });
+        const cgKey = process.env.COINGECKO_KEY ? '&x_cg_demo_api_key=' + process.env.COINGECKO_KEY : '';
+        const r3 = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd' + cgKey, { signal: AbortSignal.timeout(5000) });
         const d3 = await r3.json();
         if (d3.bitcoin?.usd) src = 'coingecko';
       } catch(_) {}
