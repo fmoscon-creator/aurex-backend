@@ -270,6 +270,7 @@ async function fetchCryptoPriceBatch(symbols) {
           result[sym] = { price: parseFloat(p.price), source: 'binance', stale: false, ts: now };
           cryptoCache[sym] = result[sym];
         });
+        if (global._lastCryptoSource !== 'binance') global._lastCryptoSourceSince = new Date().toISOString();
         global._lastCryptoSource = 'binance';
         _recordSourceSuccess('binance');
         return result;
@@ -299,6 +300,7 @@ async function fetchCryptoPriceBatch(symbols) {
           }
         });
         if (Object.keys(result).length > 0) {
+          if (global._lastCryptoSource !== 'cryptocompare') global._lastCryptoSourceSince = new Date().toISOString();
           global._lastCryptoSource = 'cryptocompare';
           _ccIncrement(1);
           _recordSourceSuccess('cryptocompare');
@@ -336,6 +338,7 @@ async function fetchCryptoPriceBatch(symbols) {
         }
       });
       if (Object.keys(result).length > 0) {
+        if (global._lastCryptoSource !== 'okx') global._lastCryptoSourceSince = new Date().toISOString();
         global._lastCryptoSource = 'okx';
         _recordSourceSuccess('okx');
         if (_health.binance) mitigateAlert('binance', 'okx');
@@ -368,6 +371,7 @@ async function fetchCryptoPriceBatch(symbols) {
           }
         });
         if (Object.keys(result).length > 0) {
+          if (global._lastCryptoSource !== 'kraken') global._lastCryptoSourceSince = new Date().toISOString();
           global._lastCryptoSource = 'kraken';
           _recordSourceSuccess('kraken');
           if (_health.binance) mitigateAlert('binance', 'kraken');
@@ -396,6 +400,7 @@ async function fetchCryptoPriceBatch(symbols) {
           }
         });
         if (Object.keys(result).length > 0) {
+          if (global._lastCryptoSource !== 'coingecko') global._lastCryptoSourceSince = new Date().toISOString();
           global._lastCryptoSource = 'coingecko';
           _recordSourceSuccess('coingecko');
           if (_health.binance) mitigateAlert('binance', 'coingecko');
@@ -442,6 +447,8 @@ async function getStockPrice(symbol) {
         const changePct = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
         const data = { symbol, price: parseFloat(price), changePct: parseFloat(changePct.toFixed(4)) };
         priceCache[symbol] = { ts: now, data };
+        if (global._lastStockSource !== 'yahoo') global._lastStockSourceSince = new Date().toISOString();
+        global._lastStockSource = 'yahoo';
         _recordSourceSuccess('yahoo');
         return data;
       }
@@ -456,6 +463,8 @@ async function getStockPrice(symbol) {
       if (json && json.c && json.c > 0) {
         const data = { symbol, price: parseFloat(json.c), changePct: parseFloat((json.dp || 0).toFixed(4)) };
         priceCache[symbol] = { ts: now, data };
+        if (global._lastStockSource !== 'finnhub') global._lastStockSourceSince = new Date().toISOString();
+        global._lastStockSource = 'finnhub';
         _recordSourceSuccess('finnhub');
         return data;
       }
@@ -474,6 +483,8 @@ async function getStockPrice(symbol) {
     }
     const data = { symbol, price: parseFloat(q['05. price']), changePct: parseFloat((q['10. change percent'] || '0').replace('%','')) };
     priceCache[symbol] = { ts: now, data };
+    if (global._lastStockSource !== 'alphavantage') global._lastStockSourceSince = new Date().toISOString();
+    global._lastStockSource = 'alphavantage';
     _recordSourceSuccess('alphavantage');
     return data;
   } catch(e) { console.error('[STOCK-FETCH alphavantage]', symbol, e.message); _recordSourceFailure('alphavantage', e.message); return null; }
@@ -1779,8 +1790,13 @@ async function buildConnectionsSection() {
 
   // 2) Cripto — orden: activas primero, fallidas al final
   out += '\n💰 CRIPTO (50 cripto + 3 stable):\n';
-  out += _formatSourceLine('OKX', 'fallback 2', global._lastCryptoSource === 'okx' ? 'ACTIVA' : null, live.okx, ts.okx);
-  out += _formatSourceLine('Kraken', 'fallback 3', global._lastCryptoSource === 'kraken' ? 'ACTIVA' : null, live.kraken, ts.kraken);
+  const cSince = global._lastCryptoSourceSince;
+  const cActiveLabel = function(name) {
+    if (global._lastCryptoSource !== name) return null;
+    return cSince ? 'ACTIVA desde ' + _fmtARShort(cSince) : 'ACTIVA';
+  };
+  out += _formatSourceLine('OKX', 'fallback 2', cActiveLabel('okx'), live.okx, ts.okx);
+  out += _formatSourceLine('Kraken', 'fallback 3', cActiveLabel('kraken'), live.kraken, ts.kraken);
   out += _formatSourceLine('CoinGecko', 'fallback 4', 'key Demo, residual', live.coingecko, ts.coingecko);
   out += _formatSourceLine('Binance', 'primaria', 'geo-block 451, skip 24h', live.binance, ts.binance);
 
@@ -1801,9 +1817,15 @@ async function buildConnectionsSection() {
 
   // 3) Stocks / ETF / Bono / Metal / Commod / Forex / Futuro
   out += '\n📈 STOCKS / ETF / Bono / Metal / Commod / Forex / Futuro (297 activos):\n';
-  out += _formatSourceLine('Yahoo Finance', 'primaria', null, live.yahoo, ts.yahoo);
-  out += _formatSourceLine('Finnhub', 'fallback 1', null, live.finnhub, ts.finnhub);
-  out += _formatSourceLine('Alpha Vantage', 'fallback 2', '25/día plan free', live.alphavantage, ts.alphavantage);
+  const sSince = global._lastStockSourceSince;
+  const sActiveLabel = function(name, baseComment) {
+    if (global._lastStockSource !== name) return baseComment;
+    const tag = sSince ? 'ACTIVA desde ' + _fmtARShort(sSince) : 'ACTIVA';
+    return baseComment ? baseComment + ', ' + tag : tag;
+  };
+  out += _formatSourceLine('Yahoo Finance', 'primaria', sActiveLabel('yahoo', null), live.yahoo, ts.yahoo);
+  out += _formatSourceLine('Finnhub', 'fallback 1', sActiveLabel('finnhub', null), live.finnhub, ts.finnhub);
+  out += _formatSourceLine('Alpha Vantage', 'fallback 2', sActiveLabel('alphavantage', '25/día plan free'), live.alphavantage, ts.alphavantage);
 
   // 4) Push
   out += '\n🔔 PUSH:\n';
