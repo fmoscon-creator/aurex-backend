@@ -619,10 +619,27 @@ async function dispararAlerta(alerta, precio) {
   }
   let fcmEnviado = false;
   if (alerta.user_id) {
-    const { data: usr } = await supabase.from('usuarios').select('fcm_token').eq('id', alerta.user_id).single();
-    if (usr?.fcm_token) {
+    // Multi-device: leer todos los devices del user de usuarios_devices.
+    // Backward compat: si la tabla está vacía para este user (o no existe),
+    // fallback al campo viejo usuarios.fcm_token.
+    let tokens = [];
+    try {
+      const { data: devices } = await supabase
+        .from('usuarios_devices')
+        .select('fcm_token, platform, device_name')
+        .eq('user_id', alerta.user_id);
+      if (devices && devices.length > 0) {
+        tokens = devices.map(function(d) { return d.fcm_token; });
+      }
+    } catch(e) { console.error('[FCM] usuarios_devices read error:', e.message); }
+    if (tokens.length === 0) {
+      // Fallback campo viejo
+      const { data: usr } = await supabase.from('usuarios').select('fcm_token').eq('id', alerta.user_id).single();
+      if (usr?.fcm_token) tokens.push(usr.fcm_token);
+    }
+    for (const token of tokens) {
       const result = await sendPushFCM(
-        usr.fcm_token,
+        token,
         emoji + ' ' + alerta.simbolo + ' — $' + fmtP(precio),
         '🎯 $' + fmtP(alerta.valor_objetivo) + ' alcanzado',
         { alerta_id: alerta.id, simbolo: alerta.simbolo, precio_disparado: precio, tipo: 'alerta_precio' }
@@ -631,10 +648,14 @@ async function dispararAlerta(alerta, precio) {
         fcmEnviado = true;
       } else {
         console.error('[FCM]', result.error, '(code:', result.code + ')');
-        // Token inválido → limpiar para que el usuario re-registre en próximo login
+        // Token inválido → cleanup en ambas tablas (compat)
         if (result.code === 'messaging/registration-token-not-registered' ||
             result.code === 'messaging/invalid-registration-token') {
-          await supabase.from('usuarios').update({ fcm_token: null }).eq('id', alerta.user_id);
+          try { await supabase.from('usuarios_devices').delete().eq('fcm_token', token); } catch(_) {}
+          try {
+            const { data: u } = await supabase.from('usuarios').select('fcm_token').eq('id', alerta.user_id).single();
+            if (u?.fcm_token === token) await supabase.from('usuarios').update({ fcm_token: null }).eq('id', alerta.user_id);
+          } catch(_) {}
           console.log('[FCM] cleaned invalid token for user', alerta.user_id);
         }
       }
@@ -814,6 +835,35 @@ app.get('/api/debug/sources', async (req, res) => {
 app.get('/api/stock/:symbol', async (req, res) => { const d = await getStockPrice(req.params.symbol.toUpperCase()); d ? res.json(d) : res.status(404).json({ error: 'No encontrado' }); });
 app.get('/api/alertas/:userId', async (req, res) => { const { data, error } = await supabase.from('alertas').select('*').eq('user_id', req.params.userId); error ? res.status(500).json({ error }) : res.json(data); });
 app.post('/api/alertas', async (req, res) => { const { data, error } = await supabase.from('alertas').insert({ ...req.body, activa: true, disparada: false, created_at: new Date().toISOString() }).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
+
+// Multi-device: registrar/actualizar device token de un user
+// Body: { fcm_token, platform, device_id?, device_name? }
+app.post('/api/users/:id/devices', async (req, res) => {
+  const body = req.body || {};
+  const { fcm_token, platform, device_id, device_name } = body;
+  if (!fcm_token || !platform) return res.status(400).json({ error: 'fcm_token y platform requeridos' });
+  if (platform !== 'android' && platform !== 'ios') return res.status(400).json({ error: 'platform debe ser android|ios' });
+  try {
+    const { error } = await supabase.from('usuarios_devices').upsert({
+      user_id: req.params.id,
+      fcm_token, platform,
+      device_id: device_id || null,
+      device_name: device_name || null,
+      last_seen: new Date().toISOString()
+    }, { onConflict: 'user_id,fcm_token' });
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch(e) { console.error('[DEVICES]', e.message); res.status(500).json({ error: e.message }); }
+});
+
+// Listar devices de un user (debug/admin)
+app.get('/api/users/:id/devices', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('usuarios_devices').select('fcm_token, platform, device_id, device_name, last_seen, created_at').eq('user_id', req.params.id).order('last_seen', { ascending: false });
+    if (error) throw error;
+    res.json({ ok: true, devices: data || [] });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
 app.patch('/api/alertas/:id', async (req, res) => { const { data, error } = await supabase.from('alertas').update(req.body).eq('id', req.params.id).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.delete('/api/alertas/:id', async (req, res) => { const { error } = await supabase.from('alertas').delete().eq('id', req.params.id); error ? res.status(500).json({ error }) : res.json({ ok: true }); });
 app.get('/api/portfolio/:userId', async (req, res) => {
