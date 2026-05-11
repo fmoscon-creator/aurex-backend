@@ -1515,6 +1515,64 @@ async function healthCheck() {
     }
   }
 
+  // 3.1) Yahoo Finance (probe AAPL chart)
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/AAPL?interval=1d&range=1d', {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      signal: ctrl.signal
+    });
+    clearTimeout(t);
+    const d = await r.json();
+    const price = d?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (!price || price <= 0) throw new Error('No price');
+    if (_health.yahoo) { _health.yahoo = false; await resolveAlert('yahoo'); }
+  } catch(e) {
+    if (!_health.yahoo) { _health.yahoo = true; await openAlert('yahoo', 'DOWN: ' + e.message); }
+  }
+
+  // 3.2) Finnhub (probe AAPL quote)
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://finnhub.io/api/v1/quote?symbol=AAPL&token=' + (process.env.FINNHUB_KEY || ''), { signal: ctrl.signal });
+    clearTimeout(t);
+    const d = await r.json();
+    if (!d || !d.c || d.c <= 0) throw new Error('No price (status ' + r.status + ')');
+    if (_health.finnhub) { _health.finnhub = false; await resolveAlert('finnhub'); }
+  } catch(e) {
+    if (!_health.finnhub) { _health.finnhub = true; await openAlert('finnhub', 'DOWN: ' + e.message); }
+  }
+
+  // 3.3) Kraken (probe XBTUSD)
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD', { signal: ctrl.signal });
+    clearTimeout(t);
+    const d = await r.json();
+    const price = parseFloat(d?.result?.XXBTZUSD?.c?.[0]);
+    if (!price || price <= 0) throw new Error('No price');
+    if (_health.kraken) { _health.kraken = false; await resolveAlert('kraken'); }
+  } catch(e) {
+    if (!_health.kraken) { _health.kraken = true; await openAlert('kraken', 'DOWN: ' + e.message); }
+  }
+
+  // 3.4) OKX (probe BTC-USDT)
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT', { signal: ctrl.signal });
+    clearTimeout(t);
+    const d = await r.json();
+    const price = parseFloat(d?.data?.[0]?.last);
+    if (!price || price <= 0) throw new Error('No price (code ' + d?.code + ')');
+    if (_health.okx) { _health.okx = false; await resolveAlert('okx'); }
+  } catch(e) {
+    if (!_health.okx) { _health.okx = true; await openAlert('okx', 'DOWN: ' + e.message); }
+  }
+
   // 4) IA signals stale (>10min)
   if (global._iaLastCalc && (Date.now() - global._iaLastCalc) > 600000) {
     if (!_health.ia_stale) { _health.ia_stale = true; await openAlert('ia_stale', 'Last calc ' + Math.round((Date.now() - global._iaLastCalc) / 60000) + ' min ago'); }
@@ -1587,6 +1645,52 @@ async function dailyHealthReport() {
   } catch(e) {
     conns += '🔴 Alpha Vantage (Error)\n';
   }
+
+  // Yahoo Finance
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/AAPL?interval=1d&range=1d', {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      signal: ctrl.signal
+    });
+    clearTimeout(t);
+    const d = await r.json();
+    const price = d?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    conns += price > 0 ? '✅ Yahoo Finance\n' : '🟡 Yahoo Finance (sin datos)\n';
+  } catch(e) { conns += '🔴 Yahoo Finance (Error)\n'; }
+
+  // Finnhub
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://finnhub.io/api/v1/quote?symbol=AAPL&token=' + (process.env.FINNHUB_KEY || ''), { signal: ctrl.signal });
+    clearTimeout(t);
+    const d = await r.json();
+    conns += d?.c > 0 ? '✅ Finnhub\n' : '🟡 Finnhub (sin datos)\n';
+  } catch(e) { conns += '🔴 Finnhub (Error)\n'; }
+
+  // Kraken
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD', { signal: ctrl.signal });
+    clearTimeout(t);
+    const d = await r.json();
+    const price = parseFloat(d?.result?.XXBTZUSD?.c?.[0]);
+    conns += price > 0 ? '✅ Kraken\n' : '🟡 Kraken (sin datos)\n';
+  } catch(e) { conns += '🔴 Kraken (Error)\n'; }
+
+  // OKX
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT', { signal: ctrl.signal });
+    clearTimeout(t);
+    const d = await r.json();
+    const price = parseFloat(d?.data?.[0]?.last);
+    conns += price > 0 ? '✅ OKX\n' : '🟡 OKX (sin datos)\n';
+  } catch(e) { conns += '🔴 OKX (Error)\n'; }
 
   // ═══ BLOQUE 2: INCIDENTES ÚLTIMAS 24H ═══
   const { data: events } = await supabase.from('health_events').select('*').gte('triggered_at', since).order('triggered_at', { ascending: false });
