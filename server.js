@@ -178,6 +178,48 @@ const CC_LIMIT = 11000;
 let _binanceBlockedUntil = 0;  // 451 geo-block Railway → skip 24h
 let _ccBlockedUntil = 0;       // rate-limit mensual → skip 24h
 
+// ── Persistencia de fuente activa cripto/stock (B2c-fix) ──
+// Sobrevive a redeploys de Railway. Mismo patrón que cc_monthly_calls.
+async function _loadActiveSources() {
+  try {
+    const { data } = await supabase.from('system_config').select('key, value').in('key', [
+      'crypto_active_source', 'crypto_active_source_since',
+      'stock_active_source', 'stock_active_source_since'
+    ]);
+    if (data) {
+      for (const row of data) {
+        if (row.key === 'crypto_active_source') global._lastCryptoSource = row.value;
+        else if (row.key === 'crypto_active_source_since') global._lastCryptoSourceSince = row.value;
+        else if (row.key === 'stock_active_source') global._lastStockSource = row.value;
+        else if (row.key === 'stock_active_source_since') global._lastStockSourceSince = row.value;
+      }
+    }
+    console.log('[ACTIVE-SOURCES] Loaded:',
+      'crypto=' + (global._lastCryptoSource || '?'),
+      'since=' + (global._lastCryptoSourceSince || '?'),
+      '| stock=' + (global._lastStockSource || '?'),
+      'since=' + (global._lastStockSourceSince || '?'));
+  } catch(e) { console.error('[ACTIVE-SOURCES] Load error:', e.message); }
+}
+
+// Actualiza global + persiste en Supabase. Solo si cambió el source.
+// Fire-and-forget: NO bloquea el flow de fetchCryptoPriceBatch / getStockPrice.
+function _persistActiveSource(type, source) {
+  const gKey = type === 'crypto' ? '_lastCryptoSource' : '_lastStockSource';
+  const gSinceKey = type === 'crypto' ? '_lastCryptoSourceSince' : '_lastStockSourceSince';
+  if (global[gKey] === source) return; // sin cambio
+  const now = new Date().toISOString();
+  global[gKey] = source;
+  global[gSinceKey] = now;
+  // Upsert en background (no await)
+  supabase.from('system_config').upsert([
+    { key: type + '_active_source', value: source, updated_at: now },
+    { key: type + '_active_source_since', value: now, updated_at: now }
+  ], { onConflict: 'key' }).then(function(r) {
+    if (r.error) console.error('[ACTIVE-SOURCES] Persist error:', r.error.message);
+  });
+}
+
 async function _ccLoadCounter() {
   try {
     const { data } = await supabase.from('system_config').select('value,updated_at').eq('key', 'cc_monthly_calls').single();
@@ -218,6 +260,7 @@ cron.schedule('0 3 1 * *', async () => { // 03:00 UTC = 00:00 AR
 });
 
 setTimeout(_ccLoadCounter, 3000);
+setTimeout(_loadActiveSources, 3000);
 
 // ── Watchdog on-fail (B2b) ──
 // Cuenta errores consecutivos por fuente. Si supera threshold, manda Telegram
@@ -270,8 +313,7 @@ async function fetchCryptoPriceBatch(symbols) {
           result[sym] = { price: parseFloat(p.price), source: 'binance', stale: false, ts: now };
           cryptoCache[sym] = result[sym];
         });
-        if (global._lastCryptoSource !== 'binance') global._lastCryptoSourceSince = new Date().toISOString();
-        global._lastCryptoSource = 'binance';
+        _persistActiveSource('crypto', 'binance');
         _recordSourceSuccess('binance');
         return result;
       }
@@ -300,8 +342,7 @@ async function fetchCryptoPriceBatch(symbols) {
           }
         });
         if (Object.keys(result).length > 0) {
-          if (global._lastCryptoSource !== 'cryptocompare') global._lastCryptoSourceSince = new Date().toISOString();
-          global._lastCryptoSource = 'cryptocompare';
+          _persistActiveSource('crypto', 'cryptocompare');
           _ccIncrement(1);
           _recordSourceSuccess('cryptocompare');
           if (_health.binance) mitigateAlert('binance', 'cryptocompare');
@@ -338,8 +379,7 @@ async function fetchCryptoPriceBatch(symbols) {
         }
       });
       if (Object.keys(result).length > 0) {
-        if (global._lastCryptoSource !== 'okx') global._lastCryptoSourceSince = new Date().toISOString();
-        global._lastCryptoSource = 'okx';
+        _persistActiveSource('crypto', 'okx');
         _recordSourceSuccess('okx');
         if (_health.binance) mitigateAlert('binance', 'okx');
         return result;
@@ -371,8 +411,7 @@ async function fetchCryptoPriceBatch(symbols) {
           }
         });
         if (Object.keys(result).length > 0) {
-          if (global._lastCryptoSource !== 'kraken') global._lastCryptoSourceSince = new Date().toISOString();
-          global._lastCryptoSource = 'kraken';
+          _persistActiveSource('crypto', 'kraken');
           _recordSourceSuccess('kraken');
           if (_health.binance) mitigateAlert('binance', 'kraken');
           return result;
@@ -400,8 +439,7 @@ async function fetchCryptoPriceBatch(symbols) {
           }
         });
         if (Object.keys(result).length > 0) {
-          if (global._lastCryptoSource !== 'coingecko') global._lastCryptoSourceSince = new Date().toISOString();
-          global._lastCryptoSource = 'coingecko';
+          _persistActiveSource('crypto', 'coingecko');
           _recordSourceSuccess('coingecko');
           if (_health.binance) mitigateAlert('binance', 'coingecko');
           return result;
@@ -447,8 +485,7 @@ async function getStockPrice(symbol) {
         const changePct = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
         const data = { symbol, price: parseFloat(price), changePct: parseFloat(changePct.toFixed(4)) };
         priceCache[symbol] = { ts: now, data };
-        if (global._lastStockSource !== 'yahoo') global._lastStockSourceSince = new Date().toISOString();
-        global._lastStockSource = 'yahoo';
+        _persistActiveSource('stock', 'yahoo');
         _recordSourceSuccess('yahoo');
         return data;
       }
@@ -463,8 +500,7 @@ async function getStockPrice(symbol) {
       if (json && json.c && json.c > 0) {
         const data = { symbol, price: parseFloat(json.c), changePct: parseFloat((json.dp || 0).toFixed(4)) };
         priceCache[symbol] = { ts: now, data };
-        if (global._lastStockSource !== 'finnhub') global._lastStockSourceSince = new Date().toISOString();
-        global._lastStockSource = 'finnhub';
+        _persistActiveSource('stock', 'finnhub');
         _recordSourceSuccess('finnhub');
         return data;
       }
@@ -483,8 +519,7 @@ async function getStockPrice(symbol) {
     }
     const data = { symbol, price: parseFloat(q['05. price']), changePct: parseFloat((q['10. change percent'] || '0').replace('%','')) };
     priceCache[symbol] = { ts: now, data };
-    if (global._lastStockSource !== 'alphavantage') global._lastStockSourceSince = new Date().toISOString();
-    global._lastStockSource = 'alphavantage';
+    _persistActiveSource('stock', 'alphavantage');
     _recordSourceSuccess('alphavantage');
     return data;
   } catch(e) { console.error('[STOCK-FETCH alphavantage]', symbol, e.message); _recordSourceFailure('alphavantage', e.message); return null; }
