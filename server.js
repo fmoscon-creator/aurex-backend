@@ -494,6 +494,79 @@ cron.schedule('*/2 * * * *', refreshCryptoCache); // cada 2 min
 setTimeout(refreshCryptoCache, 5000); // al iniciar
 
 app.get('/', (req, res) => res.json({ status: 'ok', app: 'Aurex Backend', version: '1.0.0', time: new Date().toISOString() }));
+
+// Endpoint debug — diagnóstico de cada fuente externa DESDE la IP del backend (Railway us-east4)
+app.get('/api/debug/sources', async (req, res) => {
+  const results = {};
+  const now = Date.now();
+
+  // 1. Binance (crypto BTC)
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', { signal: ctrl.signal });
+    clearTimeout(t);
+    const data = await r.json();
+    results.binance = { status: r.status, ok: r.ok, data, hasPrice: !!data.price };
+  } catch(e) { results.binance = { error: e.message }; }
+
+  // 2. CryptoCompare (crypto BTC+ETH)
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const ccHeaders = process.env.CRYPTOCOMPARE_KEY ? { 'authorization': 'Apikey ' + process.env.CRYPTOCOMPARE_KEY } : {};
+    const r = await fetch('https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC,ETH&tsyms=USD', { signal: ctrl.signal, headers: ccHeaders });
+    clearTimeout(t);
+    const data = await r.json();
+    results.cryptocompare = { status: r.status, ok: r.ok, data, hasUSD: !!(data.BTC?.USD) };
+  } catch(e) { results.cryptocompare = { error: e.message }; }
+
+  // 3. Kraken (crypto BTC)
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD', { signal: ctrl.signal });
+    clearTimeout(t);
+    const data = await r.json();
+    results.kraken = { status: r.status, ok: r.ok, hasPrice: !!(data.result?.XXBTZUSD?.c?.[0]) };
+  } catch(e) { results.kraken = { error: e.message }; }
+
+  // 4. CoinGecko (crypto BTC)
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', { signal: ctrl.signal });
+    clearTimeout(t);
+    const data = await r.json();
+    results.coingecko = { status: r.status, ok: r.ok, hasPrice: !!(data.bitcoin?.usd) };
+  } catch(e) { results.coingecko = { error: e.message }; }
+
+  // 5. Yahoo Finance (stock AAPL)
+  try {
+    const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/AAPL?interval=1d&range=1d', { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const data = await r.json();
+    const meta = data?.chart?.result?.[0]?.meta;
+    results.yahoo = { status: r.status, ok: r.ok, hasPrice: !!meta?.regularMarketPrice, price: meta?.regularMarketPrice };
+  } catch(e) { results.yahoo = { error: e.message }; }
+
+  // 6. Finnhub (stock AAPL)
+  try {
+    const r = await fetch('https://finnhub.io/api/v1/quote?symbol=AAPL&token=' + process.env.FINNHUB_KEY);
+    const data = await r.json();
+    results.finnhub = { status: r.status, ok: r.ok, hasPrice: !!(data.c > 0), price: data.c };
+  } catch(e) { results.finnhub = { error: e.message }; }
+
+  // 7. Alpha Vantage (stock AAPL)
+  try {
+    const r = await fetch('https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL&apikey=' + ALPHA_KEY);
+    const data = await r.json();
+    const q = data['Global Quote'];
+    results.alphavantage = { status: r.status, ok: r.ok, hasPrice: !!(q && q['05. price']), price: q?.['05. price'], errorMessage: data['Error Message'], info: data.Information };
+  } catch(e) { results.alphavantage = { error: e.message }; }
+
+  res.json({ ok: true, ts: new Date().toISOString(), serverIP: req.headers['x-real-ip'] || 'unknown', results });
+});
+
 app.get('/api/stock/:symbol', async (req, res) => { const d = await getStockPrice(req.params.symbol.toUpperCase()); d ? res.json(d) : res.status(404).json({ error: 'No encontrado' }); });
 app.get('/api/alertas/:userId', async (req, res) => { const { data, error } = await supabase.from('alertas').select('*').eq('user_id', req.params.userId); error ? res.status(500).json({ error }) : res.json(data); });
 app.post('/api/alertas', async (req, res) => { const { data, error } = await supabase.from('alertas').insert({ ...req.body, activa: true, disparada: false, created_at: new Date().toISOString() }).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
