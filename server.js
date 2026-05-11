@@ -219,6 +219,34 @@ cron.schedule('0 3 1 * *', async () => { // 03:00 UTC = 00:00 AR
 
 setTimeout(_ccLoadCounter, 3000);
 
+// ── Watchdog on-fail (B2b) ──
+// Cuenta errores consecutivos por fuente. Si supera threshold, manda Telegram
+// inmediato (cooldown 30 min). En éxito, resetea el contador.
+const _sourceErrorCount = {};
+const _sourceLastAlertAt = {};
+const _SOURCE_ERROR_THRESHOLD = 3;
+const _SOURCE_ALERT_COOLDOWN_MS = 30 * 60 * 1000;
+
+function _recordSourceFailure(source, errMsg) {
+  _sourceErrorCount[source] = (_sourceErrorCount[source] || 0) + 1;
+  if (_sourceErrorCount[source] >= _SOURCE_ERROR_THRESHOLD) {
+    const now = Date.now();
+    if (!_sourceLastAlertAt[source] || now - _sourceLastAlertAt[source] > _SOURCE_ALERT_COOLDOWN_MS) {
+      _sourceLastAlertAt[source] = now;
+      try {
+        const tgChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+        if (tgChatId) {
+          bot.sendMessage(tgChatId, '🚨 ' + source.toUpperCase() + ' DOWN\n' + _sourceErrorCount[source] + ' errores consecutivos\nÚltimo: ' + (errMsg || 'unknown')).catch(function(e) { console.error('[WATCHDOG TG]', e.message); });
+        }
+      } catch(e) { console.error('[WATCHDOG]', e.message); }
+    }
+  }
+}
+
+function _recordSourceSuccess(source) {
+  if (_sourceErrorCount[source]) _sourceErrorCount[source] = 0;
+}
+
 async function fetchCryptoPriceBatch(symbols) {
   const result = {};
   const now = Date.now();
@@ -243,9 +271,10 @@ async function fetchCryptoPriceBatch(symbols) {
           cryptoCache[sym] = result[sym];
         });
         global._lastCryptoSource = 'binance';
+        _recordSourceSuccess('binance');
         return result;
       }
-    } catch(e) { console.error('[CRYPTO-FETCH binance]', symbols, e.message); }
+    } catch(e) { console.error('[CRYPTO-FETCH binance]', symbols, e.message); _recordSourceFailure('binance', e.message); }
   }
 
   // 2. CryptoCompare batch (fallback 1 — plan free 11k/mes) — skip si rate-limit activo
@@ -261,6 +290,7 @@ async function fetchCryptoPriceBatch(symbols) {
       if (data?.Response === 'Error' && typeof data?.Message === 'string' && data.Message.toLowerCase().includes('rate limit')) {
         _ccBlockedUntil = Date.now() + 24 * 60 * 60 * 1000;
         console.error('[CRYPTO-FETCH cryptocompare] rate-limit hit, blocking 24h');
+        _recordSourceFailure('cryptocompare', 'rate-limit');
       } else if (data && typeof data === 'object' && Object.keys(data).length > 0) {
         Object.keys(data).forEach(sym => {
           if (data[sym]?.USD) {
@@ -271,13 +301,15 @@ async function fetchCryptoPriceBatch(symbols) {
         if (Object.keys(result).length > 0) {
           global._lastCryptoSource = 'cryptocompare';
           _ccIncrement(1);
+          _recordSourceSuccess('cryptocompare');
           if (_health.binance) mitigateAlert('binance', 'cryptocompare');
           return result;
         } else {
           console.error('[CRYPTO-FETCH cryptocompare] respuesta sin USD para', symbols, '— payload keys:', Object.keys(data));
+          _recordSourceFailure('cryptocompare', 'sin USD en payload');
         }
       }
-    } catch(e) { console.error('[CRYPTO-FETCH cryptocompare]', symbols, e.message); }
+    } catch(e) { console.error('[CRYPTO-FETCH cryptocompare]', symbols, e.message); _recordSourceFailure('cryptocompare', e.message); }
   }
 
   // 2.5 OKX batch (fallback 2 — gratuito sin key, sin geo-block validado 11-may)
@@ -305,11 +337,12 @@ async function fetchCryptoPriceBatch(symbols) {
       });
       if (Object.keys(result).length > 0) {
         global._lastCryptoSource = 'okx';
+        _recordSourceSuccess('okx');
         if (_health.binance) mitigateAlert('binance', 'okx');
         return result;
       }
     }
-  } catch(e) { console.error('[CRYPTO-FETCH okx]', symbols, e.message); }
+  } catch(e) { console.error('[CRYPTO-FETCH okx]', symbols, e.message); _recordSourceFailure('okx', e.message); }
 
   // 3. Kraken batch (fallback 2 — gratuito sin key)
   try {
@@ -336,12 +369,13 @@ async function fetchCryptoPriceBatch(symbols) {
         });
         if (Object.keys(result).length > 0) {
           global._lastCryptoSource = 'kraken';
+          _recordSourceSuccess('kraken');
           if (_health.binance) mitigateAlert('binance', 'kraken');
           return result;
         }
       }
     }
-  } catch(e) { console.error('[CRYPTO-FETCH kraken]', symbols, e.message); }
+  } catch(e) { console.error('[CRYPTO-FETCH kraken]', symbols, e.message); _recordSourceFailure('kraken', e.message); }
 
   // 4. CoinGecko batch (fallback 3 — 10k/mes gratuito) (fallback 2 — 10k/mes)
   try {
@@ -363,14 +397,16 @@ async function fetchCryptoPriceBatch(symbols) {
         });
         if (Object.keys(result).length > 0) {
           global._lastCryptoSource = 'coingecko';
+          _recordSourceSuccess('coingecko');
           if (_health.binance) mitigateAlert('binance', 'coingecko');
           return result;
         } else {
           console.error('[CRYPTO-FETCH coingecko] respuesta sin usd para', symbols, '— payload keys:', Object.keys(data));
+          _recordSourceFailure('coingecko', 'sin usd en payload');
         }
       }
     }
-  } catch(e) { console.error('[CRYPTO-FETCH coingecko]', symbols, e.message); }
+  } catch(e) { console.error('[CRYPTO-FETCH coingecko]', symbols, e.message); _recordSourceFailure('coingecko', e.message); }
 
   // Si llegamos acá, las 4 fuentes en vivo fallaron — log explícito
   console.error('[CRYPTO-FETCH all-failed] las 4 fuentes vacías para', symbols, '— cayendo a cache emergency');
@@ -406,10 +442,11 @@ async function getStockPrice(symbol) {
         const changePct = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
         const data = { symbol, price: parseFloat(price), changePct: parseFloat(changePct.toFixed(4)) };
         priceCache[symbol] = { ts: now, data };
+        _recordSourceSuccess('yahoo');
         return data;
       }
     }
-  } catch(e) { console.error('[STOCK-FETCH yahoo]', symbol, e.message); }
+  } catch(e) { console.error('[STOCK-FETCH yahoo]', symbol, e.message); _recordSourceFailure('yahoo', e.message); }
 
   // Nivel 2 — Finnhub (fallback fuerte, 60 calls/min = 86,400/día)
   try {
@@ -419,10 +456,11 @@ async function getStockPrice(symbol) {
       if (json && json.c && json.c > 0) {
         const data = { symbol, price: parseFloat(json.c), changePct: parseFloat((json.dp || 0).toFixed(4)) };
         priceCache[symbol] = { ts: now, data };
+        _recordSourceSuccess('finnhub');
         return data;
       }
     }
-  } catch(e) { console.error('[STOCK-FETCH finnhub]', symbol, e.message); }
+  } catch(e) { console.error('[STOCK-FETCH finnhub]', symbol, e.message); _recordSourceFailure('finnhub', e.message); }
 
   // Nivel 3 — Alpha Vantage (emergencia, 25 calls/día plan free)
   try {
@@ -431,12 +469,14 @@ async function getStockPrice(symbol) {
     const q = json['Global Quote'];
     if (!q || !q['05. price']) {
       console.error('[STOCK-FETCH alphavantage]', symbol, 'sin GLOBAL_QUOTE — payload keys:', Object.keys(json));
+      _recordSourceFailure('alphavantage', 'sin GLOBAL_QUOTE');
       return null;
     }
     const data = { symbol, price: parseFloat(q['05. price']), changePct: parseFloat((q['10. change percent'] || '0').replace('%','')) };
     priceCache[symbol] = { ts: now, data };
+    _recordSourceSuccess('alphavantage');
     return data;
-  } catch(e) { console.error('[STOCK-FETCH alphavantage]', symbol, e.message); return null; }
+  } catch(e) { console.error('[STOCK-FETCH alphavantage]', symbol, e.message); _recordSourceFailure('alphavantage', e.message); return null; }
 }
 
 async function generateAnalysis(simbolo, precio, contexto) {
@@ -1585,6 +1625,24 @@ async function healthCheck() {
   if (global._iaLastCalc && (Date.now() - global._iaLastCalc) > 600000) {
     if (!_health.ia_stale) { _health.ia_stale = true; await openAlert('ia_stale', 'Last calc ' + Math.round((Date.now() - global._iaLastCalc) / 60000) + ' min ago'); }
   } else if (_health.ia_stale) { _health.ia_stale = false; await resolveAlert('ia_stale'); }
+
+  // 5) CryptoCompare contador 80%/95% — alerta inmediata si supera threshold
+  // (fix B2b: antes solo se evaluaba en _ccIncrement, no disparaba cuando CC
+  // estaba rate-limited y no había calls nuevas)
+  if (!_ccAlerted80k && _ccCallsMonth >= CC_LIMIT * 0.8) {
+    _ccAlerted80k = true;
+    try {
+      const tgChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+      if (tgChatId) await bot.sendMessage(tgChatId, '⚠️ CryptoCompare al 80%\nConsumidas ' + _ccCallsMonth.toLocaleString() + ' de ' + CC_LIMIT.toLocaleString() + ' calls este mes (' + Math.round(_ccCallsMonth/CC_LIMIT*100) + '%).');
+    } catch(e) { console.error('[CC ALERT 80%]', e.message); }
+  }
+  if (!_ccAlerted95k && _ccCallsMonth >= CC_LIMIT * 0.95) {
+    _ccAlerted95k = true;
+    try {
+      const tgChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+      if (tgChatId) await bot.sendMessage(tgChatId, '🔴 CRITICO — CryptoCompare al 95%\nConsumidas ' + _ccCallsMonth.toLocaleString() + ' de ' + CC_LIMIT.toLocaleString() + ' calls — corte inminente. Reset 1-jun-2026.');
+    } catch(e) { console.error('[CC ALERT 95%]', e.message); }
+  }
 }
 
 // ── Helpers para bloque CONEXIONES (B2a) ──
@@ -1638,8 +1696,8 @@ function _fmtARShort(iso) {
 // Construye una línea de fuente con emoji + rol + comentario + timestamp opcional
 // liveOk: del probe en vivo (gana sobre health_events para emoji)
 // eventInfo: del health_events (usado solo para timestamp "DOWN Xd" o "OK desde X")
-function _formatSourceLine(name, role, comment, liveOk, eventInfo) {
-  const emoji = liveOk ? '✅' : '🔴';
+function _formatSourceLine(name, role, comment, liveOk, eventInfo, forceEmoji) {
+  const emoji = forceEmoji || (liveOk ? '✅' : '🔴');
   let line = '  ' + emoji + ' ' + name;
   if (role) line += ' — ' + role;
   if (comment) line += ' (' + comment + ')';
@@ -1725,7 +1783,21 @@ async function buildConnectionsSection() {
   out += _formatSourceLine('Kraken', 'fallback 3', global._lastCryptoSource === 'kraken' ? 'ACTIVA' : null, live.kraken, ts.kraken);
   out += _formatSourceLine('CoinGecko', 'fallback 4', 'key Demo, residual', live.coingecko, ts.coingecko);
   out += _formatSourceLine('Binance', 'primaria', 'geo-block 451, skip 24h', live.binance, ts.binance);
-  out += _formatSourceLine('CryptoCompare', 'fallback 1', 'rate-limit, skip 24h, reset 1-jun', live.cryptocompare, ts.cryptocompare);
+
+  // CryptoCompare con % real (% calls del mes vs CC_LIMIT)
+  const ccPct = CC_LIMIT > 0 ? Math.round((_ccCallsMonth / CC_LIMIT) * 100) : 0;
+  let ccEmoji, ccComment;
+  if (ccPct >= 95) {
+    ccEmoji = '🔴';
+    ccComment = 'CRITICO ' + ccPct + '% (' + _ccCallsMonth.toLocaleString() + '/' + CC_LIMIT.toLocaleString() + '), skip 24h';
+  } else if (ccPct >= 80) {
+    ccEmoji = '🟡';
+    ccComment = 'alerta ' + ccPct + '% (' + _ccCallsMonth.toLocaleString() + '/' + CC_LIMIT.toLocaleString() + ')';
+  } else {
+    ccEmoji = null; // usar default del liveOk
+    ccComment = ccPct + '% mensual (' + _ccCallsMonth.toLocaleString() + '/' + CC_LIMIT.toLocaleString() + ')';
+  }
+  out += _formatSourceLine('CryptoCompare', 'fallback 1', ccComment, live.cryptocompare, ts.cryptocompare, ccEmoji);
 
   // 3) Stocks / ETF / Bono / Metal / Commod / Forex / Futuro
   out += '\n📈 STOCKS / ETF / Bono / Metal / Commod / Forex / Futuro (297 activos):\n';
