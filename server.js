@@ -1639,24 +1639,30 @@ async function dailyHealthReport() {
   if (total > 0) msg += 'Total: ' + resolved.length + ' resolved, ' + active.length + ' active\n';
   msg += '━━━━━━━━━━━━━━━━━━\naurex.live';
 
-  // Persistir en Supabase
+  // Persistir en Supabase + leer seq autoasignado
+  let seq = null;
   try {
-    await supabase.from('daily_reports').insert({
+    const { data: inserted } = await supabase.from('daily_reports').insert({
       reported_at: now.toISOString(),
       resolved_count: resolved.length,
       active_count: active.length,
       total_count: total,
       report_text: msg,
       events_snapshot: events || []
-    });
+    }).select('seq').single();
+    if (inserted?.seq) seq = inserted.seq;
   } catch(e) { console.error('[HEALTH REPORT] Persist failed:', e.message); }
 
-  try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, msg); } catch(e) { console.error('[HEALTH REPORT]', e.message); }
+  // Prepend #seq al header del mensaje Telegram
+  const msgTG = seq
+    ? msg.replace('📊 AUREX Daily Health Report\n', '📊 AUREX Daily Health Report #' + seq + '\n')
+    : msg;
+
   try {
     const tgChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
-    if (tgChatId) await bot.sendMessage(tgChatId, msg);
+    if (tgChatId) await bot.sendMessage(tgChatId, msgTG);
   } catch(e) { console.error('[HEALTH REPORT TG]', e.message); }
-  console.log('[HEALTH] Daily report sent + persisted');
+  console.log('[HEALTH] Daily report sent + persisted' + (seq ? ' #' + seq : ''));
 }
 
 async function monthlyHealthReport() {
@@ -1806,8 +1812,9 @@ async function _buildAndSendMonthlyReport() {
 
   msg += '━━━━━━━━━━━━━━━━━━\naurex.live';
 
+  let seq = null;
   try {
-    await supabase.from('monthly_reports').insert({
+    const { data: inserted } = await supabase.from('monthly_reports').insert({
       reported_at: now.toISOString(),
       month_label: monthLabel,
       report_text: msg,
@@ -1816,11 +1823,20 @@ async function _buildAndSendMonthlyReport() {
       active_count: active.length,
       services: services,
       events_snapshot: allEvents
-    });
+    }).select('seq').single();
+    if (inserted?.seq) seq = inserted.seq;
   } catch(e) { console.error('[MONTHLY REPORT] Persist failed:', e.message); }
 
-  try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, msg); } catch(e) { console.error('[MONTHLY REPORT]', e.message); }
-  console.log('[MONTHLY] Report sent + persisted for', monthLabel);
+  // Prepend #seq al header del mensaje Telegram
+  const msgTG = seq
+    ? msg.replace('📊 AUREX Monthly Report', '📊 AUREX Monthly Report #' + seq)
+    : msg;
+
+  try {
+    const tgChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+    if (tgChatId) await bot.sendMessage(tgChatId, msgTG);
+  } catch(e) { console.error('[MONTHLY REPORT TG]', e.message); }
+  console.log('[MONTHLY] Report sent + persisted for', monthLabel + (seq ? ' #' + seq : ''));
 }
 
 async function restoreHealthState() {
@@ -2068,15 +2084,29 @@ async function dailyProjectStatusReport() {
   } catch (e) {
     console.error('[DAILY_STATUS] buildDailyStatus failed:', e.message);
     try { const chatId = process.env.ADMIN_TELEGRAM_CHAT_ID; if (chatId) await bot.sendMessage(chatId, '⚠️ DAILY_STATUS reporte 9:00 fallo: ' + e.message); } catch (e2) {}
-    try { if (ADMIN_WHATSAPP) await sendWhatsAppEvolution(ADMIN_WHATSAPP, '⚠️ DAILY_STATUS reporte 9:00 fallo: ' + e.message); } catch (e2) {}
     return;
   }
+
+  // ─── PERSISTIR EN SUPABASE + LEER seq ──────────────
+  let seq = null;
+  try {
+    const { data: inserted } = await supabase.from('project_status_reports').insert({
+      reported_at: new Date().toISOString(),
+      report_text: result.content,
+      pendientes: linkContexto,
+      contexto_url: linkInicio
+    }).select('seq').single();
+    if (inserted?.seq) seq = inserted.seq;
+  } catch (e) { console.error('[DAILY_STATUS] Persist failed:', e.message); }
+
+  const seqLabel = seq ? ' #' + seq : '';
+  const contentWithSeq = seq ? '📋 STATUS' + seqLabel + '\n\n' + result.content : result.content;
 
   // ─── TELEGRAM ──────────────────────────────────────
   const chatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
   if (chatId) {
     try {
-      await bot.sendMessage(chatId, result.content, { parse_mode: 'HTML' });
+      await bot.sendMessage(chatId, contentWithSeq, { parse_mode: 'HTML' });
       await bot.sendMessage(chatId, '📌 Pendientes actualizados (tocá para copiar):\n<pre>' + linkContexto + '</pre>', { parse_mode: 'HTML' });
       await bot.sendMessage(chatId, '🚀 Arrancar chat con contexto (tocá para copiar):\n<pre>' + linkInicio + '</pre>', { parse_mode: 'HTML' });
       if (apiKey) await bot.sendMessage(chatId, '🔑 RESEARCH_API_KEY (tocá para copiar, pegar como header X-API-Key en chats nuevos de Escritorio):\n<pre>' + apiKey + '</pre>', { parse_mode: 'HTML' });
@@ -2084,14 +2114,7 @@ async function dailyProjectStatusReport() {
   } else {
     console.error('[DAILY_STATUS] ADMIN_TELEGRAM_CHAT_ID no seteada');
   }
-
-  // ─── WHATSAPP (espejo Telegram, formato WA) ────────
-  if (ADMIN_WHATSAPP) {
-    try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, result.content); } catch (e) { console.error('[DAILY_STATUS WA m1]', e.message); }
-    try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, '📌 Pendientes actualizados (tocá y mantené el bloque para copiar):\n```\n' + linkContexto + '\n```'); } catch (e) { console.error('[DAILY_STATUS WA m2]', e.message); }
-    try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, '🚀 Arrancar chat con contexto (tocá y mantené el bloque para copiar):\n```\n' + linkInicio + '\n```'); } catch (e) { console.error('[DAILY_STATUS WA m3]', e.message); }
-    if (apiKey) { try { await sendWhatsAppEvolution(ADMIN_WHATSAPP, '🔑 RESEARCH_API_KEY (tocá y mantené el bloque para copiar, pegar como header X-API-Key en chats nuevos de Escritorio):\n```\n' + apiKey + '\n```'); } catch (e) { console.error('[DAILY_STATUS WA m4]', e.message); } }
-  }
+  console.log('[DAILY_STATUS] Report sent + persisted' + seqLabel);
 }
 
 app.post('/api/daily-status/test', async (req, res) => {
@@ -2241,10 +2264,11 @@ app.post('/api/research/analysis', async function(req, res) {
 
 restoreHealthState().then(() => {
   cron.schedule('*/5 * * * *', healthCheck);
-  cron.schedule('0 11 * * *', dailyHealthReport); // 11:00 UTC = 08:00 Argentina
+  cron.schedule('0 11 * * *', dailyHealthReport); // 11:00 UTC = 08:00 AR
+  cron.schedule('0 23 * * *', dailyHealthReport); // 23:00 UTC = 20:00 AR (segundo del día)
   cron.schedule('0 21 28-31 * *', monthlyHealthReport); // 21:00 UTC = 18:00 AR
-  cron.schedule('0 12 * * *', dailyProjectStatusReport); // 12:00 UTC = 9:00 AR
-  console.log('[HEALTH] Cron: check 5min + daily report 08:00 AR + project status 20:00 AR');
+  cron.schedule('0 12 * * *', dailyProjectStatusReport); // 12:00 UTC = 09:00 AR
+  console.log('[HEALTH] Crons: check 5min + daily 08:00 AR + daily 20:00 AR + project status 09:00 AR');
 });
 
 const PORT = process.env.PORT || 3000;
