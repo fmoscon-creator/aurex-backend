@@ -280,6 +280,36 @@ async function fetchCryptoPriceBatch(symbols) {
     } catch(e) { console.error('[CRYPTO-FETCH cryptocompare]', symbols, e.message); }
   }
 
+  // 2.5 OKX batch (fallback 2 — gratuito sin key, sin geo-block validado 11-may)
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT', { signal: ctrl.signal });
+    clearTimeout(t);
+    const data = await r.json();
+    if (data?.code === '0' && Array.isArray(data?.data) && data.data.length > 0) {
+      // Mapear instId BTC-USDT → BTC
+      const okxMap = {};
+      data.data.forEach(tk => {
+        if (tk.instId?.endsWith('-USDT')) {
+          const sym = tk.instId.replace('-USDT', '');
+          okxMap[sym] = parseFloat(tk.last);
+        }
+      });
+      symbols.forEach(sym => {
+        if (okxMap[sym] && okxMap[sym] > 0 && !result[sym]) {
+          result[sym] = { price: okxMap[sym], source: 'okx', stale: false, ts: now };
+          cryptoCache[sym] = result[sym];
+        }
+      });
+      if (Object.keys(result).length > 0) {
+        global._lastCryptoSource = 'okx';
+        if (_health.binance) mitigateAlert('binance', 'okx');
+        return result;
+      }
+    }
+  } catch(e) { console.error('[CRYPTO-FETCH okx]', symbols, e.message); }
+
   // 3. Kraken batch (fallback 2 — gratuito sin key)
   try {
     const KRAKEN_MAP = {BTC:'XXBTZUSD',ETH:'XETHZUSD',XRP:'XXRPZUSD',LTC:'XLTCZUSD',DOGE:'XDGUSD'};
