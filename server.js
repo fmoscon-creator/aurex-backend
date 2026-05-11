@@ -172,7 +172,11 @@ global._lastCryptoSource = 'binance';
 let _ccCallsMonth = 0;
 let _ccAlerted80k = false;
 let _ccAlerted95k = false;
-const CC_LIMIT = 100000;
+const CC_LIMIT = 11000;
+
+// ── Skip flags para fuentes bloqueadas (evita timeouts wasted) ──
+let _binanceBlockedUntil = 0;  // 451 geo-block Railway → skip 24h
+let _ccBlockedUntil = 0;       // rate-limit mensual → skip 24h
 
 async function _ccLoadCounter() {
   try {
@@ -219,50 +223,62 @@ async function fetchCryptoPriceBatch(symbols) {
   const result = {};
   const now = Date.now();
 
-  // 1. Binance batch (primaria)
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
-    const pairs = symbols.map(s => s + 'USDT');
-    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbols=' + JSON.stringify(pairs), { signal: ctrl.signal });
-    clearTimeout(t);
-    const data = await r.json();
-    if (Array.isArray(data) && data.length > 0) {
-      data.forEach(p => {
-        const sym = p.symbol.replace('USDT', '');
-        result[sym] = { price: parseFloat(p.price), source: 'binance', stale: false, ts: now };
-        cryptoCache[sym] = result[sym];
-      });
-      global._lastCryptoSource = 'binance';
-      return result;
-    }
-  } catch(e) { console.error('[CRYPTO-FETCH binance]', symbols, e.message); }
-
-  // 2. CryptoCompare batch (fallback 1 — 100k/mes)
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
-    const _ccHeaders = process.env.CRYPTOCOMPARE_KEY ? { 'authorization': 'Apikey ' + process.env.CRYPTOCOMPARE_KEY } : {};
-    const r = await fetch('https://min-api.cryptocompare.com/data/pricemulti?fsyms=' + symbols.join(',') + '&tsyms=USD', { signal: ctrl.signal, headers: _ccHeaders });
-    clearTimeout(t);
-    const data = await r.json();
-    if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-      Object.keys(data).forEach(sym => {
-        if (data[sym]?.USD) {
-          result[sym] = { price: data[sym].USD, source: 'cryptocompare', stale: false, ts: now };
-          cryptoCache[sym] = result[sym];
-        }
-      });
-      if (Object.keys(result).length > 0) {
-        global._lastCryptoSource = 'cryptocompare';
-        _ccIncrement(1);
-        if (_health.binance) mitigateAlert('binance', 'cryptocompare');
-        return result;
-      } else {
-        console.error('[CRYPTO-FETCH cryptocompare] respuesta sin USD para', symbols, '— payload keys:', Object.keys(data));
+  // 1. Binance batch (primaria) — skip si está marcada bloqueada (451 geo-block)
+  if (Date.now() >= _binanceBlockedUntil) {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 5000);
+      const pairs = symbols.map(s => s + 'USDT');
+      const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbols=' + JSON.stringify(pairs), { signal: ctrl.signal });
+      clearTimeout(t);
+      if (r.status === 451) {
+        _binanceBlockedUntil = Date.now() + 24 * 60 * 60 * 1000;
+        throw new Error('binance-451-geoblocked (blocked 24h)');
       }
-    }
-  } catch(e) { console.error('[CRYPTO-FETCH cryptocompare]', symbols, e.message); }
+      const data = await r.json();
+      if (Array.isArray(data) && data.length > 0) {
+        data.forEach(p => {
+          const sym = p.symbol.replace('USDT', '');
+          result[sym] = { price: parseFloat(p.price), source: 'binance', stale: false, ts: now };
+          cryptoCache[sym] = result[sym];
+        });
+        global._lastCryptoSource = 'binance';
+        return result;
+      }
+    } catch(e) { console.error('[CRYPTO-FETCH binance]', symbols, e.message); }
+  }
+
+  // 2. CryptoCompare batch (fallback 1 — plan free 11k/mes) — skip si rate-limit activo
+  if (Date.now() >= _ccBlockedUntil) {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 5000);
+      const _ccHeaders = process.env.CRYPTOCOMPARE_KEY ? { 'authorization': 'Apikey ' + process.env.CRYPTOCOMPARE_KEY } : {};
+      const r = await fetch('https://min-api.cryptocompare.com/data/pricemulti?fsyms=' + symbols.join(',') + '&tsyms=USD', { signal: ctrl.signal, headers: _ccHeaders });
+      clearTimeout(t);
+      const data = await r.json();
+      // Detectar rate-limit explícito → bloquear 24h
+      if (data?.Response === 'Error' && typeof data?.Message === 'string' && data.Message.toLowerCase().includes('rate limit')) {
+        _ccBlockedUntil = Date.now() + 24 * 60 * 60 * 1000;
+        console.error('[CRYPTO-FETCH cryptocompare] rate-limit hit, blocking 24h');
+      } else if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+        Object.keys(data).forEach(sym => {
+          if (data[sym]?.USD) {
+            result[sym] = { price: data[sym].USD, source: 'cryptocompare', stale: false, ts: now };
+            cryptoCache[sym] = result[sym];
+          }
+        });
+        if (Object.keys(result).length > 0) {
+          global._lastCryptoSource = 'cryptocompare';
+          _ccIncrement(1);
+          if (_health.binance) mitigateAlert('binance', 'cryptocompare');
+          return result;
+        } else {
+          console.error('[CRYPTO-FETCH cryptocompare] respuesta sin USD para', symbols, '— payload keys:', Object.keys(data));
+        }
+      }
+    } catch(e) { console.error('[CRYPTO-FETCH cryptocompare]', symbols, e.message); }
+  }
 
   // 3. Kraken batch (fallback 2 — gratuito sin key)
   try {
