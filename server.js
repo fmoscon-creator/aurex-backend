@@ -178,6 +178,42 @@ const CC_LIMIT = 11000;
 let _binanceBlockedUntil = 0;  // 451 geo-block Railway → skip 24h
 let _ccBlockedUntil = 0;       // rate-limit mensual → skip 24h
 
+// ── Persistencia de flags de alerta CC (B2d) ──
+// Sobrevive a redeploys. Migración 1ra vez: si keys no existen pero contador
+// ya supera threshold, asumir que ya se alertó (evita re-disparar).
+async function _loadCCAlertFlags() {
+  try {
+    const { data } = await supabase.from('system_config').select('key, value').in('key', ['cc_alerted_80k', 'cc_alerted_95k']);
+    let found80 = false, found95 = false;
+    if (data) {
+      for (const row of data) {
+        if (row.key === 'cc_alerted_80k') { _ccAlerted80k = row.value === 'true'; found80 = true; }
+        if (row.key === 'cc_alerted_95k') { _ccAlerted95k = row.value === 'true'; found95 = true; }
+      }
+    }
+    // Migración 1ra vez: si las keys no existen pero el contador ya superó
+    // threshold, marcar como ya-alertado para evitar re-disparo post-deploy
+    if (!found80 && _ccCallsMonth >= CC_LIMIT * 0.8) {
+      _ccAlerted80k = true;
+      _persistCCAlertFlag('cc_alerted_80k', true);
+    }
+    if (!found95 && _ccCallsMonth >= CC_LIMIT * 0.95) {
+      _ccAlerted95k = true;
+      _persistCCAlertFlag('cc_alerted_95k', true);
+    }
+    console.log('[CC FLAGS] Loaded: 80k=' + _ccAlerted80k + ', 95k=' + _ccAlerted95k);
+  } catch(e) { console.error('[CC FLAGS] Load error:', e.message); }
+}
+
+function _persistCCAlertFlag(key, value) {
+  // Fire and forget. No bloquea el flow.
+  supabase.from('system_config').upsert({
+    key: key, value: String(value), updated_at: new Date().toISOString()
+  }, { onConflict: 'key' }).then(function(r) {
+    if (r.error) console.error('[CC FLAG PERSIST]', key, r.error.message);
+  });
+}
+
 // ── Persistencia de fuente activa cripto/stock (B2c-fix) ──
 // Sobrevive a redeploys de Railway. Mismo patrón que cc_monthly_calls.
 async function _loadActiveSources() {
@@ -242,13 +278,19 @@ async function _ccPersist() {
 function _ccIncrement(count) {
   _ccCallsMonth += count;
   if (_ccCallsMonth % 50 < count) _ccPersist();
-  if (!_ccAlerted80k && _ccCallsMonth >= CC_LIMIT * 0.8) {
-    _ccAlerted80k = true;
-    notifyAdmin('⚠️ CryptoCompare al 80%', 'Consumidas ' + _ccCallsMonth + ' de ' + CC_LIMIT + ' calls este mes.');
-  }
+  // Consolidación: si supera 95% Y no se alertó el 95% → solo mandar CRITICO
+  // (saltar el 80% para evitar doble mensaje cuando el contador salta directo)
+  // Persistir ambos flags en Supabase para sobrevivir redeploys.
   if (!_ccAlerted95k && _ccCallsMonth >= CC_LIMIT * 0.95) {
     _ccAlerted95k = true;
+    _ccAlerted80k = true; // implícito al estar en 95%+
+    _persistCCAlertFlag('cc_alerted_95k', true);
+    _persistCCAlertFlag('cc_alerted_80k', true);
     notifyAdmin('🔴 CRITICO — CryptoCompare al 95%', 'Consumidas ' + _ccCallsMonth + ' de ' + CC_LIMIT + ' calls — riesgo de corte inminente.');
+  } else if (!_ccAlerted80k && _ccCallsMonth >= CC_LIMIT * 0.8) {
+    _ccAlerted80k = true;
+    _persistCCAlertFlag('cc_alerted_80k', true);
+    notifyAdmin('⚠️ CryptoCompare al 80%', 'Consumidas ' + _ccCallsMonth + ' de ' + CC_LIMIT + ' calls este mes.');
   }
 }
 
@@ -256,11 +298,14 @@ function _ccIncrement(count) {
 cron.schedule('0 3 1 * *', async () => { // 03:00 UTC = 00:00 AR
   _ccCallsMonth = 0; _ccAlerted80k = false; _ccAlerted95k = false;
   await _ccPersist();
-  console.log('[CC] Monthly counter reset');
+  _persistCCAlertFlag('cc_alerted_80k', false);
+  _persistCCAlertFlag('cc_alerted_95k', false);
+  console.log('[CC] Monthly counter + alert flags reset');
 });
 
 setTimeout(_ccLoadCounter, 3000);
 setTimeout(_loadActiveSources, 3000);
+setTimeout(_loadCCAlertFlags, 4000); // 1s después del counter, para que _ccCallsMonth ya esté cargado
 
 // ── Watchdog on-fail (B2b) ──
 // Cuenta errores consecutivos por fuente. Si supera threshold, manda Telegram
@@ -1672,22 +1717,25 @@ async function healthCheck() {
     if (!_health.ia_stale) { _health.ia_stale = true; await openAlert('ia_stale', 'Last calc ' + Math.round((Date.now() - global._iaLastCalc) / 60000) + ' min ago'); }
   } else if (_health.ia_stale) { _health.ia_stale = false; await resolveAlert('ia_stale'); }
 
-  // 5) CryptoCompare contador 80%/95% — alerta inmediata si supera threshold
-  // (fix B2b: antes solo se evaluaba en _ccIncrement, no disparaba cuando CC
-  // estaba rate-limited y no había calls nuevas)
-  if (!_ccAlerted80k && _ccCallsMonth >= CC_LIMIT * 0.8) {
-    _ccAlerted80k = true;
-    try {
-      const tgChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
-      if (tgChatId) await bot.sendMessage(tgChatId, '⚠️ CryptoCompare al 80%\nConsumidas ' + _ccCallsMonth.toLocaleString() + ' de ' + CC_LIMIT.toLocaleString() + ' calls este mes (' + Math.round(_ccCallsMonth/CC_LIMIT*100) + '%).');
-    } catch(e) { console.error('[CC ALERT 80%]', e.message); }
-  }
+  // 5) CryptoCompare contador 80%/95% — alerta inmediata + consolidación (B2d)
+  // Si supera 95% y no se alertó → SOLO mandar CRITICO (saltar 80% redundante).
+  // Flags persisten en system_config para sobrevivir redeploys.
   if (!_ccAlerted95k && _ccCallsMonth >= CC_LIMIT * 0.95) {
     _ccAlerted95k = true;
+    _ccAlerted80k = true; // implícito al estar en 95%+
+    _persistCCAlertFlag('cc_alerted_95k', true);
+    _persistCCAlertFlag('cc_alerted_80k', true);
     try {
       const tgChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
       if (tgChatId) await bot.sendMessage(tgChatId, '🔴 CRITICO — CryptoCompare al 95%\nConsumidas ' + _ccCallsMonth.toLocaleString() + ' de ' + CC_LIMIT.toLocaleString() + ' calls — corte inminente. Reset 1-jun-2026.');
     } catch(e) { console.error('[CC ALERT 95%]', e.message); }
+  } else if (!_ccAlerted80k && _ccCallsMonth >= CC_LIMIT * 0.8) {
+    _ccAlerted80k = true;
+    _persistCCAlertFlag('cc_alerted_80k', true);
+    try {
+      const tgChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+      if (tgChatId) await bot.sendMessage(tgChatId, '⚠️ CryptoCompare al 80%\nConsumidas ' + _ccCallsMonth.toLocaleString() + ' de ' + CC_LIMIT.toLocaleString() + ' calls este mes (' + Math.round(_ccCallsMonth/CC_LIMIT*100) + '%).');
+    } catch(e) { console.error('[CC ALERT 80%]', e.message); }
   }
 }
 
