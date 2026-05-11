@@ -1914,14 +1914,26 @@ function buildStoresSection() {
     apple: {
       name: 'AUREX AI',
       build: process.env.APPLE_BUILD_NUMBER || '?',
+      marketingVersion: process.env.APPLE_MARKETING_VERSION || '1.0',
+      bundleId: process.env.APPLE_BUNDLE_ID || 'com.fernandomoscon.aurex',
+      submissionId: process.env.APPLE_SUBMISSION_ID || null,
+      caseId: process.env.APPLE_CASE_ID || null,
       timeSince: formatTimeSince(process.env.APPLE_SUBMIT_DATE, process.env.APPLE_APPROVAL_DATE),
-      submit: process.env.APPLE_SUBMIT_DATE
+      submit: process.env.APPLE_SUBMIT_DATE,
+      approvalDate: process.env.APPLE_APPROVAL_DATE || null
     },
     google: {
-      name: 'AUREX',
+      name: process.env.GOOGLE_APP_NAME || 'AUREX',
+      developerName: process.env.GOOGLE_DEVELOPER_NAME || 'AUREX AI',
       build: process.env.GOOGLE_BUILD_NUMBER || '?',
+      versionName: process.env.GOOGLE_VERSION_NAME || '?',
+      versionCode: process.env.GOOGLE_VERSION_CODE || '?',
+      bundle: process.env.GOOGLE_BUNDLE || 'com.aurexapp',
+      status: process.env.GOOGLE_STATUS || null,
+      installCount: process.env.GOOGLE_INSTALL_COUNT || null,
       timeSince: formatTimeSince(process.env.GOOGLE_SUBMIT_DATE, process.env.GOOGLE_APPROVAL_DATE),
-      submit: process.env.GOOGLE_SUBMIT_DATE
+      submit: process.env.GOOGLE_SUBMIT_DATE,
+      approvalDate: process.env.GOOGLE_APPROVAL_DATE || null
     },
     source: 'env vars Railway'
   };
@@ -2001,32 +2013,47 @@ async function buildDailyStatus(format) {
   const generatedAt = new Date().toISOString();
 
   if (format === 'telegram') {
+    // Formatear fechas de submit/approval en AR
+    const fmtAR = function(iso) {
+      if (!iso) return '?';
+      try {
+        return new Date(iso).toLocaleString('es-AR', {
+          day: '2-digit', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit',
+          hour12: false, timeZone: 'America/Argentina/Buenos_Aires'
+        });
+      } catch (e) { return iso; }
+    };
     let t = '';
     t += '📋 AUREX Daily Status — Reporte 9:00 hs AR\n';
     t += new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) + '\n';
     t += '━━━━━━━━━━━━━━━━━━\n\n';
     t += '🍎 APPLE — ' + stores.apple.name + '\n';
     t += '• Build: ' + stores.apple.build + '\n';
-    t += '• Marketing Version: 1.0\n';
+    t += '• Marketing Version: ' + stores.apple.marketingVersion + '\n';
     t += '• Estado: ' + stores.apple.timeSince + '\n';
-    t += '• Submit: 24-abr-2026 5:24 AM AR\n';
-    t += '• ID envío: e0e7fb35-11a4-4c1d-854c-60a80c4799e6\n';
+    t += '• Submit: ' + fmtAR(stores.apple.submit) + '\n';
+    if (stores.apple.submissionId) t += '• ID envío: ' + stores.apple.submissionId + '\n';
+    if (stores.apple.caseId) t += '• Apple Case: ' + stores.apple.caseId + ' (seguimiento abierto)\n';
     t += '• Apple Account: fmoscon@gmail.com\n';
     t += '• Team ID: TX7C2F79U9\n';
     t += '• Apple App ID: 6761672161\n';
-    t += '• Bundle ID: com.fernandomoscon.aurex\n';
+    t += '• Bundle ID: ' + stores.apple.bundleId + '\n';
     t += '• Subtítulo: Real-time market data tracker\n';
     t += '• Categorías: Utilidades + Productividad\n';
     t += '• Idiomas (8): EN, ES, FR, IT, HI, AR, PT, ZH\n\n';
     t += '🤖 GOOGLE PLAY — ' + stores.google.name + '\n';
+    t += '• Developer: ' + stores.google.developerName + '\n';
     t += '• Build: ' + stores.google.build + '\n';
-    t += '• versionName: 1.0.1\n';
-    t += '• versionCode: 2\n';
-    t += '• Estado: ' + stores.google.timeSince + ' (de 14 de prueba cerrada)\n';
-    t += '• Submit: 23-abr-2026 16:20 AR\n';
-    t += '• Bundle: com.aurexapp\n';
+    t += '• versionName: ' + stores.google.versionName + '\n';
+    t += '• versionCode: ' + stores.google.versionCode + '\n';
+    t += '• Estado: ' + stores.google.timeSince + (stores.google.status ? ' (' + stores.google.status + ')' : '') + '\n';
+    t += '• Submit: ' + fmtAR(stores.google.submit) + '\n';
+    if (stores.google.approvalDate) t += '• Aprobado: ' + fmtAR(stores.google.approvalDate) + '\n';
+    t += '• Bundle: ' + stores.google.bundle + '\n';
     t += '• Categoría: Herramientas\n';
-    t += '• Testers activos: 12+\n\n';
+    if (stores.google.installCount) t += '• Instalaciones: ' + stores.google.installCount + '\n';
+    t += '\n';
     t += '📦 REPOS\n';
     t += '   PWA: ' + repos.pwa.sha + (repos.pwa.stale ? ' (stale)' : '') + '\n';
     t += '   Nativa: ' + repos.nativa.sha + '\n';
