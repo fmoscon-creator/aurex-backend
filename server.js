@@ -471,8 +471,24 @@ async function checkAlertas() {
     const cryptoSyms = [...new Set(alertas.filter(a => a.tipo_activo === 'cripto').map(a => a.simbolo))];
     let cp = {};
     if (cryptoSyms.length) {
-      const cpResult = await fetchCryptoPriceBatch(cryptoSyms);
-      Object.keys(cpResult).forEach(sym => { cp[sym] = cpResult[sym].price; });
+      // OPTIMIZACIÓN: usar cryptoCache (que mantiene refreshCryptoCache cada 2 min).
+      // Solo hacer fetch en vivo si el cache está stale (>2 min) o no existe.
+      // Reduce calls a APIs externas en 95% — evita agotar rate limits de CryptoCompare etc.
+      const now = Date.now();
+      const STALE_TTL = 2 * 60 * 1000; // 2 min
+      const missing = [];
+      cryptoSyms.forEach(sym => {
+        if (cryptoCache[sym] && (now - cryptoCache[sym].ts) < STALE_TTL) {
+          cp[sym] = cryptoCache[sym].price;
+        } else {
+          missing.push(sym);
+        }
+      });
+      // Para los que faltan (cache stale o ausente), hacer fetch en vivo
+      if (missing.length > 0) {
+        const cpResult = await fetchCryptoPriceBatch(missing);
+        Object.keys(cpResult).forEach(sym => { cp[sym] = cpResult[sym].price; });
+      }
     }
     for (const a of alertas) {
       const precio = a.tipo_activo === 'cripto' ? cp[a.simbolo] : (await getStockPrice(a.simbolo))?.price;
