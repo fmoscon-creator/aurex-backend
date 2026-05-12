@@ -455,7 +455,7 @@ async function fetchCryptoPriceBatch(symbols) {
   // 3. Kraken batch (fallback 3 — gratuito sin key)
   if (missing.length > 0) {
     try {
-      const KRAKEN_MAP = {BTC:'XXBTZUSD',ETH:'XETHZUSD',XRP:'XXRPZUSD',LTC:'XLTCZUSD',DOGE:'XDGUSD'};
+      const KRAKEN_MAP = {BTC:'XXBTZUSD',ETH:'XETHZUSD',XRP:'XXRPZUSD',LTC:'XLTCZUSD',DOGE:'XDGUSD',XMR:'XXMRZUSD',ZEC:'XZECZUSD',ETC:'XETCZUSD',XLM:'XXLMZUSD'};
       const KRAKEN_SKIP = ['FTM','MKR','ROSE','THETA'];
       const krakenSyms = missing.filter(s => !KRAKEN_SKIP.includes(s));
       if (krakenSyms.length > 0) {
