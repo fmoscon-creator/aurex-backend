@@ -175,7 +175,6 @@ let _ccAlerted95k = false;
 const CC_LIMIT = 11000;
 
 // ── Skip flags para fuentes bloqueadas (evita timeouts wasted) ──
-let _binanceBlockedUntil = 0;  // 451 geo-block Railway → skip 24h
 let _ccBlockedUntil = 0;       // rate-limit mensual → skip 24h
 
 // ── Persistencia de flags de alerta CC (B2d) ──
@@ -339,31 +338,26 @@ async function fetchCryptoPriceBatch(symbols) {
   const result = {};
   const now = Date.now();
 
-  // 1. Binance batch (primaria) — skip si está marcada bloqueada (451 geo-block)
-  if (Date.now() >= _binanceBlockedUntil) {
-    try {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 5000);
-      const pairs = symbols.map(s => s + 'USDT');
-      const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbols=' + JSON.stringify(pairs), { signal: ctrl.signal });
-      clearTimeout(t);
-      if (r.status === 451) {
-        _binanceBlockedUntil = Date.now() + 24 * 60 * 60 * 1000;
-        throw new Error('binance-451-geoblocked (blocked 24h)');
-      }
-      const data = await r.json();
-      if (Array.isArray(data) && data.length > 0) {
-        data.forEach(p => {
-          const sym = p.symbol.replace('USDT', '');
-          result[sym] = { price: parseFloat(p.price), source: 'binance', stale: false, ts: now };
-          cryptoCache[sym] = result[sym];
-        });
-        _persistActiveSource('crypto', 'binance');
-        _recordSourceSuccess('binance');
-        return result;
-      }
-    } catch(e) { console.error('[CRYPTO-FETCH binance]', symbols, e.message); _recordSourceFailure('binance', e.message); }
-  }
+  // 1. Binance.US batch (primaria) — api.binance.com bloquea Railway US con 451;
+  //    Binance.US sirve los mismos endpoints REST sin geo-block, sin API key, mismos pares.
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    const pairs = symbols.map(s => s + 'USDT');
+    const r = await fetch('https://api.binance.us/api/v3/ticker/price?symbols=' + JSON.stringify(pairs), { signal: ctrl.signal });
+    clearTimeout(t);
+    const data = await r.json();
+    if (Array.isArray(data) && data.length > 0) {
+      data.forEach(p => {
+        const sym = p.symbol.replace('USDT', '');
+        result[sym] = { price: parseFloat(p.price), source: 'binance', stale: false, ts: now };
+        cryptoCache[sym] = result[sym];
+      });
+      _persistActiveSource('crypto', 'binance');
+      _recordSourceSuccess('binance');
+      return result;
+    }
+  } catch(e) { console.error('[CRYPTO-FETCH binance]', symbols, e.message); _recordSourceFailure('binance', e.message); }
 
   // 2. CryptoCompare batch (fallback 1 — plan free 11k/mes) — skip si rate-limit activo
   if (Date.now() >= _ccBlockedUntil) {
@@ -552,7 +546,26 @@ async function getStockPrice(symbol) {
     }
   } catch(e) { console.error('[STOCK-FETCH finnhub]', symbol, e.message); _recordSourceFailure('finnhub', e.message); }
 
-  // Nivel 3 — Alpha Vantage (emergencia, 25 calls/día plan free)
+  // Nivel 3 — Twelve Data (fallback fuerte, 800 calls/día plan free, requiere key)
+  if (process.env.TWELVE_DATA_KEY) {
+    try {
+      const r = await fetch('https://api.twelvedata.com/quote?symbol=' + symbol + '&apikey=' + process.env.TWELVE_DATA_KEY);
+      if (r.ok) {
+        const json = await r.json();
+        const price = parseFloat(json?.close);
+        if (price && price > 0) {
+          const changePct = parseFloat(json?.percent_change || '0');
+          const data = { symbol, price, changePct: parseFloat(changePct.toFixed(4)) };
+          priceCache[symbol] = { ts: now, data };
+          _persistActiveSource('stock', 'twelvedata');
+          _recordSourceSuccess('twelvedata');
+          return data;
+        }
+      }
+    } catch(e) { console.error('[STOCK-FETCH twelvedata]', symbol, e.message); _recordSourceFailure('twelvedata', e.message); }
+  }
+
+  // Nivel 4 — Alpha Vantage (emergencia, 25 calls/día plan free)
   try {
     const r = await fetch('https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=' + symbol + '&apikey=' + ALPHA_KEY);
     const json = await r.json();
@@ -844,6 +857,8 @@ app.post('/api/users/:id/devices', async (req, res) => {
   if (!fcm_token || !platform) return res.status(400).json({ error: 'fcm_token y platform requeridos' });
   if (platform !== 'android' && platform !== 'ios') return res.status(400).json({ error: 'platform debe ser android|ios' });
   try {
+    const { data: userRow } = await supabase.from('usuarios').select('id').eq('id', req.params.id).maybeSingle();
+    if (!userRow) return res.status(404).json({ error: 'Usuario no encontrado' });
     const { error } = await supabase.from('usuarios_devices').upsert({
       user_id: req.params.id,
       fcm_token, platform,
