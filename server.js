@@ -163,6 +163,15 @@ const COINGECKO_IDS = {
   OP:'optimism',TRX:'tron',TON:'the-open-network',SUI:'sui',PEPE:'pepe',
   WIF:'dogwifcoin',FIL:'filecoin',INJ:'injective-protocol',RUNE:'thorchain',
   USDT:'tether',USDC:'usd-coin',
+  // 28 IDs adicionales (validados via CG batch 11-may) para que CG cubra
+  // los 53 cripto AUREX como fallback completo cuando Binance.US/OKX/Kraken fallen.
+  '1INCH':'1inch',AAVE:'aave',ALGO:'algorand',BCH:'bitcoin-cash',
+  COMP:'compound-governance-token',CRV:'curve-dao-token',DAI:'dai',DASH:'dash',
+  ETC:'ethereum-classic',FTM:'fantom',GRT:'the-graph',HBAR:'hedera-hashgraph',
+  ICP:'internet-computer',IMX:'immutable-x',JUP:'jupiter-exchange-solana',
+  LDO:'lido-dao',MANA:'decentraland',MKR:'maker',ROSE:'oasis-network',
+  SAND:'the-sandbox',SEI:'sei-network',SNX:'havven',THETA:'theta-token',
+  TIA:'celestia',VET:'vechain',XLM:'stellar',XMR:'monero',ZEC:'zcash',
 };
 const cryptoCache = {};
 const CRYPTO_CACHE_EMERGENCY_TTL = 1800000; // 30min
@@ -769,15 +778,16 @@ app.get('/api/debug/sources', async (req, res) => {
   const results = {};
   const now = Date.now();
 
-  // 1. Binance (crypto BTC)
+  // 1. Binance.US (crypto BTC) — fuente real de la cascada desde commit 4c85701.
+  //    api.binance.com queda fuera del debug porque devuelve 451 perpetuo en Railway US.
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 5000);
-    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', { signal: ctrl.signal });
+    const r = await fetch('https://api.binance.us/api/v3/ticker/price?symbol=BTCUSDT', { signal: ctrl.signal });
     clearTimeout(t);
     const data = await r.json();
-    results.binance = { status: r.status, ok: r.ok, data, hasPrice: !!data.price };
-  } catch(e) { results.binance = { error: e.message }; }
+    results.binance_us = { status: r.status, ok: r.ok, data, hasPrice: !!data.price };
+  } catch(e) { results.binance_us = { error: e.message }; }
 
   // 2. CryptoCompare (crypto BTC+ETH)
   try {
