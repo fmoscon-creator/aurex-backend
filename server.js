@@ -771,67 +771,6 @@ async function refreshCryptoCache() {
 cron.schedule('*/2 * * * *', refreshCryptoCache); // cada 2 min
 setTimeout(refreshCryptoCache, 5000); // al iniciar
 
-// Mantener priceCache lleno para stocks/ETF/etc via Twelve Data batch.
-// Reduce latency en /api/portfolio y /api/watchlist views (cache hit en lugar de
-// fetch Yahoo singular). checkAlertas + /api/stock/:symbol siguen usando getStockPrice
-// que respeta el cache de 60s.
-// Costos: 6 calls × 48 refreshes/día = 288 credits/día sobre límite Basic 8 (800/día) ✅
-// Filtro tickers .BA (argentinos) que TD plan free no cubre — Yahoo singular los cubre.
-async function refreshStockCache() {
-  if (!process.env.TWELVE_DATA_KEY) {
-    console.log('[STOCK-CACHE] skip: TWELVE_DATA_KEY no configurada');
-    return;
-  }
-  const stockSyms = IA_ACTIVOS
-    .filter(a => a.t !== 'Cripto' && a.t !== 'Stable')
-    .filter(a => !(a.y && a.y.includes('.'))) // excluye PAMP.BA, TECO2.BA, etc.
-    .map(a => a.s);
-  if (stockSyms.length === 0) return;
-  console.log('[STOCK-CACHE] refrescando', stockSyms.length, 'stocks via Twelve Data batch');
-  const now = Date.now();
-  let totalOk = 0, totalFail = 0;
-  for (let i = 0; i < stockSyms.length; i += 50) {
-    const batch = stockSyms.slice(i, i + 50);
-    try {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 15000);
-      const r = await fetch(
-        'https://api.twelvedata.com/quote?symbol=' + encodeURIComponent(batch.join(',')) + '&apikey=' + process.env.TWELVE_DATA_KEY,
-        { signal: ctrl.signal }
-      );
-      clearTimeout(t);
-      const data = await r.json();
-      // Error top-level (rate limit, plan exhausted, etc)
-      if (data?.code && data.code !== 200 && !data.symbol) {
-        console.error('[STOCK-CACHE batch', i, ']', data.message || data.code);
-        totalFail += batch.length;
-        continue;
-      }
-      // Single (batch=1): { symbol, close, ... }. Multi: { "AAPL": {...}, "MSFT": {...} }
-      const entries = (batch.length === 1 && data.symbol) ? { [data.symbol]: data } : data;
-      batch.forEach(sym => {
-        const entry = entries[sym];
-        if (entry && entry.close && !entry.code) {
-          const price = parseFloat(entry.close);
-          if (price > 0) {
-            const changePct = parseFloat(entry.percent_change || '0');
-            priceCache[sym] = { ts: now, data: { symbol: sym, price, changePct: parseFloat(changePct.toFixed(4)) } };
-            totalOk++;
-          } else { totalFail++; }
-        } else { totalFail++; }
-      });
-    } catch(e) {
-      console.error('[STOCK-CACHE batch', i, ']', e.message);
-      totalFail += batch.length;
-    }
-    // Throttle defensivo entre batches (8 credits/min limit)
-    if (i + 50 < stockSyms.length) await new Promise(r => setTimeout(r, 200));
-  }
-  console.log('[STOCK-CACHE] OK:', totalOk, '/', stockSyms.length, '(failures:', totalFail, ')');
-}
-cron.schedule('*/30 * * * *', refreshStockCache); // cada 30 min
-setTimeout(refreshStockCache, 8000); // al iniciar (3s despues del cripto)
-
 app.get('/', (req, res) => res.json({ status: 'ok', app: 'Aurex Backend', version: '1.0.0', time: new Date().toISOString() }));
 
 // Endpoint debug — diagnóstico de cada fuente externa DESDE la IP del backend (Railway us-east4)
