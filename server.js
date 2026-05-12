@@ -342,7 +342,7 @@ async function fetchCryptoPriceBatch(symbols) {
   //    Binance.US sirve los mismos endpoints REST sin geo-block, sin API key, mismos pares.
   //    BINANCE_US_SKIP: símbolos no listados en Binance.US — UN solo símbolo inválido
   //    rompe el batch entero (devuelve {code:-1121} en lugar de array).
-  const BINANCE_US_SKIP = ['USDT','TON','INJ','RUNE'];
+  const BINANCE_US_SKIP = ['INJ','TON','USDT','XMR','RUNE'];
   const usSyms = symbols.filter(s => !BINANCE_US_SKIP.includes(s));
   if (usSyms.length > 0) {
     try {
