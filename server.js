@@ -557,9 +557,15 @@ async function fetchCryptoPriceBatch(symbols) {
   }
   return result;
 }
+// TTL del cache de stocks: 5 min. Balance entre frescura para checkAlertas (alertas
+// con precio de hasta 5 min viejo) y reducción de latency para portfolio/watchlist
+// views. Build-up natural — cada call a getStockPrice escribe priceCache. Sin cron
+// de prefetch (intento previo via Twelve Data batch fallo por rate limit 8/min del
+// plan free — commit b9dabca revierte feat d888507).
+const STOCK_CACHE_TTL_MS = 5 * 60 * 1000;
 async function getStockPrice(symbol) {
   const now = Date.now();
-  if (priceCache[symbol] && (now - priceCache[symbol].ts) < 60000) return priceCache[symbol].data;
+  if (priceCache[symbol] && (now - priceCache[symbol].ts) < STOCK_CACHE_TTL_MS) return priceCache[symbol].data;
 
   // Nivel 1 — Yahoo Finance (primaria, sin key, sin límite real)
   try {
