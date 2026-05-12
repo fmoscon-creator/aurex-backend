@@ -340,24 +340,33 @@ async function fetchCryptoPriceBatch(symbols) {
 
   // 1. Binance.US batch (primaria) — api.binance.com bloquea Railway US con 451;
   //    Binance.US sirve los mismos endpoints REST sin geo-block, sin API key, mismos pares.
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
-    const pairs = symbols.map(s => s + 'USDT');
-    const r = await fetch('https://api.binance.us/api/v3/ticker/price?symbols=' + JSON.stringify(pairs), { signal: ctrl.signal });
-    clearTimeout(t);
-    const data = await r.json();
-    if (Array.isArray(data) && data.length > 0) {
-      data.forEach(p => {
-        const sym = p.symbol.replace('USDT', '');
-        result[sym] = { price: parseFloat(p.price), source: 'binance', stale: false, ts: now };
-        cryptoCache[sym] = result[sym];
-      });
-      _persistActiveSource('crypto', 'binance');
-      _recordSourceSuccess('binance');
-      return result;
-    }
-  } catch(e) { console.error('[CRYPTO-FETCH binance]', symbols, e.message); _recordSourceFailure('binance', e.message); }
+  //    BINANCE_US_SKIP: símbolos no listados en Binance.US — UN solo símbolo inválido
+  //    rompe el batch entero (devuelve {code:-1121} en lugar de array).
+  const BINANCE_US_SKIP = ['USDT','TON','INJ','RUNE'];
+  const usSyms = symbols.filter(s => !BINANCE_US_SKIP.includes(s));
+  if (usSyms.length > 0) {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 5000);
+      const pairs = usSyms.map(s => s + 'USDT');
+      const r = await fetch('https://api.binance.us/api/v3/ticker/price?symbols=' + JSON.stringify(pairs), { signal: ctrl.signal });
+      clearTimeout(t);
+      const data = await r.json();
+      if (Array.isArray(data) && data.length > 0) {
+        data.forEach(p => {
+          const sym = p.symbol.replace('USDT', '');
+          result[sym] = { price: parseFloat(p.price), source: 'binance', stale: false, ts: now };
+          cryptoCache[sym] = result[sym];
+        });
+        _persistActiveSource('crypto', 'binance');
+        _recordSourceSuccess('binance');
+        return result;
+      } else {
+        console.error('[CRYPTO-FETCH binance] non-array response:', JSON.stringify(data).slice(0,200));
+        _recordSourceFailure('binance', 'non-array: ' + (data?.msg || 'unknown'));
+      }
+    } catch(e) { console.error('[CRYPTO-FETCH binance]', symbols, e.message); _recordSourceFailure('binance', e.message); }
+  }
 
   // 2. CryptoCompare batch (fallback 1 — plan free 11k/mes) — skip si rate-limit activo
   if (Date.now() >= _ccBlockedUntil) {
