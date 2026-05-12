@@ -337,6 +337,13 @@ function _recordSourceSuccess(source) {
 async function fetchCryptoPriceBatch(symbols) {
   const result = {};
   const now = Date.now();
+  // Si una fuente cubre menos que TODOS los symbols (caso BINANCE_US_SKIP), las
+  // siguientes fuentes solo procesan los `missing` para no overwritear precios
+  // primarios y para no llamar APIs externas innecesariamente. `hasPrimarySource`
+  // evita que un fallback parcial sobreescriba la fuente activa (ej: Binance
+  // cubre 49/53, CC cubre 4 missing → fuente activa sigue siendo `binance`).
+  let hasPrimarySource = false;
+  let missing = symbols;
 
   // 1. Binance.US batch (primaria) — api.binance.com bloquea Railway US con 451;
   //    Binance.US sirve los mismos endpoints REST sin geo-block, sin API key, mismos pares.
@@ -360,7 +367,9 @@ async function fetchCryptoPriceBatch(symbols) {
         });
         _persistActiveSource('crypto', 'binance');
         _recordSourceSuccess('binance');
-        return result;
+        hasPrimarySource = true;
+        missing = symbols.filter(s => !result[s]);
+        if (missing.length === 0) return result;
       } else {
         console.error('[CRYPTO-FETCH binance] non-array response:', JSON.stringify(data).slice(0,200));
         _recordSourceFailure('binance', 'non-array: ' + (data?.msg || 'unknown'));
@@ -369,12 +378,12 @@ async function fetchCryptoPriceBatch(symbols) {
   }
 
   // 2. CryptoCompare batch (fallback 1 — plan free 11k/mes) — skip si rate-limit activo
-  if (Date.now() >= _ccBlockedUntil) {
+  if (missing.length > 0 && Date.now() >= _ccBlockedUntil) {
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 5000);
       const _ccHeaders = process.env.CRYPTOCOMPARE_KEY ? { 'authorization': 'Apikey ' + process.env.CRYPTOCOMPARE_KEY } : {};
-      const r = await fetch('https://min-api.cryptocompare.com/data/pricemulti?fsyms=' + symbols.join(',') + '&tsyms=USD', { signal: ctrl.signal, headers: _ccHeaders });
+      const r = await fetch('https://min-api.cryptocompare.com/data/pricemulti?fsyms=' + missing.join(',') + '&tsyms=USD', { signal: ctrl.signal, headers: _ccHeaders });
       clearTimeout(t);
       const data = await r.json();
       // Detectar rate-limit explícito → bloquear 24h
@@ -383,138 +392,160 @@ async function fetchCryptoPriceBatch(symbols) {
         console.error('[CRYPTO-FETCH cryptocompare] rate-limit hit, blocking 24h');
         _recordSourceFailure('cryptocompare', 'rate-limit');
       } else if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+        let ccAdded = 0;
         Object.keys(data).forEach(sym => {
-          if (data[sym]?.USD) {
+          if (data[sym]?.USD && missing.includes(sym) && !result[sym]) {
             result[sym] = { price: data[sym].USD, source: 'cryptocompare', stale: false, ts: now };
             cryptoCache[sym] = result[sym];
+            ccAdded++;
           }
         });
-        if (Object.keys(result).length > 0) {
-          _persistActiveSource('crypto', 'cryptocompare');
+        if (ccAdded > 0) {
+          if (!hasPrimarySource) { _persistActiveSource('crypto', 'cryptocompare'); hasPrimarySource = true; }
           _ccIncrement(1);
           _recordSourceSuccess('cryptocompare');
           if (_health.binance) mitigateAlert('binance', 'cryptocompare');
-          return result;
+          missing = symbols.filter(s => !result[s]);
+          if (missing.length === 0) return result;
         } else {
-          console.error('[CRYPTO-FETCH cryptocompare] respuesta sin USD para', symbols, '— payload keys:', Object.keys(data));
+          console.error('[CRYPTO-FETCH cryptocompare] respuesta sin USD para', missing, '— payload keys:', Object.keys(data));
           _recordSourceFailure('cryptocompare', 'sin USD en payload');
         }
       }
-    } catch(e) { console.error('[CRYPTO-FETCH cryptocompare]', symbols, e.message); _recordSourceFailure('cryptocompare', e.message); }
+    } catch(e) { console.error('[CRYPTO-FETCH cryptocompare]', missing, e.message); _recordSourceFailure('cryptocompare', e.message); }
   }
 
   // 2.5 OKX batch (fallback 2 — gratuito sin key, sin geo-block validado 11-may)
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8000);
-    const r = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT', { signal: ctrl.signal });
-    clearTimeout(t);
-    const data = await r.json();
-    console.log('[CRYPTO-FETCH okx] status:', r.status, 'code:', data?.code, 'data.len:', Array.isArray(data?.data) ? data.data.length : 'N/A');
-    if (data?.code === '0' && Array.isArray(data?.data) && data.data.length > 0) {
-      // Mapear instId BTC-USDT → BTC
-      const okxMap = {};
-      data.data.forEach(tk => {
-        if (tk.instId?.endsWith('-USDT')) {
-          const sym = tk.instId.replace('-USDT', '');
-          okxMap[sym] = parseFloat(tk.last);
-        }
-      });
-      symbols.forEach(sym => {
-        if (okxMap[sym] && okxMap[sym] > 0 && !result[sym]) {
-          result[sym] = { price: okxMap[sym], source: 'okx', stale: false, ts: now };
-          cryptoCache[sym] = result[sym];
-        }
-      });
-      if (Object.keys(result).length > 0) {
-        _persistActiveSource('crypto', 'okx');
-        _recordSourceSuccess('okx');
-        if (_health.binance) mitigateAlert('binance', 'okx');
-        return result;
-      }
-    }
-  } catch(e) { console.error('[CRYPTO-FETCH okx]', symbols, e.message); _recordSourceFailure('okx', e.message); }
-
-  // 3. Kraken batch (fallback 2 — gratuito sin key)
-  try {
-    const KRAKEN_MAP = {BTC:'XXBTZUSD',ETH:'XETHZUSD',XRP:'XXRPZUSD',LTC:'XLTCZUSD',DOGE:'XDGUSD'};
-    const KRAKEN_SKIP = ['FTM','MKR','ROSE','THETA'];
-    const krakenSyms = symbols.filter(s => !KRAKEN_SKIP.includes(s));
-    if (krakenSyms.length > 0) {
-      const pairs = krakenSyms.map(s => KRAKEN_MAP[s] || (s + 'USD')).join(',');
+  if (missing.length > 0) {
+    try {
       const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 5000);
-      const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=' + pairs, { signal: ctrl.signal });
+      const t = setTimeout(() => ctrl.abort(), 8000);
+      const r = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT', { signal: ctrl.signal });
       clearTimeout(t);
       const data = await r.json();
-      if (data && data.result && Object.keys(data.result).length > 0) {
-        const reverseMap = {};
-        krakenSyms.forEach(s => { reverseMap[KRAKEN_MAP[s] || (s + 'USD')] = s; });
-        Object.keys(data.result).forEach(pair => {
-          const sym = reverseMap[pair] || pair.replace('USD','').replace('XX','').replace('ZUSD','').replace('XDG','DOGE');
-          const price = parseFloat(data.result[pair].c[0]);
-          if (price > 0) {
-            result[sym] = { price, source: 'kraken', stale: false, ts: now };
-            cryptoCache[sym] = result[sym];
+      console.log('[CRYPTO-FETCH okx] status:', r.status, 'code:', data?.code, 'data.len:', Array.isArray(data?.data) ? data.data.length : 'N/A');
+      if (data?.code === '0' && Array.isArray(data?.data) && data.data.length > 0) {
+        // Mapear instId BTC-USDT → BTC
+        const okxMap = {};
+        data.data.forEach(tk => {
+          if (tk.instId?.endsWith('-USDT')) {
+            const sym = tk.instId.replace('-USDT', '');
+            okxMap[sym] = parseFloat(tk.last);
           }
         });
-        if (Object.keys(result).length > 0) {
-          _persistActiveSource('crypto', 'kraken');
-          _recordSourceSuccess('kraken');
-          if (_health.binance) mitigateAlert('binance', 'kraken');
-          return result;
-        }
-      }
-    }
-  } catch(e) { console.error('[CRYPTO-FETCH kraken]', symbols, e.message); _recordSourceFailure('kraken', e.message); }
-
-  // 4. CoinGecko batch (fallback 3 — 10k/mes gratuito) (fallback 2 — 10k/mes)
-  try {
-    const ids = symbols.map(s => COINGECKO_IDS[s]).filter(Boolean).join(',');
-    if (ids) {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 5000);
-      const cgKey = process.env.COINGECKO_KEY ? '&x_cg_demo_api_key=' + process.env.COINGECKO_KEY : '';
-      const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd' + cgKey, { signal: ctrl.signal });
-      clearTimeout(t);
-      const data = await r.json();
-      if (data && Object.keys(data).length > 0) {
-        symbols.forEach(sym => {
-          const id = COINGECKO_IDS[sym];
-          if (id && data[id]?.usd) {
-            result[sym] = { price: data[id].usd, source: 'coingecko', stale: false, ts: now };
+        let okxAdded = 0;
+        missing.forEach(sym => {
+          if (okxMap[sym] && okxMap[sym] > 0 && !result[sym]) {
+            result[sym] = { price: okxMap[sym], source: 'okx', stale: false, ts: now };
             cryptoCache[sym] = result[sym];
+            okxAdded++;
           }
         });
-        if (Object.keys(result).length > 0) {
-          _persistActiveSource('crypto', 'coingecko');
-          _recordSourceSuccess('coingecko');
-          if (_health.binance) mitigateAlert('binance', 'coingecko');
-          return result;
-        } else {
-          console.error('[CRYPTO-FETCH coingecko] respuesta sin usd para', symbols, '— payload keys:', Object.keys(data));
-          _recordSourceFailure('coingecko', 'sin usd en payload');
+        if (okxAdded > 0) {
+          if (!hasPrimarySource) { _persistActiveSource('crypto', 'okx'); hasPrimarySource = true; }
+          _recordSourceSuccess('okx');
+          if (_health.binance) mitigateAlert('binance', 'okx');
+          missing = symbols.filter(s => !result[s]);
+          if (missing.length === 0) return result;
         }
       }
-    }
-  } catch(e) { console.error('[CRYPTO-FETCH coingecko]', symbols, e.message); _recordSourceFailure('coingecko', e.message); }
+    } catch(e) { console.error('[CRYPTO-FETCH okx]', missing, e.message); _recordSourceFailure('okx', e.message); }
+  }
 
-  // Si llegamos acá, las 4 fuentes en vivo fallaron — log explícito
-  console.error('[CRYPTO-FETCH all-failed] las 4 fuentes vacías para', symbols, '— cayendo a cache emergency');
-
-  // 5. Caché (último recurso)
-  symbols.forEach(sym => {
-    if (cryptoCache[sym]) {
-      const age = now - cryptoCache[sym].ts;
-      if (age < CRYPTO_CACHE_EMERGENCY_TTL) {
-        result[sym] = {
-          price: cryptoCache[sym].price, source: 'cache', stale: true,
-          staleSince: cryptoCache[sym].ts, ageMinutes: Math.round(age / 60000), ts: cryptoCache[sym].ts
-        };
+  // 3. Kraken batch (fallback 3 — gratuito sin key)
+  if (missing.length > 0) {
+    try {
+      const KRAKEN_MAP = {BTC:'XXBTZUSD',ETH:'XETHZUSD',XRP:'XXRPZUSD',LTC:'XLTCZUSD',DOGE:'XDGUSD'};
+      const KRAKEN_SKIP = ['FTM','MKR','ROSE','THETA'];
+      const krakenSyms = missing.filter(s => !KRAKEN_SKIP.includes(s));
+      if (krakenSyms.length > 0) {
+        const pairs = krakenSyms.map(s => KRAKEN_MAP[s] || (s + 'USD')).join(',');
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 5000);
+        const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=' + pairs, { signal: ctrl.signal });
+        clearTimeout(t);
+        const data = await r.json();
+        if (data && data.result && Object.keys(data.result).length > 0) {
+          const reverseMap = {};
+          krakenSyms.forEach(s => { reverseMap[KRAKEN_MAP[s] || (s + 'USD')] = s; });
+          let krakenAdded = 0;
+          Object.keys(data.result).forEach(pair => {
+            const sym = reverseMap[pair] || pair.replace('USD','').replace('XX','').replace('ZUSD','').replace('XDG','DOGE');
+            const price = parseFloat(data.result[pair].c[0]);
+            if (price > 0 && !result[sym]) {
+              result[sym] = { price, source: 'kraken', stale: false, ts: now };
+              cryptoCache[sym] = result[sym];
+              krakenAdded++;
+            }
+          });
+          if (krakenAdded > 0) {
+            if (!hasPrimarySource) { _persistActiveSource('crypto', 'kraken'); hasPrimarySource = true; }
+            _recordSourceSuccess('kraken');
+            if (_health.binance) mitigateAlert('binance', 'kraken');
+            missing = symbols.filter(s => !result[s]);
+            if (missing.length === 0) return result;
+          }
+        }
       }
+    } catch(e) { console.error('[CRYPTO-FETCH kraken]', missing, e.message); _recordSourceFailure('kraken', e.message); }
+  }
+
+  // 4. CoinGecko batch (fallback 4 — 10k/mes gratuito)
+  if (missing.length > 0) {
+    try {
+      const ids = missing.map(s => COINGECKO_IDS[s]).filter(Boolean).join(',');
+      if (ids) {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 5000);
+        const cgKey = process.env.COINGECKO_KEY ? '&x_cg_demo_api_key=' + process.env.COINGECKO_KEY : '';
+        const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd' + cgKey, { signal: ctrl.signal });
+        clearTimeout(t);
+        const data = await r.json();
+        if (data && Object.keys(data).length > 0) {
+          let cgAdded = 0;
+          missing.forEach(sym => {
+            const id = COINGECKO_IDS[sym];
+            if (id && data[id]?.usd && !result[sym]) {
+              result[sym] = { price: data[id].usd, source: 'coingecko', stale: false, ts: now };
+              cryptoCache[sym] = result[sym];
+              cgAdded++;
+            }
+          });
+          if (cgAdded > 0) {
+            if (!hasPrimarySource) { _persistActiveSource('crypto', 'coingecko'); hasPrimarySource = true; }
+            _recordSourceSuccess('coingecko');
+            if (_health.binance) mitigateAlert('binance', 'coingecko');
+            missing = symbols.filter(s => !result[s]);
+            if (missing.length === 0) return result;
+          } else {
+            console.error('[CRYPTO-FETCH coingecko] respuesta sin usd para', missing, '— payload keys:', Object.keys(data));
+            _recordSourceFailure('coingecko', 'sin usd en payload');
+          }
+        }
+      }
+    } catch(e) { console.error('[CRYPTO-FETCH coingecko]', missing, e.message); _recordSourceFailure('coingecko', e.message); }
+  }
+
+  // Si quedan missing tras agotar las 4 fuentes live — log explícito + cache emergency
+  if (missing.length > 0) {
+    console.error('[CRYPTO-FETCH all-failed] las 4 fuentes no cubrieron', missing, '— cayendo a cache emergency');
+    // 5. Caché (último recurso) solo para missing
+    missing.forEach(sym => {
+      if (cryptoCache[sym]) {
+        const age = now - cryptoCache[sym].ts;
+        if (age < CRYPTO_CACHE_EMERGENCY_TTL) {
+          result[sym] = {
+            price: cryptoCache[sym].price, source: 'cache', stale: true,
+            staleSince: cryptoCache[sym].ts, ageMinutes: Math.round(age / 60000), ts: cryptoCache[sym].ts
+          };
+        }
+      }
+    });
+    // Solo sobreescribir _lastCryptoSource a cache/none si NO hubo fuente primaria
+    if (!hasPrimarySource) {
+      global._lastCryptoSource = Object.keys(result).length > 0 ? 'cache' : 'none';
     }
-  });
-  global._lastCryptoSource = Object.keys(result).length > 0 ? 'cache' : 'none';
+  }
   return result;
 }
 async function getStockPrice(symbol) {
