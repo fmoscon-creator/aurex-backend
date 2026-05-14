@@ -1340,7 +1340,32 @@ app.get('/api/watchlists/:userId/items', async (req, res) => {
   }
   res.json(result);
 });
-app.post('/api/watchlists', async (req, res) => { const { data, error } = await supabase.from('watchlists').insert(req.body).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
+app.post('/api/watchlists', async (req, res) => {
+  // Build 18 Bloque 2: gating PRO/ELITE — FREE solo 1 watchlist (endpoint plural usado por Android)
+  try {
+    const userId = req.body.user_id;
+    if (userId) {
+      const plan = await getUserPlan(userId);
+      const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.FREE;
+      if (limits.watchlistMax !== Infinity) {
+        const { count } = await supabase.from('watchlists').select('id', { count: 'exact', head: true }).eq('user_id', userId);
+        if (count !== null && count >= limits.watchlistMax) {
+          return res.status(403).json({
+            error: 'plan_limit_reached',
+            limit: limits.watchlistMax,
+            plan: plan,
+            message: 'Tu plan ' + plan + ' permite hasta ' + limits.watchlistMax + ' watchlist. Pasate a PRO o ELITE para sumar mas.',
+            upgrade_url: 'https://aurex.live/inicio#planes',
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[POST /api/watchlists] gating error:', e.message);
+  }
+  const { data, error } = await supabase.from('watchlists').insert(req.body).select().single();
+  error ? res.status(500).json({ error }) : res.json(data);
+});
 app.post('/api/watchlist-items', async (req, res) => { const { data, error } = await supabase.from('watchlist_items').insert(req.body).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.delete('/api/watchlists/:id', async (req, res) => { await supabase.from('watchlist_items').delete().eq('watchlist_id', req.params.id); const { error } = await supabase.from('watchlists').delete().eq('id', req.params.id); error ? res.status(500).json({ error }) : res.json({ ok: true }); });
 app.delete('/api/watchlist-items/:id', async (req, res) => { const { error } = await supabase.from('watchlist_items').delete().eq('id', req.params.id); error ? res.status(500).json({ error }) : res.json({ ok: true }); });
