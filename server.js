@@ -732,10 +732,15 @@ async function dispararAlerta(alerta, precio) {
   await supabase.from('alertas_historial').insert({ alerta_id: alerta.id, simbolo: alerta.simbolo, precio_disparado: precio, analisis_ia: analisis, telegram_enviado: !!tgChatId, whatsapp_enviado: !!alerta.whatsapp_numero, fcm_enviado: fcmEnviado, created_at: new Date().toISOString() });
 }
 
+// Build 18 Bloque 1: tipos de alerta que dependen de PRECIO (resto va a checkAlertasEvento)
+const TIPOS_ALERTA_PRECIO = ['umbral', 'precio_objetivo', 'variacion_brusca', 'max_min', 'precio'];
 async function checkAlertas() {
   try {
-    const { data: alertas } = await supabase.from('alertas').select('*').eq('activa', true).eq('disparada', false);
-    if (!alertas || !alertas.length) return;
+    const { data: alertasAll } = await supabase.from('alertas').select('*').eq('activa', true).eq('disparada', false);
+    if (!alertasAll || !alertasAll.length) return;
+    // Build 18 Bloque 1: separar alertas de precio (esta funcion) vs eventos (checkAlertasEvento)
+    const alertas = alertasAll.filter(a => !a.tipo || TIPOS_ALERTA_PRECIO.includes(a.tipo));
+    if (!alertas.length) return;
     const cryptoSyms = [...new Set(alertas.filter(a => a.tipo_activo?.toLowerCase() === 'cripto').map(a => a.simbolo))];
     let cp = {};
     if (cryptoSyms.length) {
@@ -768,6 +773,279 @@ async function checkAlertas() {
 }
 
 cron.schedule('*/30 * * * * *', checkAlertas);
+
+// ============================================================================
+// Build 18 Bloque 1: EVALUADORES DE ALERTAS NO-PRECIO (11 tipos)
+// Cierra el agujero historico de Build 17 donde toggles PRO/ELITE existian
+// en UI pero el backend nunca disparaba la alerta (solo precio se evaluaba).
+// ============================================================================
+
+// Estado anterior en memoria (RAM) — se pierde con restart Railway, OK porque
+// el siguiente tick (~5min) re-calibra antes de comparar. Para deteccion de
+// "cambios" comparando tick N vs tick N-1.
+const _alertasEventoState = {
+  iaSignals: {},     // {simbolo: 'ALCISTA'|'BAJISTA'|'ALTA CONV-IA'}
+  pulseZone:  {},    // {GLOBAL: 'Codicia', CRIPTO: 'Miedo', ...}
+  geoScore:   null,  // ultimo score geopolitico (0-100)
+  apertura:   {},    // {marketCode_YYYYMMDD: true} — evitar disparar 2x mismo dia
+  termoUser:  {},    // {user_id: 'verde'|'amarillo'|'rojo'} — termometro previo
+};
+
+// Calendario estatico de eventos macro (manual hasta integrar API).
+// Formato fecha: 'YYYY-MM-DD' en UTC. Ampliable agregando entradas.
+const CALENDARIO_EVENTOS = {
+  // FED FOMC meetings 2026 (oficial Federal Reserve schedule)
+  fed_fomc: ['2026-01-28','2026-03-18','2026-04-29','2026-06-17','2026-07-29','2026-09-16','2026-10-28','2026-12-09'],
+  // CPI release dates BLS 2026 (publicacion mensual ~mid-mes)
+  cpi_pbi: ['2026-01-14','2026-02-11','2026-03-11','2026-04-10','2026-05-13','2026-06-11','2026-07-15','2026-08-12','2026-09-11','2026-10-15','2026-11-13','2026-12-10'],
+  // Earnings por simbolo (Q1/Q2/Q3/Q4 2026 fechas reportadas Yahoo Finance / company IR)
+  earnings: {
+    AAPL: ['2026-01-30','2026-04-30','2026-07-30','2026-10-29'],
+    MSFT: ['2026-01-28','2026-04-23','2026-07-23','2026-10-22'],
+    GOOGL:['2026-02-04','2026-04-29','2026-07-28','2026-10-28'],
+    AMZN: ['2026-02-05','2026-04-30','2026-07-30','2026-10-29'],
+    META: ['2026-01-28','2026-04-29','2026-07-29','2026-10-28'],
+    TSLA: ['2026-01-28','2026-04-22','2026-07-22','2026-10-21'],
+    NVDA: ['2026-02-25','2026-05-27','2026-08-26','2026-11-18'],
+  },
+};
+
+// Horarios de apertura por mercado (hora local del mercado en formato HH:MM)
+// Se evalua si el "now" del usuario esta dentro de ventana ±2 minutos.
+const HORARIOS_APERTURA = {
+  NYSE:   { tz: 'America/New_York',     open: '09:30' },
+  NASDAQ: { tz: 'America/New_York',     open: '09:30' },
+  BYMA:   { tz: 'America/Argentina/Buenos_Aires', open: '11:00' },
+  BVMF:   { tz: 'America/Sao_Paulo',    open: '10:00' },
+  LSE:    { tz: 'Europe/London',        open: '08:00' },
+  TSE:    { tz: 'Asia/Tokyo',           open: '09:00' },
+  SSE:    { tz: 'Asia/Shanghai',        open: '09:30' },
+};
+
+// Helper: hora actual en mercado dado, formato 'HH:MM'
+function _horaEnTZ(tz) {
+  return new Date().toLocaleTimeString('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
+}
+function _fechaHoyUTC() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// Dispara alerta de evento (no-precio): marca disparada=true, manda Telegram/push
+// con texto contextual. NO usa valor_objetivo numerico.
+async function dispararAlertaEvento(alerta, titulo, descripcion) {
+  await supabase.from('alertas').update({
+    disparada: true,
+    disparada_at: new Date().toISOString(),
+    precio_disparado: 0, // numerico requerido por schema; 0 = evento sin precio
+  }).eq('id', alerta.id);
+  const ts = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
+  // Telegram
+  try {
+    const { data: u } = await supabase.from('usuarios').select('telegram_chat_id').eq('id', alerta.user_id).single();
+    const tgChatId = u?.telegram_chat_id;
+    if (tgChatId && !tgChatId.startsWith('pending_')) {
+      await bot.sendMessage(tgChatId, '🚨 ' + titulo + '\n\n' + descripcion + '\n\n⏰ ' + ts, { parse_mode: 'Markdown' });
+    }
+  } catch(e) { console.error('[ALERTA-EVENTO TG]', e.message); }
+  // Push FCM (multi-device)
+  try {
+    let tokens = [];
+    const { data: devices } = await supabase.from('usuarios_devices').select('fcm_token').eq('user_id', alerta.user_id);
+    if (devices?.length) tokens = devices.map(d => d.fcm_token);
+    if (!tokens.length) {
+      const { data: usr } = await supabase.from('usuarios').select('fcm_token').eq('id', alerta.user_id).single();
+      if (usr?.fcm_token) tokens.push(usr.fcm_token);
+    }
+    for (const token of tokens) {
+      await sendPushFCM(token, titulo, descripcion, { alerta_id: alerta.id, simbolo: alerta.simbolo, tipo: alerta.tipo });
+    }
+  } catch(e) { console.error('[ALERTA-EVENTO FCM]', e.message); }
+  // Historial
+  await supabase.from('alertas_historial').insert({
+    alerta_id: alerta.id,
+    simbolo: alerta.simbolo,
+    precio_disparado: 0,
+    analisis_ia: titulo + ' — ' + descripcion,
+    telegram_enviado: true,
+    whatsapp_enviado: false,
+    fcm_enviado: true,
+    created_at: new Date().toISOString(),
+  });
+}
+
+async function checkAlertasEvento() {
+  try {
+    const { data: alertasAll } = await supabase.from('alertas').select('*').eq('activa', true).eq('disparada', false);
+    if (!alertasAll?.length) return;
+    const alertas = alertasAll.filter(a => a.tipo && !TIPOS_ALERTA_PRECIO.includes(a.tipo));
+    if (!alertas.length) return;
+
+    // Construir mapa actual de señales IA
+    const signalsActuales = {};
+    if (_iaSignalsCache?.signals) {
+      _iaSignalsCache.signals.forEach(s => { signalsActuales[s.simbolo] = s; });
+    }
+    // Pulse actual
+    const pulseActual = _pulseCache?.scores || {};
+    const geoActual = _pulseCache?.raw?.geo?.score ?? null;
+    const hoyUTC = _fechaHoyUTC();
+
+    for (const a of alertas) {
+      try {
+        const tipo = a.tipo;
+
+        // 1. APERTURA — disparar 1x por dia cuando mercado abre
+        if (tipo === 'apertura') {
+          // tipo_activo guarda mercado o usa default NYSE para stocks USA
+          const mkt = (a.mercado || (a.tipo_activo === 'cripto' ? null : 'NYSE'));
+          if (!mkt || !HORARIOS_APERTURA[mkt]) continue;
+          const horaMkt = _horaEnTZ(HORARIOS_APERTURA[mkt].tz);
+          const [hOpen, mOpen] = HORARIOS_APERTURA[mkt].open.split(':').map(Number);
+          const [hNow, mNow] = horaMkt.split(':').map(Number);
+          const minsDiff = Math.abs((hNow*60+mNow) - (hOpen*60+mOpen));
+          const key = mkt + '_' + hoyUTC;
+          if (minsDiff <= 2 && !_alertasEventoState.apertura[key]) {
+            _alertasEventoState.apertura[key] = true;
+            await dispararAlertaEvento(a, '🔔 Apertura ' + mkt, 'El mercado ' + mkt + ' abrió. Seguimiento activo de ' + a.simbolo + '.');
+          }
+          continue;
+        }
+
+        // 2. ALTA_CONVICCION_IA — señal IA actual del simbolo es ALTA CONV-IA
+        if (tipo === 'alta_conviccion_ia') {
+          const s = signalsActuales[a.simbolo];
+          if (s && s.direccion === 'ALTA CONV-IA') {
+            const prev = _alertasEventoState.iaSignals[a.simbolo];
+            if (prev !== 'ALTA CONV-IA') {
+              await dispararAlertaEvento(a, '⭐ Alta convicción IA — ' + a.simbolo,
+                'Señal de alta convicción detectada. Confianza ' + (s.confianza || '?') + '%.');
+            }
+          }
+          continue;
+        }
+
+        // 3. CAMBIO_SENAL — señal IA cambió respecto al tick anterior
+        if (tipo === 'cambio_senal') {
+          const s = signalsActuales[a.simbolo];
+          if (s) {
+            const prev = _alertasEventoState.iaSignals[a.simbolo];
+            if (prev && prev !== s.direccion) {
+              await dispararAlertaEvento(a, '🔄 Cambio de señal — ' + a.simbolo,
+                'Señal IA pasó de ' + prev + ' a ' + s.direccion + ' (confianza ' + (s.confianza || '?') + '%).');
+            }
+          }
+          continue;
+        }
+
+        // 4. SENAL_PORTFOLIO — cualquier activo del portfolio del user con cambio de señal
+        if (tipo === 'senal_portfolio') {
+          const { data: portfolio } = await supabase.from('portfolio').select('simbolo').eq('user_id', a.user_id);
+          const symsPortf = (portfolio || []).map(p => p.simbolo);
+          for (const sym of symsPortf) {
+            const s = signalsActuales[sym];
+            if (s) {
+              const prev = _alertasEventoState.iaSignals[sym];
+              if (prev && prev !== s.direccion) {
+                await dispararAlertaEvento(a, '📊 Señal Portfolio — ' + sym,
+                  sym + ' cambió a ' + s.direccion + '. Revisá tu portfolio.');
+                break;
+              }
+            }
+          }
+          continue;
+        }
+
+        // 5. CAMBIO_ZONA_PULSE — zona Pulse GLOBAL cambió
+        if (tipo === 'cambio_zona_pulse') {
+          const labelActual = pulseActual.GLOBAL?.label;
+          const labelPrev = _alertasEventoState.pulseZone.GLOBAL;
+          if (labelActual && labelPrev && labelActual !== labelPrev) {
+            await dispararAlertaEvento(a, '💓 AUREX Pulse cambió de zona',
+              'Pulse global pasó de "' + labelPrev + '" a "' + labelActual + '" (' + pulseActual.GLOBAL.value + '/100).');
+          }
+          continue;
+        }
+
+        // 6. POR_CATEGORIA — zona Pulse de categoria especifica cambió (valor_objetivo guarda categoria como string)
+        if (tipo === 'por_categoria') {
+          const cat = (a.categoria || a.mercado || 'CRIPTO').toUpperCase();
+          const labelActual = pulseActual[cat]?.label;
+          const labelPrev = _alertasEventoState.pulseZone[cat];
+          if (labelActual && labelPrev && labelActual !== labelPrev) {
+            await dispararAlertaEvento(a, '🎯 Pulse ' + cat + ' cambió de zona',
+              'Pulse ' + cat + ' pasó de "' + labelPrev + '" a "' + labelActual + '" (' + pulseActual[cat].value + '/100).');
+          }
+          continue;
+        }
+
+        // 7. TERMOMETRO_RIESGO — nivel de riesgo del user cambió (basado en pulse + concentración portfolio)
+        if (tipo === 'termometro_riesgo') {
+          const pulseVal = pulseActual.GLOBAL?.value ?? 50;
+          // Termómetro simple: <30 rojo, 30-70 amarillo, >70 verde (alto pulse = mercado optimista = bajo riesgo)
+          const nivel = pulseVal < 30 ? 'rojo' : pulseVal > 70 ? 'verde' : 'amarillo';
+          const prev = _alertasEventoState.termoUser[a.user_id];
+          if (prev && prev !== nivel) {
+            await dispararAlertaEvento(a, '🌡️ Termómetro de riesgo cambió',
+              'Tu termómetro pasó de "' + prev + '" a "' + nivel + '" (Pulse global ' + pulseVal + '/100).');
+          }
+          _alertasEventoState.termoUser[a.user_id] = nivel;
+          continue;
+        }
+
+        // 8. FED_FOMC — hoy es fecha de reunión FOMC
+        if (tipo === 'fed_fomc') {
+          if (CALENDARIO_EVENTOS.fed_fomc.includes(hoyUTC)) {
+            await dispararAlertaEvento(a, '🏛️ FED FOMC hoy',
+              'Reunión del FOMC programada para hoy. Posible volatilidad en USD y mercados USA.');
+          }
+          continue;
+        }
+
+        // 9. CPI_PBI — hoy es fecha de publicación CPI
+        if (tipo === 'cpi_pbi') {
+          if (CALENDARIO_EVENTOS.cpi_pbi.includes(hoyUTC)) {
+            await dispararAlertaEvento(a, '📊 CPI publicado hoy',
+              'Datos de inflación CPI (USA) publicados hoy. Impacto típico en bonos, USD y stocks.');
+          }
+          continue;
+        }
+
+        // 10. EARNINGS — hoy hay earnings del simbolo
+        if (tipo === 'earnings') {
+          const fechas = CALENDARIO_EVENTOS.earnings[a.simbolo];
+          if (fechas?.includes(hoyUTC)) {
+            await dispararAlertaEvento(a, '📈 Earnings ' + a.simbolo + ' hoy',
+              a.simbolo + ' reporta resultados hoy. Volatilidad esperada en after-hours.');
+          }
+          continue;
+        }
+
+        // 11. GEOPOLITICA_GDELT — score geopolitico cambió >= 10 puntos vs anterior
+        if (tipo === 'geopolitica_gdelt') {
+          if (geoActual != null && _alertasEventoState.geoScore != null) {
+            const delta = Math.abs(geoActual - _alertasEventoState.geoScore);
+            if (delta >= 10) {
+              const dir = geoActual < _alertasEventoState.geoScore ? 'deterioro' : 'mejora';
+              await dispararAlertaEvento(a, '🌍 Alerta geopolítica GDELT',
+                'Sentimiento geopolítico mostró ' + dir + ' significativa: ' + _alertasEventoState.geoScore + ' → ' + geoActual + '/100.');
+            }
+          }
+          continue;
+        }
+      } catch (eAlerta) {
+        console.error('[ALERTA-EVENTO]', a.tipo, a.id, eAlerta.message);
+      }
+    }
+
+    // Actualizar estado para proximo tick
+    Object.keys(signalsActuales).forEach(sym => { _alertasEventoState.iaSignals[sym] = signalsActuales[sym].direccion; });
+    Object.keys(pulseActual).forEach(cat => { if (pulseActual[cat]?.label) _alertasEventoState.pulseZone[cat] = pulseActual[cat].label; });
+    if (geoActual != null) _alertasEventoState.geoScore = geoActual;
+  } catch(e) { console.error('checkAlertasEvento:', e.message); }
+}
+
+// Cron cada 5 min — alineado con calcularSenalesIA y calcularPulse que tambien corren */5
+cron.schedule('*/5 * * * *', checkAlertasEvento);
 
 // Mantener cryptoCache siempre lleno (para /api/crypto-prices fallback)
 async function refreshCryptoCache() {
@@ -1001,7 +1279,32 @@ app.post('/api/portfolio', async (req, res) => {
 app.patch('/api/portfolio/:id', async (req, res) => { const { data, error } = await supabase.from('portfolio').update(req.body).eq('id', req.params.id).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.delete('/api/portfolio/:id', async (req, res) => { const { error } = await supabase.from('portfolio').delete().eq('id', req.params.id); error ? res.status(500).json({ error }) : res.json({ ok: true }); });
 app.get('/api/watchlist/:userId', async (req, res) => { const { data, error } = await supabase.from('watchlist').select('*').eq('user_id', req.params.userId).order('orden'); error ? res.status(500).json({ error }) : res.json(data); });
-app.post('/api/watchlist', async (req, res) => { const { data, error } = await supabase.from('watchlist').insert({ ...req.body, created_at: new Date().toISOString() }).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
+app.post('/api/watchlist', async (req, res) => {
+  // Build 18 Bloque 1: gating PRO/ELITE — FREE solo 1 watchlist
+  try {
+    const userId = req.body.user_id;
+    if (userId) {
+      const plan = await getUserPlan(userId);
+      const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.FREE;
+      if (limits.watchlistMax !== Infinity) {
+        const { count } = await supabase.from('watchlist').select('id', { count: 'exact', head: true }).eq('user_id', userId);
+        if (count !== null && count >= limits.watchlistMax) {
+          return res.status(403).json({
+            error: 'plan_limit_reached',
+            limit: limits.watchlistMax,
+            plan: plan,
+            message: 'Tu plan ' + plan + ' permite hasta ' + limits.watchlistMax + ' watchlist. Pasate a PRO o ELITE para sumar mas.',
+            upgrade_url: 'https://aurex.live/inicio#planes',
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[POST /api/watchlist] gating error:', e.message);
+  }
+  const { data, error } = await supabase.from('watchlist').insert({ ...req.body, created_at: new Date().toISOString() }).select().single();
+  error ? res.status(500).json({ error }) : res.json(data);
+});
 app.delete('/api/watchlist/:id', async (req, res) => { const { error } = await supabase.from('watchlist').delete().eq('id', req.params.id); error ? res.status(500).json({ error }) : res.json({ ok: true }); });
 
 // AVATAR upload — usa service_role key del backend para bypassar RLS del bucket
@@ -1210,11 +1513,11 @@ function PLAN_MAP_NAME(planId) {
 const PLAN_LIMITS = {
   FREE: {
     portfolioMax: 5,
-    watchlistMax: 10,
+    watchlistMax: 1,       // Build 18 Bloque 1: alineado con copy PWA/Android "Watchlist con 1 lista"
     alertTypes: ['umbral', 'precio_objetivo', 'variacion_brusca', 'max_min', 'apertura'],
     whatsappPerDay: 0,
     telegramAlertas: false,
-    signalsAI: 3, // por dia
+    signalsAI: 3,          // por dia (rate-limit pendiente — endpoint /api/ia-signals es publico hoy)
     apiAccess: false,
   },
   PRO: {
