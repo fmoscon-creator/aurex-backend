@@ -1237,6 +1237,99 @@ const PLAN_LIMITS = {
   },
 };
 
+// ============================================================
+// RevenueCat Webhook — recibe eventos de Apple App Store + Google Play
+// y sincroniza usuarios.plan en Supabase
+// Configuración: RevenueCat Dashboard → Project → Integrations → Webhooks → Add Webhook
+//   URL: https://aurex-app-production.up.railway.app/webhook/revenuecat
+//   Authorization Header: Bearer <REVENUECAT_WEBHOOK_SECRET>
+// Variable Railway requerida: REVENUECAT_WEBHOOK_SECRET (el secret generado por Code)
+// ============================================================
+
+app.post('/webhook/revenuecat', async (req, res) => {
+  try {
+    // Validar Authorization header con REVENUECAT_WEBHOOK_SECRET
+    const authHeader = req.headers['authorization'] || '';
+    const expectedAuth = `Bearer ${process.env.REVENUECAT_WEBHOOK_SECRET || ''}`;
+    if (!process.env.REVENUECAT_WEBHOOK_SECRET) {
+      console.warn('[RevenueCat Webhook] REVENUECAT_WEBHOOK_SECRET no configurado en env — skip validacion');
+    } else if (authHeader !== expectedAuth) {
+      console.error('[RevenueCat Webhook] Authorization invalido. Recibido:', authHeader.substring(0, 30));
+      return res.status(401).json({ error: 'Invalid authorization' });
+    }
+
+    const event = req.body?.event;
+    if (!event || !event.type) {
+      console.error('[RevenueCat Webhook] Sin event.type:', req.body);
+      return res.status(400).json({ error: 'Missing event.type' });
+    }
+    console.log(`[RevenueCat Webhook] Evento: ${event.type} | env: ${event.environment} | user: ${event.app_user_id} | product: ${event.product_id}`);
+
+    // Detectar plan segun entitlement_ids
+    const entitlements = event.entitlement_ids || (event.entitlements ? Object.keys(event.entitlements) : []);
+    let newPlan = null;
+    if (entitlements.includes('elite')) newPlan = 'ELITE';
+    else if (entitlements.includes('pro')) newPlan = 'PRO';
+
+    // Eventos que ACTIVAN suscripcion
+    const activationEvents = ['INITIAL_PURCHASE', 'RENEWAL', 'PRODUCT_CHANGE', 'UNCANCELLATION', 'NON_RENEWING_PURCHASE'];
+    // Eventos que CANCELAN suscripcion
+    const cancellationEvents = ['CANCELLATION', 'EXPIRATION', 'BILLING_ISSUE', 'SUBSCRIPTION_PAUSED'];
+
+    const appUserId = event.app_user_id;
+    if (!appUserId) {
+      console.error('[RevenueCat Webhook] Sin app_user_id en evento:', event);
+      return res.status(400).json({ error: 'Missing app_user_id' });
+    }
+
+    // RevenueCat envia app_user_id que deberia ser el supabase users.id (UUID)
+    // Si no es UUID valido, posiblemente es anonymous_id de RevenueCat
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(appUserId);
+    if (!isUUID) {
+      console.warn(`[RevenueCat Webhook] app_user_id no es UUID: ${appUserId} — quizas usuario anonymous. No se actualiza Supabase.`);
+      return res.json({ ok: true, skipped: 'non-UUID app_user_id' });
+    }
+
+    if (activationEvents.includes(event.type) && newPlan) {
+      const { data, error } = await supabase
+        .from('usuarios')
+        .update({ plan: newPlan })
+        .eq('id', appUserId)
+        .select();
+      if (error) {
+        console.error('[RevenueCat Webhook] Error actualizando plan:', error);
+        return res.status(500).json({ error: 'DB update failed' });
+      }
+      if (!data || data.length === 0) {
+        console.warn(`[RevenueCat Webhook] Usuario ${appUserId} no encontrado en Supabase`);
+        return res.json({ ok: true, warning: 'user not found' });
+      }
+      console.log(`[RevenueCat Webhook] ${event.type}: ${appUserId} → ${newPlan} (product ${event.product_id})`);
+    } else if (cancellationEvents.includes(event.type)) {
+      const { error } = await supabase
+        .from('usuarios')
+        .update({ plan: 'FREE' })
+        .eq('id', appUserId);
+      if (error) {
+        console.error('[RevenueCat Webhook] Error degradando a FREE:', error);
+        return res.status(500).json({ error: 'DB update failed' });
+      }
+      console.log(`[RevenueCat Webhook] ${event.type}: ${appUserId} → FREE`);
+    } else {
+      console.log(`[RevenueCat Webhook] Evento ignorado: ${event.type}`);
+    }
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[RevenueCat Webhook] ERROR no controlado:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================
+// Fin RevenueCat Webhook
+// ============================================================
+
 async function getUserPlan(userId) {
   if (!userId) return 'FREE';
   try {
