@@ -903,7 +903,31 @@ app.get('/api/debug/sources', async (req, res) => {
 
 app.get('/api/stock/:symbol', async (req, res) => { const d = await getStockPrice(req.params.symbol.toUpperCase()); d ? res.json(d) : res.status(404).json({ error: 'No encontrado' }); });
 app.get('/api/alertas/:userId', async (req, res) => { const { data, error } = await supabase.from('alertas').select('*').eq('user_id', req.params.userId); error ? res.status(500).json({ error }) : res.json(data); });
-app.post('/api/alertas', async (req, res) => { const { data, error } = await supabase.from('alertas').insert({ ...req.body, activa: true, disparada: false, created_at: new Date().toISOString() }).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
+app.post('/api/alertas', async (req, res) => {
+  // Gating por plan: tipos de alerta avanzados solo PRO/ELITE
+  try {
+    const userId = req.body.user_id;
+    const tipo = (req.body.tipo || '').toLowerCase();
+    if (userId && tipo) {
+      const plan = await getUserPlan(userId);
+      const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.FREE;
+      if (!limits.alertTypes.includes(tipo)) {
+        return res.status(403).json({
+          error: 'plan_limit_reached',
+          plan: plan,
+          tipo_alerta: tipo,
+          message: `Tu plan ${plan} no incluye alertas tipo "${tipo}". Pasate a PRO o ELITE para activarlas.`,
+          upgrade_url: 'https://aurex.live/inicio#planes',
+        });
+      }
+    }
+  } catch (e) {
+    console.error('[POST /api/alertas] gating error:', e.message);
+    // No bloqueamos si el gating falla
+  }
+  const { data, error } = await supabase.from('alertas').insert({ ...req.body, activa: true, disparada: false, created_at: new Date().toISOString() }).select().single();
+  error ? res.status(500).json({ error }) : res.json(data);
+});
 
 // Multi-device: registrar/actualizar device token de un user
 // Body: { fcm_token, platform, device_id?, device_name? }
@@ -947,7 +971,33 @@ app.get('/api/portfolio/:userId', async (req, res) => {
   });
   res.json(enriched);
 });
-app.post('/api/portfolio', async (req, res) => { const { data, error } = await supabase.from('portfolio').insert({ ...req.body, created_at: new Date().toISOString() }).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
+app.post('/api/portfolio', async (req, res) => {
+  // Gating por plan: FREE limitado a 5 activos en portfolio
+  try {
+    const userId = req.body.user_id;
+    if (userId) {
+      const plan = await getUserPlan(userId);
+      const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.FREE;
+      if (limits.portfolioMax !== Infinity) {
+        const { count } = await supabase.from('portfolio').select('id', { count: 'exact', head: true }).eq('user_id', userId);
+        if (count !== null && count >= limits.portfolioMax) {
+          return res.status(403).json({
+            error: 'plan_limit_reached',
+            limit: limits.portfolioMax,
+            plan: plan,
+            message: `Tu plan ${plan} permite hasta ${limits.portfolioMax} activos en Portfolio. Pasate a PRO o ELITE para sumar mas.`,
+            upgrade_url: 'https://aurex.live/inicio#planes',
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[POST /api/portfolio] gating error:', e.message);
+    // No bloqueamos si el gating falla — preferimos disponibilidad
+  }
+  const { data, error } = await supabase.from('portfolio').insert({ ...req.body, created_at: new Date().toISOString() }).select().single();
+  error ? res.status(500).json({ error }) : res.json(data);
+});
 app.patch('/api/portfolio/:id', async (req, res) => { const { data, error } = await supabase.from('portfolio').update(req.body).eq('id', req.params.id).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.delete('/api/portfolio/:id', async (req, res) => { const { error } = await supabase.from('portfolio').delete().eq('id', req.params.id); error ? res.status(500).json({ error }) : res.json({ ok: true }); });
 app.get('/api/watchlist/:userId', async (req, res) => { const { data, error } = await supabase.from('watchlist').select('*').eq('user_id', req.params.userId).order('orden'); error ? res.status(500).json({ error }) : res.json(data); });
@@ -1149,6 +1199,57 @@ function PLAN_MAP_NAME(planId) {
 }
 // ============================================================
 // Fin PayPal Webhook
+// ============================================================
+
+// ============================================================
+// Gating por plan (FREE / PRO / ELITE) — limites en endpoints clave
+// Tabla de limites + helper getUserPlan(userId)
+// Aplica a: POST /api/portfolio (limite FREE=5 activos), POST /api/alertas (tipos avanzados PRO+/ELITE)
+// ============================================================
+
+const PLAN_LIMITS = {
+  FREE: {
+    portfolioMax: 5,
+    watchlistMax: 10,
+    alertTypes: ['umbral', 'precio_objetivo', 'variacion_brusca', 'max_min', 'apertura'],
+    whatsappPerDay: 0,
+    telegramAlertas: false,
+    signalsAI: 3, // por dia
+    apiAccess: false,
+  },
+  PRO: {
+    portfolioMax: Infinity,
+    watchlistMax: Infinity,
+    alertTypes: ['umbral', 'precio_objetivo', 'variacion_brusca', 'max_min', 'apertura', 'alta_conviccion_ia', 'cambio_senal', 'senal_portfolio', 'cambio_zona_pulse', 'por_categoria', 'termometro_riesgo', 'fed_fomc', 'cpi_pbi', 'earnings'],
+    whatsappPerDay: 3,
+    telegramAlertas: true,
+    signalsAI: Infinity,
+    apiAccess: false,
+  },
+  ELITE: {
+    portfolioMax: Infinity,
+    watchlistMax: Infinity,
+    alertTypes: ['umbral', 'precio_objetivo', 'variacion_brusca', 'max_min', 'apertura', 'alta_conviccion_ia', 'cambio_senal', 'senal_portfolio', 'cambio_zona_pulse', 'por_categoria', 'termometro_riesgo', 'fed_fomc', 'cpi_pbi', 'earnings', 'geopolitica_gdelt'],
+    whatsappPerDay: 10,
+    telegramAlertas: true,
+    signalsAI: Infinity,
+    apiAccess: true,
+  },
+};
+
+async function getUserPlan(userId) {
+  if (!userId) return 'FREE';
+  try {
+    const { data, error } = await supabase.from('usuarios').select('plan').eq('id', userId).single();
+    if (error || !data) return 'FREE';
+    return (data.plan || 'FREE').toUpperCase();
+  } catch (e) {
+    console.error('[getUserPlan] error:', e.message);
+    return 'FREE';
+  }
+}
+// ============================================================
+// Fin gating por plan
 // ============================================================
 
 // AUTH: proxy a Supabase auth desde Railway (evita issue de network fetch RN → Supabase directo)
