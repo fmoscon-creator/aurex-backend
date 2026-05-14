@@ -997,6 +997,160 @@ app.get('/api/usuario/:userId', async (req, res) => { const { data, error } = aw
 app.post('/api/usuario', async (req, res) => { const { data: ex } = await supabase.from('usuarios').select('*').eq('email', req.body.email).single(); if (ex) return res.json(ex); const { data, error } = await supabase.from('usuarios').insert({ ...req.body, plan: req.body.plan || 'FREE', created_at: new Date().toISOString() }).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 app.patch('/api/usuario/:userId', async (req, res) => { const { data, error } = await supabase.from('usuarios').update(req.body).eq('id', req.params.userId).select().single(); error ? res.status(500).json({ error }) : res.json(data); });
 
+// ============================================================
+// PayPal Webhook — recibe eventos de Billing y sincroniza usuarios.plan
+// Configuración: dashboard PayPal Live → Apps & Credentials → Webhooks → URL: https://aurex-app-production.up.railway.app/webhook/paypal
+// Eventos a suscribir: BILLING.SUBSCRIPTION.ACTIVATED, UPDATED, CANCELLED, SUSPENDED, EXPIRED, RE-ACTIVATED, PAYMENT.SALE.COMPLETED
+// Variables Railway requeridas: PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_WEBHOOK_ID
+// ============================================================
+
+const PAYPAL_PLAN_MAP = {
+  'P-64Y46051CU7251058NHMGG4Y': 'PRO',   // PRO Mensual USD 9.99
+  'P-3FG40467BU710103WNHMGJSA': 'PRO',   // PRO Anual USD 89.99
+  'P-9T718444CV910321WNHMGOWY': 'ELITE', // ELITE Mensual USD 19.99
+  'P-1WB81912S68516031NHMGRPY': 'ELITE', // ELITE Anual USD 179.99
+};
+
+async function getPayPalAccessToken() {
+  const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_SECRET}`).toString('base64');
+  const r = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
+    method: 'POST',
+    headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=client_credentials',
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(`PayPal OAuth failed: ${JSON.stringify(data)}`);
+  return data.access_token;
+}
+
+async function verifyPayPalWebhookSignature(headers, body) {
+  if (!process.env.PAYPAL_WEBHOOK_ID) {
+    console.warn('[PayPal Webhook] PAYPAL_WEBHOOK_ID no configurado — skip verificación (modo dev)');
+    return true;
+  }
+  const accessToken = await getPayPalAccessToken();
+  const r = await fetch('https://api-m.paypal.com/v1/notifications/verify-webhook-signature', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      auth_algo: headers['paypal-auth-algo'],
+      cert_url: headers['paypal-cert-url'],
+      transmission_id: headers['paypal-transmission-id'],
+      transmission_sig: headers['paypal-transmission-sig'],
+      transmission_time: headers['paypal-transmission-time'],
+      webhook_id: process.env.PAYPAL_WEBHOOK_ID,
+      webhook_event: body,
+    }),
+  });
+  const data = await r.json();
+  return data.verification_status === 'SUCCESS';
+}
+
+app.post('/webhook/paypal', async (req, res) => {
+  try {
+    const event = req.body;
+    const eventType = event?.event_type;
+    if (!eventType) {
+      console.error('[PayPal Webhook] Sin event_type:', event);
+      return res.status(400).json({ error: 'Missing event_type' });
+    }
+    console.log(`[PayPal Webhook] Evento recibido: ${eventType}`);
+
+    // Validar firma (saltea si PAYPAL_WEBHOOK_ID no está cargado todavía)
+    let isValid = true;
+    try {
+      isValid = await verifyPayPalWebhookSignature(req.headers, event);
+    } catch (e) {
+      console.error('[PayPal Webhook] Error verificando firma:', e.message);
+      return res.status(500).json({ error: 'Signature verification failed' });
+    }
+    if (!isValid) {
+      console.error('[PayPal Webhook] Firma INVALIDA — rechazado');
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+
+    const subscription = event.resource || {};
+    const subscriberEmail = subscription?.subscriber?.email_address?.toLowerCase();
+    const planId = subscription?.plan_id;
+    const subscriptionId = subscription?.id;
+    const newPlan = PLAN_MAP_NAME(planId);
+
+    if (eventType.startsWith('BILLING.SUBSCRIPTION') && !subscriberEmail) {
+      console.error('[PayPal Webhook] Sin subscriber email en evento billing:', event);
+      return res.status(400).json({ error: 'No subscriber email' });
+    }
+
+    switch (eventType) {
+      case 'BILLING.SUBSCRIPTION.ACTIVATED':
+      case 'BILLING.SUBSCRIPTION.RE-ACTIVATED':
+      case 'BILLING.SUBSCRIPTION.UPDATED': {
+        if (!newPlan) {
+          console.error(`[PayPal Webhook] plan_id desconocido: ${planId}`);
+          return res.status(400).json({ error: 'Unknown plan_id' });
+        }
+        const { data: usr, error: errFind } = await supabase
+          .from('usuarios')
+          .select('id, email, plan')
+          .ilike('email', subscriberEmail)
+          .maybeSingle();
+        if (errFind) {
+          console.error('[PayPal Webhook] Error buscando usuario:', errFind);
+          return res.status(500).json({ error: 'DB lookup failed' });
+        }
+        if (!usr) {
+          console.warn(`[PayPal Webhook] Usuario no encontrado en BD: ${subscriberEmail} — creando registro mínimo con plan=${newPlan}`);
+          await supabase.from('usuarios').insert({
+            email: subscriberEmail,
+            plan: newPlan,
+            created_at: new Date().toISOString(),
+          });
+        } else {
+          await supabase
+            .from('usuarios')
+            .update({ plan: newPlan })
+            .eq('id', usr.id);
+          console.log(`[PayPal Webhook] ${eventType}: ${subscriberEmail} ${usr.plan} → ${newPlan} (sub ${subscriptionId})`);
+        }
+        break;
+      }
+
+      case 'BILLING.SUBSCRIPTION.CANCELLED':
+      case 'BILLING.SUBSCRIPTION.SUSPENDED':
+      case 'BILLING.SUBSCRIPTION.EXPIRED': {
+        const { error: errCancel } = await supabase
+          .from('usuarios')
+          .update({ plan: 'FREE' })
+          .ilike('email', subscriberEmail);
+        if (errCancel) {
+          console.error('[PayPal Webhook] Error degradando a FREE:', errCancel);
+          return res.status(500).json({ error: 'DB update failed' });
+        }
+        console.log(`[PayPal Webhook] ${eventType}: ${subscriberEmail} → FREE`);
+        break;
+      }
+
+      case 'PAYMENT.SALE.COMPLETED':
+        console.log(`[PayPal Webhook] Pago completado para subscripcion ${subscriptionId}, monto ${event.resource?.amount?.total} ${event.resource?.amount?.currency}`);
+        break;
+
+      default:
+        console.log(`[PayPal Webhook] Evento ignorado: ${eventType}`);
+    }
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[PayPal Webhook] ERROR no controlado:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+function PLAN_MAP_NAME(planId) {
+  return PAYPAL_PLAN_MAP[planId] || null;
+}
+// ============================================================
+// Fin PayPal Webhook
+// ============================================================
+
 // AUTH: proxy a Supabase auth desde Railway (evita issue de network fetch RN → Supabase directo)
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrbGxqbmZobHptZnNmbXhycGllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MzI3NDcsImV4cCI6MjA5MDEwODc0N30.FxegnijMue_K9jPqzY7gwNABaVpyyB6Io_ZkWLMSX9k';
 app.post('/api/login', async (req, res) => {
