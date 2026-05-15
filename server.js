@@ -911,6 +911,30 @@ async function checkAlertasEvento() {
           continue;
         }
 
+        // 1.5. RSI_EXTREMO (Build 23 Bug B) — RSI14 sobrecompra >70 o sobreventa <30 (FREE-accesible)
+        // Usa s.rsi ya precalculado en _iaSignalsCache (L2015). Estado previo evita disparos continuos
+        // mientras el RSI sigue en zona extrema; al salir de la zona (30-70) se resetea para proximo cruce.
+        if (tipo === 'rsi_extremo') {
+          const s = signalsActuales[a.simbolo];
+          if (s && typeof s.rsi === 'number') {
+            if (!_alertasEventoState.rsiExtremo) _alertasEventoState.rsiExtremo = {};
+            const stateKey = a.simbolo + '_rsi';
+            const prev = _alertasEventoState.rsiExtremo[stateKey];
+            if (s.rsi >= 70 && prev !== 'sobrecompra') {
+              _alertasEventoState.rsiExtremo[stateKey] = 'sobrecompra';
+              await dispararAlertaEvento(a, 'RSI Sobrecompra — ' + a.simbolo,
+                'RSI14 en ' + Math.round(s.rsi) + '. Zona de sobrecompra (>70).');
+            } else if (s.rsi <= 30 && prev !== 'sobreventa') {
+              _alertasEventoState.rsiExtremo[stateKey] = 'sobreventa';
+              await dispararAlertaEvento(a, 'RSI Sobreventa — ' + a.simbolo,
+                'RSI14 en ' + Math.round(s.rsi) + '. Zona de sobreventa (<30).');
+            } else if (s.rsi > 30 && s.rsi < 70 && prev) {
+              delete _alertasEventoState.rsiExtremo[stateKey];
+            }
+          }
+          continue;
+        }
+
         // 2. ALTA_CONVICCION_IA — señal IA actual del simbolo es ALTA CONV-IA
         if (tipo === 'alta_conviccion_ia') {
           const s = signalsActuales[a.simbolo];
@@ -1539,7 +1563,7 @@ const PLAN_LIMITS = {
   FREE: {
     portfolioMax: 5,
     watchlistMax: 1,       // Build 18 Bloque 1: alineado con copy PWA/Android "Watchlist con 1 lista"
-    alertTypes: ['umbral', 'precio_objetivo', 'variacion_brusca', 'max_min', 'apertura'],
+    alertTypes: ['umbral', 'precio_objetivo', 'variacion_brusca', 'max_min', 'apertura', 'rsi_extremo'],
     whatsappPerDay: 0,
     telegramAlertas: false,
     signalsAI: 3,          // por dia (rate-limit pendiente — endpoint /api/ia-signals es publico hoy)
@@ -1548,7 +1572,7 @@ const PLAN_LIMITS = {
   PRO: {
     portfolioMax: Infinity,
     watchlistMax: Infinity,
-    alertTypes: ['umbral', 'precio_objetivo', 'variacion_brusca', 'max_min', 'apertura', 'alta_conviccion_ia', 'cambio_senal', 'senal_portfolio', 'cambio_zona_pulse', 'por_categoria', 'termometro_riesgo', 'fed_fomc', 'cpi_pbi', 'earnings'],
+    alertTypes: ['umbral', 'precio_objetivo', 'variacion_brusca', 'max_min', 'apertura', 'alta_conviccion_ia', 'cambio_senal', 'senal_portfolio', 'cambio_zona_pulse', 'por_categoria', 'termometro_riesgo', 'fed_fomc', 'cpi_pbi', 'earnings', 'rsi_extremo'],
     whatsappPerDay: 3,
     telegramAlertas: true,
     signalsAI: Infinity,
@@ -1557,7 +1581,7 @@ const PLAN_LIMITS = {
   ELITE: {
     portfolioMax: Infinity,
     watchlistMax: Infinity,
-    alertTypes: ['umbral', 'precio_objetivo', 'variacion_brusca', 'max_min', 'apertura', 'alta_conviccion_ia', 'cambio_senal', 'senal_portfolio', 'cambio_zona_pulse', 'por_categoria', 'termometro_riesgo', 'fed_fomc', 'cpi_pbi', 'earnings', 'geopolitica_gdelt'],
+    alertTypes: ['umbral', 'precio_objetivo', 'variacion_brusca', 'max_min', 'apertura', 'alta_conviccion_ia', 'cambio_senal', 'senal_portfolio', 'cambio_zona_pulse', 'por_categoria', 'termometro_riesgo', 'fed_fomc', 'cpi_pbi', 'earnings', 'geopolitica_gdelt', 'rsi_extremo'],
     whatsappPerDay: 10,
     telegramAlertas: true,
     signalsAI: Infinity,
