@@ -1638,8 +1638,25 @@ app.post('/webhook/revenuecat', async (req, res) => {
     // Si no es UUID valido, posiblemente es anonymous_id de RevenueCat
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(appUserId);
     if (!isUUID) {
-      console.warn(`[RevenueCat Webhook] app_user_id no es UUID: ${appUserId} — quizas usuario anonymous. No se actualiza Supabase.`);
-      return res.json({ ok: true, skipped: 'non-UUID app_user_id' });
+      // Build 34 IAP-5: era warn + return silencioso. Ahora error + alerta Telegram admin.
+      // Razon: usuario pago pero su uid quedo como $anonymous:xxx -> plan no se activa.
+      // Sin alerta NO sabemos que paso. Con alerta podemos rescatar manualmente.
+      console.error(`[RevenueCat Webhook] WEBHOOK_USER_ANONIMO_${event.id}: app_user_id=${appUserId} product=${event.product_id} type=${event.type}`);
+      try {
+        const tgChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+        if (tgChatId) {
+          bot.sendMessage(tgChatId,
+            `🚨 *RC Webhook user anónimo*\n\n` +
+            `Event: ${event.type}\n` +
+            `Product: ${event.product_id}\n` +
+            `app_user_id: \`${appUserId}\`\n` +
+            `Event ID: ${event.id}\n\n` +
+            `Usuario PAGÓ pero RC no lo identificó. Plan NO se activó automáticamente. Rescatar manualmente.`,
+            { parse_mode: 'Markdown' }
+          );
+        }
+      } catch (e) { console.warn('[IAP-5] Telegram alert fallo:', e?.message); }
+      return res.json({ ok: true, skipped: 'non-UUID app_user_id', alerted: true });
     }
 
     if (activationEvents.includes(event.type) && newPlan) {
