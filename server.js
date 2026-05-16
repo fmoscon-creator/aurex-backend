@@ -1645,15 +1645,15 @@ app.post('/webhook/revenuecat', async (req, res) => {
       try {
         const tgChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
         if (tgChatId) {
+          // Build 34 IAP-5: texto plano sin parse_mode — el appUserId contiene "$" y ":" que rompen Markdown.
           bot.sendMessage(tgChatId,
-            `🚨 *RC Webhook user anónimo*\n\n` +
+            `🚨 RC Webhook user anónimo\n\n` +
             `Event: ${event.type}\n` +
             `Product: ${event.product_id}\n` +
-            `app_user_id: \`${appUserId}\`\n` +
+            `app_user_id: ${appUserId}\n` +
             `Event ID: ${event.id}\n\n` +
-            `Usuario PAGÓ pero RC no lo identificó. Plan NO se activó automáticamente. Rescatar manualmente.`,
-            { parse_mode: 'Markdown' }
-          );
+            `Usuario PAGÓ pero RC no lo identificó. Plan NO se activó automáticamente. Rescatar manualmente.`
+          ).catch(e => console.warn('[IAP-5] Telegram sendMessage fallo:', e?.message));
         }
       } catch (e) { console.warn('[IAP-5] Telegram alert fallo:', e?.message); }
       return res.json({ ok: true, skipped: 'non-UUID app_user_id', alerted: true });
